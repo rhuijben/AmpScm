@@ -26,37 +26,21 @@
 extern "C" {
 #endif
 
-	typedef struct amp_error_t amp_error_t;
-	typedef struct amp_file_t amp_file_t;
-	typedef apr_pool_t amp_pool_t;
-	typedef off_t amp_off_t;
-
-	typedef char amp_boolean_t;
-
-#define AMP_SUCCESS 0
-
-	typedef enum amp_newline_t
-	{
-		amp_newline_nl = 0x01,
-		amp_newline_cr = 0x02,
-		amp_newline_crlf = 0x04,
-
-		amp_newline_any = amp_newline_nl | amp_newline_cr | amp_newline_crlf
-	} amp_newline_t;
+#define AMP_SUCCESS 0	
 
 	typedef enum amp_file_open_t
 	{
-		amp_open_read = APR_FOPEN_READ,
-		amp_open_write = APR_FOPEN_WRITE,
-		amp_open_create = APR_FOPEN_CREATE,
-		amp_open_append = APR_FOPEN_APPEND,
-		amp_open_truncate = APR_FOPEN_TRUNCATE,
+		amp_open_read = 1,//APR_FOPEN_READ,
+		amp_open_write = 2,//APR_FOPEN_WRITE,
+		amp_open_create = 4,//APR_FOPEN_CREATE,
+		amp_open_append = 8,//APR_FOPEN_APPEND,
+		amp_open_truncate = 16,//APR_FOPEN_TRUNCATE,
 
-		amp_open_excl = APR_FOPEN_EXCL,
-		amp_open_buffered = APR_FOPEN_BUFFERED,
+		amp_open_excl = 32,
+		amp_open_buffered = 64,
 
-		amp_open_no_cleanup = APR_FOPEN_NOCLEANUP,
-		amp_open_del_on_close = APR_FOPEN_DELONCLOSE
+		amp_open_no_cleanup = 128,
+		amp_open_del_on_close = 256
 	} amp_file_open_t;
 
 	enum amp_file_share_t
@@ -64,7 +48,7 @@ extern "C" {
 		amp_share_none = 0x00,
 	};
 
-	AMP_DLL(amp_error_t*)
+	AMP_DECLARE(amp_error_t*)
 		amp_file_open(
 			amp_file_t** new_file,
 			const char* filename,
@@ -74,16 +58,16 @@ extern "C" {
 			amp_pool_t* scratch_pool
 		);
 
-	AMP_DLL(amp_error_t*)
+	AMP_DECLARE(amp_error_t*)
 		amp_cstring_to_utf8(
 			const char** result,
 			const char* input,
 			amp_pool_t* result_pool);
 
-	AMP_DLL(amp_error_t*)
+	AMP_DECLARE(amp_error_t*)
 		amp_cmdline_printf(amp_pool_t* scratch_pool, const char* fmt, ...);
 
-	AMP_DLL(amp_error_t*)
+	AMP_DECLARE(amp_error_t*)
 		amp_cmdline_puts(const char* text, amp_pool_t *scratch_pool);
 	
 #ifdef __cplusplus

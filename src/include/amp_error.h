@@ -1,20 +1,20 @@
+#include "amp_types.h"
+
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+AMP_C__START
+
 #define AMP_SUCCESS 0
 #define AMP_NO_ERROR 0
 
-	typedef struct amp_error_t amp_error_t;
+typedef struct amp_error_t amp_error_t;
 
 
-	/* For the Subversion developers, this #define turns on extended "stack
-	   traces" of any errors that get thrown. See the AMP_ERR() macro.  */
+/* For the AmpScm development mode, this #define turns on extended "stack
+   traces" of any errors that get thrown. See the AMP_ERR() macro.  */
 #ifdef _DEBUG
 #define AMP_ERR__TRACING
 #endif
-
 
 	   /** the best kind of (@c amp_error_t *) ! */
 #define AMP_NO_ERROR   0
@@ -22,58 +22,6 @@ extern "C" {
 /* The actual error codes are kept in a separate file; see comments
    there for the reasons why. */
 #include "amp_error_codes.h"
-
-   /**
-	* Return the symbolic name of an error code.  If the error code
-	* is in amp_error_codes.h, return the name of the macro as a string.
-	* If the error number is not recognised, return @c NULL.
-	*
-	* An error number may not be recognised because it was defined in a future
-	* version of Subversion (e.g., a 1.9.x server may transmit a defined-in-1.9.0
-	* error number to a 1.8.x client).
-	*
-	* An error number may be recognised @em incorrectly if the @c apr_status_t
-	* value originates in another library (such as libserf) which also uses APR.
-	* (This is a theoretical concern only: the @c apr_err member of #amp_error_t
-	* should never contain a "foreign" @c apr_status_t value, and
-	* in any case Subversion and Serf use non-overlapping subsets of the
-	* @c APR_OS_START_USERERR range.)
-	*
-	* Support for error codes returned by APR itself (i.e., not in the
-	* @c APR_OS_START_USERERR range, as defined in apr_errno.h) may be implemented
-	* in the future.
-	*
-	* @note In rare cases, a single numeric code has more than one symbolic name.
-	* (For example, #AMP_ERR_WC_NOT_DIRECTORY and #AMP_ERR_WC_NOT_WORKING_COPY).
-	* In those cases, it is not guaranteed which symbolic name is returned.
-	*
-	* @since New in 1.8.
-	*/
-	AMP_DLL(const char*)
-		amp_error_symbolic_name(apr_status_t statcode);
-
-
-	/** If @a err has a custom error message, return that, otherwise
-	 * store the generic error string associated with @a err->apr_err into
-	 * @a buf (terminating with NULL) and return @a buf.
-	 *
-	 * @since New in 1.4.
-	 *
-	 * @note @a buf and @a bufsize are provided in the interface so that
-	 * this function is thread-safe and yet does no allocation.
-	 */
-	AMP_DLL(const char*)
-		amp_err_best_message(const amp_error_t* err,
-		char* buf,
-		apr_size_t bufsize);
-
-
-
-	/** AMP error creation and destruction.
-	 *
-	 * @defgroup amp_error_error_creation_destroy Error creation and destruction
-	 * @{
-	 */
 
 	 /** Create a nested exception structure.
 	  *
@@ -93,118 +41,103 @@ extern "C" {
 	  *        If creating the "bottommost" error in a chain, pass @c NULL for
 	  *        the child argument.
 	  */
-	AMP_DLL(amp_error_t*)
-		amp_error_create(apr_status_t apr_err,
-			amp_error_t* child,
-			const char* message);
+AMP_DECLARE(amp_error_t *)
+amp_error_create(amp_status_t status,
+				 amp_error_t *child,
+				 const char *message);
 
-	/** Create an error structure with the given @a apr_err and @a child,
-	 * with a printf-style error message produced by passing @a fmt, using
-	 * apr_psprintf().
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_createf(apr_status_t apr_err,
-			amp_error_t* child,
-			const char* fmt,
-			...)
-		__attribute__((format(printf, 3, 4)));
+		 /** Create an error structure with the given @a apr_err and @a child,
+		  * with a printf-style error message produced by passing @a fmt, using
+		  * apr_psprintf().
+		  */
+AMP_DECLARE(amp_error_t *)
+amp_error_createf(amp_status_t status,
+				  amp_error_t *child,
+				  const char *fmt,
+				  ...);
 
-	/** Wrap a @a status from an APR function.  If @a fmt is NULL, this is
-	 * equivalent to amp_error_create(status,NULL,NULL).  Otherwise,
-	 * the error message is constructed by formatting @a fmt and the
-	 * following arguments according to apr_psprintf(), and then
-	 * appending ": " and the error message corresponding to @a status.
-	 * (If UTF-8 translation of the APR error message fails, the ": " and
-	 * APR error are not appended to the error message.)
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_wrap_apr(apr_status_t status,
-			const char* fmt,
-			...)
-		__attribute__((format(printf, 2, 3)));
+/** If @a child is AMP_NO_ERROR, return AMP_NO_ERROR.
+ * Else, prepend a new error to the error chain of @a child. The new error
+ * uses @a new_msg as error message but all other error attributes (such
+ * as the error code) are copied from @a child.
+ */
+AMP_DECLARE(amp_error_t *)
+amp_error_quick_wrap(amp_error_t *child,
+					 const char *new_msg);
 
-	/** If @a child is AMP_NO_ERROR, return AMP_NO_ERROR.
-	 * Else, prepend a new error to the error chain of @a child. The new error
-	 * uses @a new_msg as error message but all other error attributes (such
-	 * as the error code) are copied from @a child.
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_quick_wrap(amp_error_t* child,
-			const char* new_msg);
+/** Like amp_error_quick_wrap(), but with format string support.
+ *
+ * @since New in 1.9.
+ */
+amp_error_t *
+amp_error_quick_wrapf(amp_error_t *child,
+					  const char *fmt,
+					  ...)
+	__attribute__((format(printf, 2, 3)));
 
-	/** Like amp_error_quick_wrap(), but with format string support.
-	 *
-	 * @since New in 1.9.
-	 */
-	amp_error_t*
-		amp_error_quick_wrapf(amp_error_t* child,
-			const char* fmt,
-			...)
-		__attribute__((format(printf, 2, 3)));
+/** Compose two errors, returning the composition as a brand new error
+ * and consuming the original errors.  Either or both of @a err1 and
+ * @a err2 may be @c AMP_NO_ERROR.  If both are not @c AMP_NO_ERROR,
+ * @a err2 will follow @a err1 in the chain of the returned error.
+ *
+ * Either @a err1 or @a err2 can be functions that return amp_error_t*
+ * but if both are functions they can be evaluated in either order as
+ * per the C language rules.
+ *
+ * @since New in 1.6.
+ */
+AMP_DECLARE(amp_error_t *)
+amp_error_compose_create(amp_error_t *err1,
+						 amp_error_t *err2);
 
-	/** Compose two errors, returning the composition as a brand new error
-	 * and consuming the original errors.  Either or both of @a err1 and
-	 * @a err2 may be @c AMP_NO_ERROR.  If both are not @c AMP_NO_ERROR,
-	 * @a err2 will follow @a err1 in the chain of the returned error.
-	 *
-	 * Either @a err1 or @a err2 can be functions that return amp_error_t*
-	 * but if both are functions they can be evaluated in either order as
-	 * per the C language rules.
-	 *
-	 * @since New in 1.6.
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_compose_create(amp_error_t* err1,
-			amp_error_t* err2);
+				 /** Return the root cause of @a err by finding the last error in its
+				  * chain (e.g. it or its children).  @a err may be @c AMP_NO_ERROR, in
+				  * which case @c AMP_NO_ERROR is returned.  The returned error should
+				  * @em not be cleared as it shares memory with @a err.
+				  *
+				  * @since New in 1.5.
+				  */
+AMP_DECLARE(amp_error_t *)
+amp_error_root_cause(amp_error_t *err);
 
-	/** Return the root cause of @a err by finding the last error in its
-	 * chain (e.g. it or its children).  @a err may be @c AMP_NO_ERROR, in
-	 * which case @c AMP_NO_ERROR is returned.  The returned error should
-	 * @em not be cleared as it shares memory with @a err.
-	 *
-	 * @since New in 1.5.
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_root_cause(amp_error_t* err);
+/** Return the first error in @a err's chain that has an error code @a
+ * apr_err or #AMP_NO_ERROR if there is no error with that code.  The
+ * returned error should @em not be cleared as it shares memory with @a err.
+ *
+ * If @a err is #AMP_NO_ERROR, return #AMP_NO_ERROR.
+ *
+ * @since New in 1.7.
+ */
+AMP_DECLARE(amp_error_t *)
+amp_error_find_cause(amp_error_t *err, apr_status_t apr_err);
 
-	/** Return the first error in @a err's chain that has an error code @a
-	 * apr_err or #AMP_NO_ERROR if there is no error with that code.  The
-	 * returned error should @em not be cleared as it shares memory with @a err.
-	 *
-	 * If @a err is #AMP_NO_ERROR, return #AMP_NO_ERROR.
-	 *
-	 * @since New in 1.7.
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_find_cause(amp_error_t* err, apr_status_t apr_err);
+/** Create a new error that is a deep copy of @a err and return it.
+ *
+ * @since New in 1.2.
+ */
+AMP_DECLARE(amp_error_t *)
+amp_error_dup(const amp_error_t *err);
 
-	/** Create a new error that is a deep copy of @a err and return it.
-	 *
-	 * @since New in 1.2.
-	 */
-	AMP_DLL(amp_error_t*)
-		amp_error_dup(const amp_error_t* err);
-
-	/** Free the memory used by @a error, as well as all ancestors and
-	 * descendants of @a error.
-	 *
-	 * Unlike other Subversion objects, errors are managed explicitly; you
-	 * MUST clear an error if you are ignoring it, or you are leaking memory.
-	 * For convenience, @a error may be @c NULL, in which case this function does
-	 * nothing; thus, amp_error_clear(amp_foo(...)) works as an idiom to
-	 * ignore errors.
-	 */
-	void
-		amp_error_clear(amp_error_t* error);
+/** Free the memory used by @a error, as well as all ancestors and
+ * descendants of @a error.
+ *
+ * Unlike other Subversion objects, errors are managed explicitly; you
+ * MUST clear an error if you are ignoring it, or you are leaking memory.
+ * For convenience, @a error may be @c NULL, in which case this function does
+ * nothing; thus, amp_error_clear(amp_foo(...)) works as an idiom to
+ * ignore errors.
+ */
+void
+amp_error_clear(amp_error_t *error);
 
 
 #if defined(AMP_ERR__TRACING)
 	/** Set the error location for debug mode. */
-	AMP_DLL(void)
-		amp_error__locate(const char* file,
-			long line);
+AMP_DECLARE(void)
+amp_error__locate(const char *file,
+				  long line);
 
-	/* Wrapper macros to collect file and line information */
+		  /* Wrapper macros to collect file and line information */
 #define amp_error_create \
   (amp_error__locate(__FILE__,__LINE__), (amp_error_create))
 #define amp_error_createf \
@@ -252,40 +185,19 @@ extern "C" {
 	  * @since New in 1.7.
 	  */
 #ifdef AMP_ERR__TRACING
-	amp_error_t*
-		amp_error__trace(const char* file, long line, amp_error_t* err);
+amp_error_t *
+amp_error__trace(const char *file, long line, amp_error_t *err);
 
 #define amp_error_trace(expr)  amp_error__trace(__FILE__, __LINE__, (expr))
 #else
 #define amp_error_trace(expr)  (expr)
 #endif
 
-	  /**
-	   * Returns an error chain that is based on @a err's error chain but
-	   * does not include any error tracing placeholders.  @a err is not
-	   * modified, except for any allocations using its pool.
-	   *
-	   * The returned error chain is allocated from @a err's pool and shares
-	   * its message and source filename character arrays.  The returned
-	   * error chain should *not* be cleared because it is not a fully
-	   * fledged error chain, only clearing @a err should be done to clear
-	   * the returned error chain.  If @a err is cleared, then the returned
-	   * error chain is unusable.
-	   *
-	   * @a err can be #AMP_NO_ERROR.  If @a err is not #AMP_NO_ERROR, then
-	   * the last link in the error chain must be a non-tracing error, i.e,
-	   * a real error.
-	   *
-	   * @since New in 1.7.
-	   */
-	amp_error_t* amp_error_purge_tracing(amp_error_t* err);
-
-
-	/** A statement macro, very similar to @c AMP_ERR.
-	 *
-	 * This macro will wrap the error with the specified text before
-	 * returning the error.
-	 */
+/** A statement macro, very similar to @c AMP_ERR.
+ *
+ * This macro will wrap the error with the specified text before
+ * returning the error.
+ */
 #define AMP_ERR_W(expr, wrap_msg)                           \
   do {                                                      \
     amp_error_t *amp_err__temp = (expr);                    \
@@ -294,42 +206,8 @@ extern "C" {
   } while (0)
 
 
-	 /** A statement macro intended for the main() function of the 'svn' program.
-	  *
-	  * Evaluate @a expr. If it yields an error, display the error on stdout
-	  * and return @c EXIT_FAILURE.
-	  *
-	  * @note Not for use in the library, as it prints to stderr. This macro
-	  * no longer suits the needs of the 'svn' program, and is not generally
-	  * suitable for third-party use as it assumes the program name is 'svn'.
-	  *
-	  * @deprecated Provided for backward compatibility with the 1.8 API. Consider
-	  * using amp_handle_error2() or amp_cmdline_handle_exit_error() instead.
-	  */
-#define AMP_INT_ERR(expr)                                        \
-  do {                                                           \
-    amp_error_t *amp_err__temp = (expr);                         \
-    if (amp_err__temp) {                                         \
-      amp_handle_error2(amp_err__temp, stderr, FALSE, "svn: ");  \
-      amp_error_clear(amp_err__temp);                            \
-      return EXIT_FAILURE; }                                     \
-  } while (0)
-
-	  /** @} */
-
-		 /** Evaluates to @c TRUE iff @a apr_err (of type apr_status_t) is in the given
-		  * @a category, which should be one of the @c AMP_ERR_*_CATEGORY_START
-		  * constants.
-		  *
-		  * @since New in 1.7.
-		  */
-#define AMP_ERROR_IN_CATEGORY(apr_err, category)            \
-    ((category) == ((apr_err) / AMP_ERR_CATEGORY_SIZE) * AMP_ERR_CATEGORY_SIZE)
+AMP_DECLARE(char*)
+amp_strerror(amp_status_t statcode, char* buf, apr_size_t bufsize);
 
 
-	AMP_DLL(char*)
-		amp_strerror(apr_status_t statcode, char* buf, apr_size_t bufsize);
-
-#ifdef __cplusplus
-}
-#endif
+AMP_C__END
