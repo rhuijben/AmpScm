@@ -135,19 +135,20 @@ amp_error_clear(amp_error_t *error);
 	/** Set the error location for debug mode. */
 AMP_DECLARE(void)
 amp_error__locate(const char *file,
-				  long line);
+				  long line,
+				  const char *function);
 
 		  /* Wrapper macros to collect file and line information */
 #define amp_error_create \
-  (amp_error__locate(__FILE__,__LINE__), (amp_error_create))
+  (amp_error__locate(__FILE__,__LINE__,__func__), (amp_error_create))
 #define amp_error_createf \
-  (amp_error__locate(__FILE__,__LINE__), (amp_error_createf))
+  (amp_error__locate(__FILE__,__LINE__,__func__), (amp_error_createf))
 #define amp_error_wrap_apr \
-  (amp_error__locate(__FILE__,__LINE__), (amp_error_wrap_apr))
+  (amp_error__locate(__FILE__,__LINE__,__func__), (amp_error_wrap_apr))
 #define amp_error_quick_wrap \
-  (amp_error__locate(__FILE__,__LINE__), (amp_error_quick_wrap))
+  (amp_error__locate(__FILE__,__LINE__,__func__), (amp_error_quick_wrap))
 #define amp_error_quick_wrapf \
-  (amp_error__locate(__FILE__,__LINE__), (amp_error_quick_wrapf))
+  (amp_error__locate(__FILE__,__LINE__,__func__), (amp_error_quick_wrapf))
 #endif
 
 	/** A statement macro for checking error values.
@@ -186,9 +187,9 @@ amp_error__locate(const char *file,
 	  */
 #ifdef AMP_ERR__TRACING
 amp_error_t *
-amp_error__trace(const char *file, long line, amp_error_t *err);
+amp_error__trace(const char *file, long line, const char *function, amp_error_t *err);
 
-#define amp_error_trace(expr)  amp_error__trace(__FILE__, __LINE__, (expr))
+#define amp_error_trace(expr)  amp_error__trace(__FILE__, __LINE__, __FUNCTION__, (expr))
 #else
 #define amp_error_trace(expr)  (expr)
 #endif

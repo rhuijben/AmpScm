@@ -49,26 +49,10 @@ extern "C" {
 	};
 
 	AMP_DECLARE(amp_error_t*)
-		amp_file_open(
-			amp_file_t** new_file,
-			const char* filename,
-			amp_file_open_t open_type,
-			amp_file_share_t stare_type,
-			amp_pool_t* result_pool,
-			amp_pool_t* scratch_pool
-		);
-
-	AMP_DECLARE(amp_error_t*)
 		amp_cstring_to_utf8(
 			const char** result,
 			const char* input,
 			amp_pool_t* result_pool);
-
-	AMP_DECLARE(amp_error_t*)
-		amp_cmdline_printf(amp_pool_t* scratch_pool, const char* fmt, ...);
-
-	AMP_DECLARE(amp_error_t*)
-		amp_cmdline_puts(const char* text, amp_pool_t *scratch_pool);
 	
 #ifdef __cplusplus
 }

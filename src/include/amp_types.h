@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdlib.h>
+#include <wchar.h>
+
 #ifndef AMP_DECLARE
 #define AMP_DECLARE(type) type
 #endif
@@ -123,6 +126,13 @@ typedef struct amp_error_t
 
 typedef struct amp_bucket_t amp_bucket_t;
 typedef long long amp_off_t;
+
+// TODO: Move
+AMP_DECLARE(amp_error_t*)
+amp_utf8_to_wchar(
+	wchar_t** dest,
+	const char* src,
+	amp_pool_t* result_pool);
 
 AMP_C__END
 
