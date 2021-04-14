@@ -120,8 +120,18 @@ amp_palloc_n(
 	size_t count,
 	amp_pool_t* pool)
 {
-	return (T*)amp_palloc(sizeof(T)*count, pool);
+	return (T*)amp_palloc(sizeof(T) * count, pool);
 }
+
+template<typename T>
+inline T*
+amp_pcalloc_n(
+	size_t count,
+	amp_pool_t* pool)
+{
+	return (T*)memset(amp_palloc(sizeof(T) * count, pool), 0, sizeof(T) * count);
+}
+
 
 template<typename T>
 inline T* amp_pcalloc(amp_pool_t* pool)
