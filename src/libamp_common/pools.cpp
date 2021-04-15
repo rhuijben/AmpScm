@@ -1,6 +1,8 @@
 #include <new>
 #include <malloc.h>
+#include <stdio.h>
 
+#include <Windows.h>
 #include "amp_pools.hpp"
 #include "amp_apr.hpp"
 
@@ -122,18 +124,18 @@ amp_pstrcat(
 	...)
 {
 	char *cp, *argp, *res;
-	apr_size_t saved_lengths[MAX_SAVED_LENGTHS];
+	size_t saved_lengths[MAX_SAVED_LENGTHS];
 	int nargs = 0;
 
 	/* Pass one --- find length of required string */
 
-	apr_size_t len = 0;
+	size_t len = 0;
 	va_list args;
 
 	va_start(args, pool);
 
 	while ((cp = va_arg(args, char *)) != NULL) {
-		apr_size_t cplen = strlen(cp);
+		size_t cplen = strlen(cp);
 		if (nargs < MAX_SAVED_LENGTHS) {
 			saved_lengths[nargs++] = cplen;
 		}
@@ -174,7 +176,7 @@ amp_pstrcat(
 }
 
 char *
-amp_pprintf(
+amp_psprintf(
 	amp_pool_t* pool,
 	const char* format,
 	...)
@@ -183,7 +185,7 @@ amp_pprintf(
 	char* r;
 	va_start(args, format);
 
-	r = amp_pvprintf(pool, format, args);
+	r = amp_pvsprintf(pool, format, args);
 
 	va_end(args);
 
@@ -191,7 +193,7 @@ amp_pprintf(
 }
 
 char *
-amp_pvprintf(
+amp_pvsprintf(
 	amp_pool_t* pool,
 	const char* format,
 	va_list args)
@@ -362,7 +364,7 @@ amp_pool::cleanup_kill(const void* data,
 	}
 }
 
-amp_error_t*
+amp_err_t*
 amp_utf8_to_wchar(
 	wchar_t** dest,
 	const char* src,
@@ -380,17 +382,47 @@ amp_utf8_to_wchar(
 	int required = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src, n, nullptr, 0);
 
 	if (required <= 0)
-		return amp_error_create(AMP_ERR_BAD_CHECKSUM_KIND, nullptr, "Can't calculate wide length");
+		return amp_err_create(amp_err_get_os(), nullptr, nullptr);
 
 	wchar_t* buffer = amp_palloc_n<wchar_t>(required + 1, result_pool);
 	buffer[required] = 0;
 
 	if(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src, n, buffer, required+1) != required)
-		return amp_error_create(AMP_ERR_BAD_CHECKSUM_KIND, nullptr, "MultiByteToWideChar failed");
+		return amp_err_create(amp_err_get_os(), nullptr, nullptr);
 
 	*dest = buffer;
 
-	return AMP_SUCCESS;
+	return AMP_NO_ERROR;
+#else
+	return amp_error_create(AMP_ERR_BAD_CHECKSUM_KIND, nullptr, "Not implemented yet");
+#endif
+}
+
+char *
+amp_wchar_to_utf8(
+	const wchar_t *src,
+	amp_pool_t* result_pool)
+{
+#ifdef _WIN32
+	int n = wcslen(src);
+
+	if (n == 0)
+	{
+		return amp_pcalloc_n<char>(1, result_pool);
+	}
+
+	int required = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, src, n, nullptr, 0, nullptr, nullptr);
+
+	if (required <= 0)
+		return amp_pstrdup("<?>", result_pool);
+
+	char* buffer = amp_palloc_n<char>(required + 1, result_pool);
+	buffer[required] = 0;
+
+	if(WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, src, n, buffer, required, nullptr, nullptr) != required)
+		return amp_pstrdup("<?>", result_pool);
+
+	return buffer;
 #else
 	return amp_error_create(AMP_ERR_BAD_CHECKSUM_KIND, nullptr, "Not implemented yet");
 #endif

@@ -17,7 +17,10 @@ namespace amp
 	class amp_bucket : public amp_pool_managed, public amp_bucket_t
 	{
 	public:
-		virtual const char* get_bucket_type();
+		virtual const char* get_bucket_type()
+		{
+			return nullptr;
+		}
 
 		/**
 		 * Read (and consume) up to @a requested bytes from @a bucket.
@@ -28,14 +31,14 @@ namespace amp
 		 * The data will exist until one of two conditions occur:
 		 *
 		 * 1) this bucket is destroyed
-		 * 2) another call to any read function, get_remaining() or to peek()
+		 * 2) another call to any read function, get_remaining(), skip, reset or to peek()
 		 *
 		 * If an application needs the data to exist for a longer duration,
 		 * then it must make a copy.
 		 */
-		virtual amp_error_t* read(
+		virtual amp_err_t* read(
 				amp_span* data,
-				size_t requested,
+				ptrdiff_t requested,
 				amp_pool_t* scratch_pool) = 0;
 
 		/**
@@ -54,13 +57,12 @@ namespace amp
 		 * The lifetime of the data is the same as that of the @see read
 		 * function above.
 		 */
-		virtual amp_error_t* read_line(
-					amp_span * data,
+		virtual amp_err_t* read_until_newline(
+					amp_span* data,
 					amp_newline_t* found,
-					amp_newline_t newline_t,
-					size_t limit,
-					amp_pool_t* scratch_pool
-		);
+					amp_newline_t acceptable,
+					ptrdiff_t requested,
+					amp_pool_t* scratch_pool);
 
 		/**
 		 * Read a set of pointer/length pairs from the bucket.
@@ -78,12 +80,29 @@ namespace amp
 		 * The lifetime of the data is the same as that of the @see read
 		 * function above.
 		 */
-		virtual amp_error_t* read_iovec(
+		virtual amp_err_t* read_iovec(
 				int* vecs_used,
-				size_t requested,
+				ptrdiff_t requested,
 				struct iovec* vecs,
-				int vecs_count
-		);
+				int vecs_count,
+				amp_pool_t *scratch_pool)
+		{
+			AMP_ASSERT(vecs && vecs_count > 0);
+
+			if (vecs_count <= 0)
+			{
+				*vecs_used = 0;
+				return AMP_NO_ERROR;
+			}
+
+			amp_span result;
+			AMP_ERR(read(&result, requested, scratch_pool));
+
+			*vecs_used = 1;
+			vecs[0].iov_base = const_cast<char*>(result.data());
+			vecs[0].iov_len = result.size_bytes();
+			return AMP_NO_ERROR;
+		}
 
 		/**
 		 * Look within @a bucket for a bucket of the given @a type. The bucket
@@ -100,11 +119,14 @@ namespace amp
 		 * The returned bucket becomes the responsibility of the caller. When
 		 * the caller is done with the bucket, it should be destroyed.
 		 */
-		virtual amp_error_t* read_bucket(
+		virtual amp_err_t* read_bucket(
 				amp_bucket_t** result,
 				const char* bucket_type,
-				amp_pool_t* scratch_pool
-		);
+				amp_pool_t* scratch_pool)
+		{
+			*result = nullptr;
+			return AMP_NO_ERROR;
+		}
 
 		/**
 		 * Peek, but don't consume, the data in @a bucket.
@@ -125,24 +147,46 @@ namespace amp
 		 * can return the same data repeatedly rather than blocking; thus,
 		 * APR_EAGAIN will never be returned.
 		 */
-		virtual amp_error_t* peek(
+		virtual amp_err_t* peek(
 				amp_span* data,
 				bool no_poll,
-				amp_pool_t* scratch_pool
-		);
+				amp_pool_t* scratch_pool)
+		{
+			*data = amp_span("", 0);
+			return AMP_NO_ERROR;
+		}
+
+		/**
+		 * @brief Tries to read @a requested bytes, without actually looking at them
+		 * @param skipped 
+		 * @param requested 
+		 * @param scratch_pool 
+		 * @return 
+		*/
+		virtual amp_err_t* read_skip(
+			ptrdiff_t* skipped,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool
+		)
+		{
+			amp_span result;
+
+			AMP_ERR(read(&result, requested, scratch_pool));
+
+			*skipped = result.size_bytes();
+			return AMP_NO_ERROR;
+		}
 
 		/**
 		 * Returns length of remaining data to be read in @a bucket. Returns
 		 * AMP_ERR_NOT_IMPLEMENTED if length is unknown.
-		 * 
-		 * Callers may assume that nothing changes to the stream itself
-		 * if the function returns an error implying that the function
-		 * is not implemented.
 		 */
-		virtual amp_error_t* get_remaining(
+		virtual amp_err_t* read_remaining_bytes(
 				ptrdiff_t* remaining,
-				amp_pool_t* scratch_pool
-		);
+				amp_pool_t* scratch_pool)
+		{
+			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
+		}
 
 		/**
 		 * @brief Resets the bucket to its original location *or* returns
@@ -152,7 +196,10 @@ namespace amp
 		 * if the function returns an error implying that the function
 		 * is not implemented
 		*/
-		virtual amp_error_t* reset(amp_pool_t* scratch_pool);
+		virtual amp_err_t* reset(amp_pool_t* scratch_pool)
+		{
+			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
+		}
 
 		/**
 		 * @brief Duplicates the stream to two streams that will now return
@@ -162,6 +209,9 @@ namespace amp
 		 * if the function returns an error implying that the function
 		 * is not implemented.
 		*/
-		virtual amp_error_t* duplicate(amp_pool_t* scratch_pool);
+		virtual amp_err_t* duplicate(amp_pool_t* scratch_pool)
+		{
+			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
+		}
 	};
 }

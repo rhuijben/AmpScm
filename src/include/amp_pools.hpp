@@ -1,7 +1,6 @@
-#include "amp_types.hpp"
-
 #pragma once
-#include "amp_pools.h"
+
+#include "amp_types.hpp"
 
 struct amp_allocator_t
 {

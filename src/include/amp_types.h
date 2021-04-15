@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 #include <wchar.h>
 
 #ifndef AMP_DECLARE
@@ -9,6 +11,10 @@
 
 #ifndef AMP_DEPRECATED
 #define AMP_DEPRECATED __declspec(deprecated)
+#endif
+
+#ifdef _MSC_VER
+#define __attribute__(...)
 #endif
 
 #ifdef _DEBUG
@@ -51,27 +57,38 @@ typedef struct amp_file_t amp_file_t;
 #endif
 
 /* For amp_errors.h */
-typedef struct amp_error_t amp_error_t;
+typedef struct amp_err_t amp_err_t;
 
 typedef enum amp_newline_t
 {
+	amp_newline_none = 0,
 	amp_newline_lf = 0x01,
 	amp_newline_cr = 0x02,
 	amp_newline_crlf = 0x04,
 
+	amp_newline_crlf_split = 0x10,
+
 	amp_newline_any = amp_newline_lf | amp_newline_cr | amp_newline_crlf
 } amp_newline_t;
 
-typedef amp_error_t* (*amp_error_chain_func_t)(
-		amp_error_t*,
+typedef amp_err_t* (*amp_error_chain_func_t)(
+		amp_err_t*,
 		amp_pool_t* pool);
 
 typedef const char* (*amp_error_message_func_t)(
-	amp_error_t*,
+	amp_err_t*,
 	amp_pool_t* pool);
 
+#ifndef MIN
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
 
-typedef struct amp_error_t
+#ifndef MAX
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
+
+
+typedef struct amp_err_t
 {
 	/** Error value, compatible with the APR status values, but extended to 64 bit
 	*  to allow our error codes in our own range
@@ -95,7 +112,7 @@ typedef struct amp_error_t
 	 * member, individual error object can be strung together into an
 	 * "error chain".
 	 */
-	struct amp_error_t* child;
+	struct amp_err_t* child;
 
 	/** The pool in which this error object is allocated. Freeing this pool
 	* will free the error
@@ -108,6 +125,10 @@ typedef struct amp_error_t
 	const void* chain_producer_baton;
 	amp_error_chain_func_t* chain_producer_func;
 
+	amp_boolean_t is_trace;
+	amp_boolean_t is_composed;
+
+#ifdef AMP_DEBUG
 	/** Source file where the error originated (iff @c AMP_DEBUG;
 	 * undefined otherwise).
 	 */
@@ -118,22 +139,30 @@ typedef struct amp_error_t
 	 */
 	long line;
 
-	amp_boolean_t is_trace;
-	amp_boolean_t is_composed;
+	const char* func;
+#endif
 
-} amp_error_t;
+	/* new items may be added at the end. Use provided constructors */
+
+} amp_err_t;
 
 
 typedef struct amp_bucket_t amp_bucket_t;
 typedef long long amp_off_t;
 
 // TODO: Move
-AMP_DECLARE(amp_error_t*)
+AMP_DECLARE(amp_err_t*)
 amp_utf8_to_wchar(
 	wchar_t** dest,
 	const char* src,
 	amp_pool_t* result_pool);
 
+AMP_DECLARE(char*)
+amp_wchar_to_utf8(
+	const wchar_t* src,
+	amp_pool_t* result_pool);
+
 AMP_C__END
 
 #include "amp_error.h"
+#include "amp_pools.h"

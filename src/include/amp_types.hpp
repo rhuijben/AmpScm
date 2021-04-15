@@ -7,7 +7,10 @@ namespace amp {
 	class amp_destroyable
 	{
 	public:
-		virtual void destroy(amp_pool_t* scratch_pool) {}
+		virtual void destroy(amp_pool_t* scratch_pool) 
+		{
+			AMP_UNUSED(scratch_pool);
+		}
 	};
 
 	class amp_pool_managed : amp_destroyable
@@ -22,8 +25,14 @@ namespace amp {
 			m_pool = pool;
 		}
 
+		void destroy_with_pool();
+		void kill_cleanup();
+
 	public:
-		virtual void destroy(amp_pool_t* scratch_pool) {}
+		virtual void destroy(amp_pool_t* scratch_pool) 
+		{
+			AMP_UNUSED(scratch_pool);
+		}
 
 		amp_pool_t* get_pool() const
 		{
@@ -33,3 +42,7 @@ namespace amp {
 
 
 }
+
+// Same list as amp_types.h does for .h files
+#include "amp_error.hpp"
+#include "amp_pools.hpp"

@@ -82,12 +82,12 @@ AMP_DECLARE(char*) amp_pstrdup(
 	const char* src,
 	amp_pool_t* pool);
 
-AMP_DECLARE(char*) amp_pprintf(
+AMP_DECLARE(char*) amp_psprintf(
 	amp_pool_t* pool,
 	const char* format,
 	...);
 
-AMP_DECLARE(char*) amp_pvprintf(
+AMP_DECLARE(char*) amp_pvsprintf(
 	amp_pool_t* pool,
 	const char* format,
 	va_list args);
