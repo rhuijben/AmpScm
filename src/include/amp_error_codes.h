@@ -25,11 +25,9 @@
 	  a public API. */
 
 
-#include <apr_errno.h>     /* APR's error system */
+#include "amp_errno.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+AMP_C__START
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
@@ -39,14 +37,16 @@ extern "C" {
         static const err_defn error_table[] = { \
           { AMP_WARNING, "AMP_WARNING", "Warning" },
 #define AMP_ERRDEF(num, offset, str) { num, #num, str },
-#define AMP_ERROR_END { (enum amp_errno_t)0, NULL, NULL } };
+#define AMP_ERR_MAPPED(num, str) { (amp_status_t)num, #num, str },
+#define AMP_ERROR_END { (amp_status_t)0, NULL, NULL } };
 
 #elif !defined(AMP_ERROR_ENUM_DEFINED)
 
 #define AMP_ERROR_START \
         typedef enum amp_errno_t { \
-          AMP_WARNING = APR_OS_START_USERERR + 1,
+          AMP_WARNING = AMP_OS_START_USERERR + 1,
 #define AMP_ERRDEF(num, offset, str) /** str */ num = offset,
+#define AMP_ERR_MAPPED(num, str)
 #define AMP_ERROR_END AMP_ERR_LAST } svn_errno_t;
 
 #define AMP_ERROR_ENUM_DEFINED
@@ -54,7 +54,7 @@ extern "C" {
 #endif
 
 	/* Define custom Amp error numbers, in the range reserved for
-	   that in APR: from APR_OS_START_USERERR to APR_OS_START_SYSERR (see
+	   that in APR: from AMP_OS_START_USERERR to AMP_OS_START_SYSERR (see
 	   apr_errno.h).
 
 	   Error numbers are divided into categories of up to 5000 errors
@@ -79,13 +79,13 @@ extern "C" {
 
 	/* Leave one category of room at the beginning, for AMP_WARNING and
 	   any other such beasts we might create in the future. */
-#define AMP_ERR_BAD_CATEGORY_START      (APR_OS_START_USERERR + SVN_ERR_OFFSET\
+#define AMP_ERR_BAD_CATEGORY_START      (AMP_OS_START_USERERR + SVN_ERR_OFFSET\
                                          + ( 1 * AMP_ERR_CATEGORY_SIZE))
-#define AMP_ERR_XML_CATEGORY_START      (APR_OS_START_USERERR + SVN_ERR_OFFSET\
+#define AMP_ERR_XML_CATEGORY_START      (AMP_OS_START_USERERR + SVN_ERR_OFFSET\
                                          + ( 2 * AMP_ERR_CATEGORY_SIZE))
-#define AMP_ERR_IO_CATEGORY_START       (APR_OS_START_USERERR + SVN_ERR_OFFSET\
+#define AMP_ERR_IO_CATEGORY_START       (AMP_OS_START_USERERR + SVN_ERR_OFFSET\
                                          + ( 3 * AMP_ERR_CATEGORY_SIZE))
-#define AMP_ERR_STREAM_CATEGORY_START   (APR_OS_START_USERERR + SVN_ERR_OFFSET\
+#define AMP_ERR_STREAM_CATEGORY_START   (AMP_OS_START_USERERR + SVN_ERR_OFFSET\
                                          + ( 4 * AMP_ERR_CATEGORY_SIZE))
 
 
@@ -182,7 +182,7 @@ extern "C" {
 				   "Unexpected line ending in the property value")
 
 		AMP_ERRDEF(AMP_ERR_NOT_IMPLEMENTED,
-				   AMP_ERR_BAD_CATEGORY_START+18,
+				   AMP_ERR_BAD_CATEGORY_START + 18,
 				   "Not implemented")
 
 		AMP_ERRDEF(AMP_ERR_COMPOSED_ERROR,
@@ -285,6 +285,56 @@ extern "C" {
 				   AMP_ERR_STREAM_CATEGORY_START + 4,
 				   "Stream doesn't support this capability")
 
+		AMP_ERR_MAPPED(AMP_ENOSTAT, "Could not perform a stat on the file.")
+		AMP_ERR_MAPPED(AMP_ENOPOOL, "A new pool could not be created.")
+		AMP_ERR_MAPPED(AMP_EBADDATE, "An invalid date has been provided")
+		AMP_ERR_MAPPED(AMP_EINVALSOCK, "An invalid socket was returned")
+		AMP_ERR_MAPPED(AMP_ENOPROC, "No process was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOTIME, "No time was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENODIR, "No directory was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOLOCK, "No lock was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOPOLL, "No poll structure was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOSOCKET, "No socket was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOTHREAD, "No thread was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOTHDKEY, "No thread key structure was provided and one was required.")
+		AMP_ERR_MAPPED(AMP_ENOSHMAVAIL, "No shared memory is currently available")
+		AMP_ERR_MAPPED(AMP_EDSOOPEN, "DSO load failed")
+		AMP_ERR_MAPPED(AMP_EBADIP, "The specified IP address is invalid.")
+		AMP_ERR_MAPPED(AMP_EBADMASK, "The specified network mask is invalid.")
+		AMP_ERR_MAPPED(AMP_ESYMNOTFOUND, "Could not find the requested symbol.")
+		AMP_ERR_MAPPED(AMP_ENOTENOUGHENTROPY, "Not enough entropy to continue.")
+		AMP_ERR_MAPPED(AMP_INCHILD, "Your code just forked, and you are currently executing in the "
+				"child process")
+		AMP_ERR_MAPPED(AMP_INPARENT, "Your code just forked, and you are currently executing in the "
+				"parent process")
+		AMP_ERR_MAPPED(AMP_DETACH, "The specified thread is detached")
+		AMP_ERR_MAPPED(AMP_NOTDETACH, "The specified thread is not detached")
+		AMP_ERR_MAPPED(AMP_CHILD_DONE, "The specified child process is done executing")
+		AMP_ERR_MAPPED(AMP_CHILD_NOTDONE, "The specified child process is not done executing")
+		AMP_ERR_MAPPED(AMP_TIMEUP, "The timeout specified has expired")
+		AMP_ERR_MAPPED(AMP_INCOMPLETE, "Partial results are valid but processing is incomplete")
+		AMP_ERR_MAPPED(AMP_BADCH, "Bad character specified on command line")
+		AMP_ERR_MAPPED(AMP_BADARG, "Missing parameter for the specified command line option")
+		AMP_ERR_MAPPED(AMP_EOF, "End of file found")
+		AMP_ERR_MAPPED(AMP_NOTFOUND, "Could not find specified socket in poll list.")
+		AMP_ERR_MAPPED(AMP_ANONYMOUS, "Shared memory is implemented anonymously")
+		AMP_ERR_MAPPED(AMP_FILEBASED, "Shared memory is implemented using files")
+		AMP_ERR_MAPPED(AMP_KEYBASED, "Shared memory is implemented using a key system")
+		AMP_ERR_MAPPED(AMP_EINIT, "There is no error, this value signifies an initialized "
+				"error code")
+		AMP_ERR_MAPPED(AMP_ENOTIMPL, "This function has not been implemented on this platform")
+		AMP_ERR_MAPPED(AMP_EMISMATCH, "passwords do not match")
+		AMP_ERR_MAPPED(AMP_EABSOLUTE, "The given path is absolute")
+		AMP_ERR_MAPPED(AMP_ERELATIVE, "The given path is relative")
+		AMP_ERR_MAPPED(AMP_EINCOMPLETE, "The given path is incomplete")
+		AMP_ERR_MAPPED(AMP_EABOVEROOT, "The given path was above the root path")
+		AMP_ERR_MAPPED(AMP_EBADPATH, "The given path is misformatted or contained invalid characters")
+		AMP_ERR_MAPPED(AMP_EPATHWILD, "The given path contained wildcard characters")
+		AMP_ERR_MAPPED(AMP_EBUSY, "The given lock was busy.")
+		AMP_ERR_MAPPED(AMP_EPROC_UNKNOWN, "The process is not recognized.")
+		AMP_ERR_MAPPED(AMP_EGENERAL, "Internal error (specific information not available)")
+
+
 		AMP_ERROR_END
 
 
@@ -292,8 +342,6 @@ extern "C" {
 #undef AMP_ERRDEF
 #undef AMP_ERROR_END
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+AMP_C__END
 
 #endif /* defined(AMP_ERROR_BUILD_ARRAY) || !defined(AMP_ERROR_ENUM_DEFINED) */

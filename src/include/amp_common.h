@@ -26,29 +26,8 @@
 extern "C" {
 #endif
 
-#define AMP_SUCCESS 0	
 
-	typedef enum amp_file_open_t
-	{
-		amp_open_read = 1,//APR_FOPEN_READ,
-		amp_open_write = 2,//APR_FOPEN_WRITE,
-		amp_open_create = 4,//APR_FOPEN_CREATE,
-		amp_open_append = 8,//APR_FOPEN_APPEND,
-		amp_open_truncate = 16,//APR_FOPEN_TRUNCATE,
-
-		amp_open_excl = 32,
-		amp_open_buffered = 64,
-
-		amp_open_no_cleanup = 128,
-		amp_open_del_on_close = 256
-	} amp_file_open_t;
-
-	enum amp_file_share_t
-	{
-		amp_share_none = 0x00,
-	};
-
-	AMP_DECLARE(amp_error_t*)
+	AMP_DECLARE(amp_err_t*)
 		amp_cstring_to_utf8(
 			const char** result,
 			const char* input,

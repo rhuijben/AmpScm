@@ -92,10 +92,9 @@ amp_allocator::realloc(void* data, size_t new_size)
 
 	size_t size = new_size + sizeof(allocation_t);
 
-	void* nw;
 	if (m_realloc_func)
 	{
-		nw = m_realloc_func(data, new_size, t->size + sizeof(allocation_t));
+		void* nw = m_realloc_func(data, new_size, t->size + sizeof(allocation_t));
 
 		if (!nw)
 			return nullptr;
