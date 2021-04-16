@@ -101,6 +101,17 @@ amp_allocator::realloc(void* data, size_t new_size)
 			return nullptr;
 
 		t = reinterpret_cast<allocation_t*>(nw);
+
+
+		if (t->prev)
+			t->prev->next = t;
+		else
+			first = t;
+
+		if (t->next)
+			t->next->prev = t;
+		else
+			last = t;
 	}
 	else
 	{
@@ -113,19 +124,19 @@ amp_allocator::realloc(void* data, size_t new_size)
 		t = reinterpret_cast<allocation_t*>(nw);
 
 		(*m_free_func)(data);
+
+		t->size = new_size;
+
+		if (t->prev)
+			t->prev->next = t;
+		else
+			first = t;
+
+		if (t->next)
+			t->next->prev = t;
+		else
+			last = t;
 	}
-
-	t->size = new_size;
-
-	if (t->prev)
-		t->prev->next = t;
-	else
-		first = t;
-
-	if (t->next)
-		t->next->prev = t;
-	else
-		last = t;
 
 	return &t[1];
 }
