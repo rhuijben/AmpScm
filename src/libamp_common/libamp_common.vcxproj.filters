@@ -83,13 +83,16 @@
     <ClCompile Include="allocators.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="file_io.cpp">
+    <ClCompile Include="files.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="buckets\bucket_files.cpp">
+    <ClCompile Include="buckets\bucket_type_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="buckets\bucket_type_aggregate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -150,7 +150,7 @@ namespace amp
 		 */
 		virtual amp_err_t* read_bucket(
 				amp_bucket_t** result,
-				const char* bucket_type,
+				const amp_bucket_type_t* bucket_type,
 				amp_pool_t* scratch_pool)
 		{
 			AMP_UNUSED(scratch_pool);
@@ -319,6 +319,72 @@ namespace amp
 
 	public:
 		virtual void destroy(amp_pool_t* pool) override;
+	};
+
+	class amp_bucket_aggregate final : public amp_bucket
+	{
+	private:
+		struct bucket_list_t
+		{
+			struct bucket_list_t* prev;
+			struct bucket_list_t* next;
+			amp_bucket_t* bucket;
+		};
+
+		bucket_list_t* first;
+		bucket_list_t* last;
+		bucket_list_t* cur;
+		bool keep_open;
+	public:
+		amp_bucket_aggregate(bool keep_open, amp_allocator_t* allocator);
+
+		void append(amp_bucket_t* bucket);
+		void prepend(amp_bucket_t* bucket);
+
+		virtual void destroy(amp_pool_t* scratch_pool) override;
+	public:
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_until_eol(
+			amp_span* data,
+			amp_newline_t* found,
+			amp_newline_t acceptable,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_iovec(
+			int* vecs_used,
+			ptrdiff_t requested,
+			struct iovec* vecs,
+			int vecs_count,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_bucket(
+			amp_bucket_t** result,
+			const amp_bucket_type_t* bucket_type,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* peek(
+			amp_span* data,
+			bool no_poll,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_skip(
+			amp_off_t* skipped,
+			amp_off_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_remaining_bytes(
+				amp_off_t* remaining,
+				amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* reset(
+				amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* duplicate(amp_pool_t* scratch_pool) override;
 	};
 }
 
