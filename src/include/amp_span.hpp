@@ -131,6 +131,12 @@ namespace amp
 
 			return m_data[idx];
 		}
+
+	public:
+		constexpr operator span<const T>() const noexcept
+		{
+			return span<const T>(data(), size());
+		}
 	};
 
 	typedef span<const char> amp_span;

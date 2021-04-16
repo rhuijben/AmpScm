@@ -102,6 +102,8 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\..\..\vcpkg\installed\x86-windows-static-md\include</AdditionalIncludeDirectories>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <DisableSpecificWarnings>5105</DisableSpecificWarnings>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -146,6 +148,8 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\..\..\vcpkg\installed\x64-windows-static-md\include</AdditionalIncludeDirectories>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <DisableSpecificWarnings>5105</DisableSpecificWarnings>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -167,6 +171,8 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\..\..\vcpkg\installed\x64-windows-static-md\include</AdditionalIncludeDirectories>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <DisableSpecificWarnings>5105</DisableSpecificWarnings>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -196,11 +202,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="allocators.cpp" />
-    <ClCompile Include="bucket.cpp" />
+    <ClCompile Include="buckets.cpp" />
+    <ClCompile Include="buckets\bucket_files.cpp" />
     <ClCompile Include="common.cpp" />
     <ClCompile Include="error.cpp" />
-    <ClCompile Include="Files.cpp" />
-    <ClCompile Include="io.cpp" />
+    <ClCompile Include="file_io.cpp" />
     <ClCompile Include="libamp_common.cpp" />
     <ClCompile Include="pools.cpp" />
     <ClCompile Include="Types.cpp" />

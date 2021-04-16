@@ -3,3 +3,7 @@
 // For more information see https://go.microsoft.com/fwlink/?linkid=865984
 #define AMP_DECLARE(type) type
 
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define AMP__PUBLIC_ACCESSOR_DECLARE(type) private: class amp::type * get_accessor(); public: class amp::type * operator->() { return get_accessor(); }

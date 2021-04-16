@@ -240,16 +240,48 @@ amp_pool::amp_pool(amp_pool_t* parent_pool)
 	amp_pool_cleanup_register(parent_pool, static_cast<amp_pool_t*>(this), cleanup_subpool, cleanup_subpool);
 }
 
+inline constexpr size_t align_bytes(size_t left, size_t bytes)
+{
+	if (!(left & (sizeof(void*) -1))) // If left is ptr aligned, we are ok.
+		return bytes;
+
+	if (!(bytes & sizeof(void*) - 1)) // If bytes is exactly pointer multiple we must fix alignment
+		return bytes + (left & (sizeof(void*) - 1));
+
+	// Align to smaller sizes if needed
+	if (!(bytes & 1))
+	{
+		if (!(bytes & 2))
+		{
+			// ptr alignment is already handled, so this case should only happen on 64 bit
+			return bytes + (left & (4 - 1));
+		}
+		else
+			return bytes + (left & (2 - 1));
+	}
+	return bytes;
+}
+
+inline constexpr bool space_avail(amp_pool_t::page_t* page, size_t bytes)
+{
+	if (!page)
+		return false;
+
+	size_t left = page->data_left;
+
+	return left >= align_bytes(left, bytes);
+}
+
 void*
 amp_pool::alloc(size_t bytes)
 {
 	AMP_ASSERT(bytes >= 0);
 
-	if (!m_first_page || m_first_page->data_left < bytes)
+	if (!m_first_page || align_bytes(m_first_page->data_left, bytes) > m_first_page->data_left)
 	{
 		size_t alloc = max(bytes, 65536);
 
-		alloc = (alloc + 15) & ~0xF;
+		alloc = (alloc + 0xF) & ~0xF; // round to 16 bytes
 
 		page_t* p = (page_t*)amp_allocator_alloc(sizeof(*p) + alloc, m_allocator);
 		memset(p, 0, sizeof(*p));
@@ -260,8 +292,10 @@ amp_pool::alloc(size_t bytes)
 		m_first_page = p;
 	}
 
-	AMP_ASSERT(bytes <= m_first_page->data_left);
-	m_first_page->data_left -= bytes;
+	size_t alloc_bytes = align_bytes(m_first_page->data_left, bytes);
+	AMP_ASSERT(alloc_bytes <= m_first_page->data_left && alloc_bytes >= bytes);
+
+	m_first_page->data_left -= alloc_bytes;
 	return reinterpret_cast<char*>(&m_first_page[1]) + m_first_page->data_left;	
 }
 

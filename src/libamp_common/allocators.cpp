@@ -61,6 +61,7 @@ amp_allocator::alloc(size_t size)
 		last->next = t;
 	else
 		first = t;	
+	last = t;
 
 	return &t[1];
 }

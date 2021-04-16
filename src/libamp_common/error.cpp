@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <Windows.h>
 
+using namespace amp;
+
 const char*
 amp_err_symbolic_name(amp_status_t statcode);
 
