@@ -1,25 +1,54 @@
 #pragma once
+#include <stdint.h>
 #include <assert.h>
 
 #include "amp_types.hpp"
 #include "amp_span.hpp"
 #include "amp_buckets.h"
 
+namespace amp {
+	class amp_bucket;
+}
+
 struct amp_bucket_t
 {
+	struct amp_bucket_type_t
+	{
 
+	};
+
+protected:
+	const amp_bucket_type_t* type;
+	amp_allocator_t* allocator;
+
+	AMP__PUBLIC_ACCESSOR_DECLARE(amp_bucket)
 };
 
 namespace amp
 {
-	
 
-	class amp_bucket : public amp_pool_managed, public amp_bucket_t
+	class amp_bucket : public amp_bucket_t
 	{
-	public:
-		virtual const char* get_bucket_type()
+	protected:
+		amp_bucket(const amp_bucket_type_t* bucket_type, amp_allocator_t *bucket_allocator)
 		{
-			return nullptr;
+			AMP_ASSERT(bucket_type && bucket_allocator);
+
+			type = bucket_type;
+			allocator = bucket_allocator;
+		}
+
+	public:
+		virtual void destroy(amp_pool_t* scratch_pool)
+		{
+			AMP_UNUSED(scratch_pool);
+			amp_allocator_free(this, allocator);
+		}
+
+	public:
+		constexpr const amp_bucket_type_t* get_bucket_type() const
+		{
+			return type;
 		}
 
 		/**
@@ -57,7 +86,7 @@ namespace amp
 		 * The lifetime of the data is the same as that of the @see read
 		 * function above.
 		 */
-		virtual amp_err_t* read_until_newline(
+		virtual amp_err_t* read_until_eol(
 					amp_span* data,
 					amp_newline_t* found,
 					amp_newline_t acceptable,
@@ -85,7 +114,7 @@ namespace amp
 				ptrdiff_t requested,
 				struct iovec* vecs,
 				int vecs_count,
-				amp_pool_t *scratch_pool)
+				amp_pool_t* scratch_pool)
 		{
 			AMP_ASSERT(vecs && vecs_count > 0);
 
@@ -124,6 +153,9 @@ namespace amp
 				const char* bucket_type,
 				amp_pool_t* scratch_pool)
 		{
+			AMP_UNUSED(scratch_pool);
+			AMP_UNUSED(bucket_type);
+
 			*result = nullptr;
 			return AMP_NO_ERROR;
 		}
@@ -152,26 +184,32 @@ namespace amp
 				bool no_poll,
 				amp_pool_t* scratch_pool)
 		{
+			AMP_UNUSED(scratch_pool);
+			AMP_UNUSED(no_poll);
+
 			*data = amp_span("", 0);
 			return AMP_NO_ERROR;
 		}
 
 		/**
 		 * @brief Tries to read @a requested bytes, without actually looking at them
-		 * @param skipped 
-		 * @param requested 
-		 * @param scratch_pool 
-		 * @return 
+		 * @param skipped
+		 * @param requested
+		 * @param scratch_pool
+		 * @return
 		*/
 		virtual amp_err_t* read_skip(
-			ptrdiff_t* skipped,
-			ptrdiff_t requested,
+			amp_off_t* skipped,
+			amp_off_t requested,
 			amp_pool_t* scratch_pool
 		)
 		{
 			amp_span result;
 
-			AMP_ERR(read(&result, requested, scratch_pool));
+			if (requested > INTPTR_MAX)
+				requested = INTPTR_MAX;
+
+			AMP_ERR(read(&result, (ptrdiff_t)requested, scratch_pool));
 
 			*skipped = result.size_bytes();
 			return AMP_NO_ERROR;
@@ -181,37 +219,107 @@ namespace amp
 		 * Returns length of remaining data to be read in @a bucket. Returns
 		 * AMP_ERR_NOT_IMPLEMENTED if length is unknown.
 		 */
-		virtual amp_err_t* read_remaining_bytes(
-				ptrdiff_t* remaining,
-				amp_pool_t* scratch_pool)
+		virtual amp_err_t*
+			read_remaining_bytes(
+					amp_off_t* remaining,
+					amp_pool_t* scratch_pool)
 		{
+			AMP_UNUSED(scratch_pool);
+			*remaining = -1;
+
 			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
 		}
 
 		/**
 		 * @brief Resets the bucket to its original location *or* returns
 		 * an error.
-		 * 
+		 *
 		 * Callers may assume that nothing changes to the stream itself
 		 * if the function returns an error implying that the function
 		 * is not implemented
 		*/
 		virtual amp_err_t* reset(amp_pool_t* scratch_pool)
 		{
+			AMP_UNUSED(scratch_pool);
+
 			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
 		}
 
 		/**
 		 * @brief Duplicates the stream to two streams that will now return
 		 * the same data. Will fail if the stream doesn't support this natively
-		 * 
+		 *
 		 * Callers may assume that nothing changes to the stream itself
 		 * if the function returns an error implying that the function
 		 * is not implemented.
 		*/
 		virtual amp_err_t* duplicate(amp_pool_t* scratch_pool)
 		{
+			AMP_UNUSED(scratch_pool);
+
 			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
 		}
+
+	public:
+		class amp_bucket_type final : public amp_bucket_type_t
+		{
+			const char* name;
+		public:
+			amp_bucket_type(const char *type_name)
+			{
+				AMP_ASSERT(type_name);
+				name = type_name;
+			}
+		};
+	};
+
+
+	class amp_bucket_file final : public amp_bucket
+	{
+	private:
+		amp_file_t* file;
+		amp_off_t file_remaining;
+		ptrdiff_t available;
+		ptrdiff_t position;
+		span<char> buffer;
+
+	private:
+		amp_err_t* refill(ptrdiff_t requested);
+	public:
+		amp_bucket_file(amp_file_t* file, amp_allocator_t* bucket_allocator);
+
+	public:
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_until_eol(
+			amp_span* data,
+			amp_newline_t* found,
+			amp_newline_t acceptable,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* peek(
+			amp_span* data,
+			bool no_poll,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* reset(amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_skip(
+			amp_off_t* skipped,
+			amp_off_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_remaining_bytes(
+				amp_off_t* remaining,
+				amp_pool_t* scratch_pool) override;
+
+	public:
+		virtual void destroy(amp_pool_t* pool) override;
 	};
 }
+
+AMP__PUBLIC_ACCESSOR_INPLEMENT(amp_bucket)

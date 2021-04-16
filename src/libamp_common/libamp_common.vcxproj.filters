@@ -68,7 +68,7 @@
     <ClCompile Include="libamp_common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bucket.cpp">
+    <ClCompile Include="buckets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="common.cpp">
@@ -77,19 +77,19 @@
     <ClCompile Include="error.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="io.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="allocators.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Files.cpp">
+    <ClCompile Include="file_io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="buckets\bucket_files.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

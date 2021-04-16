@@ -34,6 +34,11 @@
 #include "amp_files.h"
 #include "amp_span.hpp"
 
+namespace amp
+{
+	class amp_file;
+	class amp_file_handle;
+}
 
 struct amp_file_handle_t
 {
@@ -41,16 +46,20 @@ protected:
 	std::atomic_int32_t user_count;
 
 #ifdef _WIN32
-	HANDLE file_handle;	
+	HANDLE file_handle;
 #else
 	int file_descriptor;
 #endif	
+
+	AMP__PUBLIC_ACCESSOR_DECLARE(amp_file_handle)
 };
 
 struct amp_file_t
 {
 protected:
 	amp_file_handle_t* file_handle;
+
+	AMP__PUBLIC_ACCESSOR_DECLARE(amp_file)
 };
 
 namespace amp
@@ -79,11 +88,11 @@ namespace amp
 		amp_err_t* explicit_destroy();
 
 	public:
-		amp_err_t* read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer);
-		amp_err_t* get_current_size(amp_off_t *size);
-		amp_err_t* write(amp_off_t offset, amp_span data);
-		amp_err_t* truncate(amp_off_t offset);
-		amp_err_t* flush(bool force_to_disk);
+		amp_err_t* read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer) noexcept;
+		amp_err_t* get_current_size(amp_off_t* size) noexcept;
+		amp_err_t* write_full(amp_off_t offset, amp_span data) noexcept;
+		amp_err_t* truncate(amp_off_t offset) noexcept;
+		amp_err_t* flush(bool force_to_disk) noexcept;
 	};
 
 	class amp_file : public amp_file_t, amp_pool_managed
@@ -91,10 +100,10 @@ namespace amp
 	private:
 		amp_off_t position;
 	public:
-		amp_file(amp_file_handle_t* handle, amp_pool_t *pool)
+		amp_file(amp_file_handle_t* handle, amp_pool_t* pool)
 			: amp_pool_managed(pool)
 		{
-			file_handle = static_cast<amp_file_handle*>(handle)->add_ref();
+			file_handle = (*handle)->add_ref();
 			position = 0;
 
 			destroy_with_pool();
@@ -105,56 +114,57 @@ namespace amp
 			destroy(nullptr);
 		}
 
-		virtual void destroy(amp_pool_t *) override
+		virtual void destroy(amp_pool_t*) override
 		{
-			auto r = static_cast<amp_file_handle*>(file_handle);
+			auto r = file_handle;
 			file_handle = nullptr;
 
 			if (r)
-				r->destroy();
+				(*r)->destroy();
 		}
 
 	public:
-		amp_err_t* read(ptrdiff_t* bytes_read, span<char> buffer)
+		amp_err_t* read(ptrdiff_t* bytes_read, span<char> buffer) noexcept
 		{
 			ptrdiff_t b_read;
 
-			AMP_ERR(static_cast<amp_file_handle*>(file_handle)->read(&b_read, position, buffer));
+			AMP_ERR((*file_handle)->read(&b_read, position, buffer));
 
 			position += b_read;
 			*bytes_read = b_read;
 			return AMP_NO_ERROR;
 		}
 
-		amp_err_t* get_current_size(amp_off_t *size)
+		amp_err_t* get_current_size(amp_off_t* size) noexcept
 		{
-			return amp_err_trace(
-				static_cast<amp_file_handle*>(file_handle)->get_current_size(size)
-				);
+			return amp_err_trace((*file_handle)->get_current_size(size));
 		}
 
-		amp_off_t get_current_position()
+		constexpr amp_off_t get_current_position() const noexcept
 		{
 			return position;
 		}
 
-		amp_err_t* write(amp_span buffer)
+		amp_err_t* write_full(amp_span buffer) noexcept
 		{
-			AMP_ERR(static_cast<amp_file_handle*>(file_handle)->write(position, buffer));
+			AMP_ERR((*file_handle)->write_full(position, buffer));
 
 			position += buffer.size_bytes();
 			return AMP_NO_ERROR;
 		}
 
-		amp_err_t* truncate()
+		amp_err_t* truncate() noexcept
 		{
-			return amp_err_trace(static_cast<amp_file_handle*>(file_handle)->truncate(position));
+			return amp_err_trace((*file_handle)->truncate(position));
 		}
 
-		amp_err_t* seek(amp_off_t offset)
+		amp_err_t* seek(amp_off_t offset) noexcept
 		{
 			if (offset == 0)
+			{
 				position = 0;
+				return AMP_NO_ERROR;
+			}
 
 			amp_off_t sz;
 			AMP_ERR(get_current_size(&sz));
@@ -162,25 +172,41 @@ namespace amp
 			if (offset <= sz)
 				position = offset;
 			else
-				return amp_err_create(AMP_BADARG, nullptr, "Offset behind file");
+				return amp_err_create(AMP_EOF, nullptr, "Offset behind file");
 
 			return AMP_NO_ERROR;
 		}
 
-		amp_err_t* close()
+		amp_err_t* close() noexcept
 		{
-			auto r = static_cast<amp_file_handle*>(file_handle);
+			auto r = file_handle;
 			file_handle = nullptr;
 
 			if (r)
-				return amp_err_trace(r->explicit_destroy());
+				return amp_err_trace((*r)->explicit_destroy());
 
 			return AMP_NO_ERROR;
 		}
 
-		amp_err_t* flush(bool force_to_disk)
+		amp_err_t* flush(bool force_to_disk) noexcept
 		{
-			return amp_err_trace(static_cast<amp_file_handle*>(file_handle)->flush(force_to_disk));
+			return amp_err_trace((*file_handle)->flush(force_to_disk));
+		}
+
+		amp_file_t* duplicate(amp_pool_t* pool)
+		{
+			return AMP_POOL_NEW(amp_file, pool, file_handle, pool);
 		}
 	};
+
+	inline amp_err_t*
+		amp_file_read(ptrdiff_t* bytes_read, amp_file_t* file, span<char> buffer)
+	{
+		return (*file)->read(bytes_read, buffer);
+	}
+
+
 }
+
+AMP__PUBLIC_ACCESSOR_INPLEMENT(amp_file)
+AMP__PUBLIC_ACCESSOR_INPLEMENT(amp_file_handle)

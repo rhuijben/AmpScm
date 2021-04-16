@@ -2,6 +2,12 @@
 
 #include "amp_types.hpp"
 
+namespace amp
+{
+	class amp_allocator;
+	class amp_pool;
+}
+
 struct amp_allocator_t
 {
 	struct allocation_t
@@ -16,6 +22,8 @@ protected:
 	amp_allocator_free_func_t m_free_func;
 	amp_allocator_realloc_func_t m_realloc_func;
 	amp_allocator_abort_func_t m_abort_func;
+
+	AMP__PUBLIC_ACCESSOR_DECLARE(amp_allocator)
 };
 
 struct amp_pool_t
@@ -41,6 +49,8 @@ protected:
 	page_t* m_first_page;
 	cleanup_t* m_first_cleanup;
 	bool m_owns_allocator;
+
+	AMP__PUBLIC_ACCESSOR_DECLARE(amp_pool)
 };
 
 namespace amp {
@@ -105,45 +115,55 @@ namespace amp {
 			return m_allocator;
 		}
 	};
+
+
+	template<typename T>
+	inline T* amp_palloc(amp_pool_t* pool)
+	{
+		return (T*)amp_palloc(sizeof(T), pool);
+	}
+
+	template<typename T>
+	inline T*
+		amp_palloc_n(
+			size_t count,
+			amp_pool_t* pool)
+	{
+		return (T*)amp_palloc(sizeof(T) * count, pool);
+	}
+
+	template<typename T>
+	inline T*
+		amp_pcalloc_n(
+			size_t count,
+			amp_pool_t* pool)
+	{
+		return (T*)memset(amp_palloc(sizeof(T) * count, pool), 0, sizeof(T) * count);
+	}
+
+
+	template<typename T>
+	inline T* amp_pcalloc(amp_pool_t* pool)
+	{
+		return (T*)amp_pcalloc(sizeof(T), pool);
+	}
+
+	template<typename T>
+	inline T* amp_allocator_alloc(amp_allocator_t* allocator)
+	{
+		return (T*)amp_allocator_alloc(sizeof(T), allocator);
+	}
+
+	template<typename T>
+	inline T* amp_allocator_alloc_n(size_t count, amp_allocator_t* allocator)
+	{
+		return (T*)amp_allocator_alloc(sizeof(T) * count, allocator);
+	}
+
+
+#define AMP_POOL_NEW(type, pool, ...) new (amp::amp_palloc<type>(pool)) type(__VA_ARGS__)
+#define AMP_ALLOCATOR_NEW(type, allocator, ...) new (amp::amp_allocator_alloc<type>(allocator)) type(__VA_ARGS__)	
 }
 
-template<typename T>
-inline T* amp_palloc(amp_pool_t* pool)
-{
-	return (T*)amp_palloc(sizeof(T), pool);
-}
-
-template<typename T>
-inline T*
-amp_palloc_n(
-	size_t count,
-	amp_pool_t* pool)
-{
-	return (T*)amp_palloc(sizeof(T) * count, pool);
-}
-
-template<typename T>
-inline T*
-amp_pcalloc_n(
-	size_t count,
-	amp_pool_t* pool)
-{
-	return (T*)memset(amp_palloc(sizeof(T) * count, pool), 0, sizeof(T) * count);
-}
-
-
-template<typename T>
-inline T* amp_pcalloc(amp_pool_t* pool)
-{
-	return (T*)amp_pcalloc(sizeof(T), pool);
-}
-
-template<typename T>
-inline T* amp_allocator_alloc(amp_allocator_t* allocator)
-{
-	return (T*)amp_allocator_alloc(sizeof(T), allocator);
-}
-
-
-#define AMP_POOL_NEW(type, pool, ...) new (amp_palloc<type>(pool)) type(__VA_ARGS__)
-
+AMP__PUBLIC_ACCESSOR_INPLEMENT(amp_allocator)
+AMP__PUBLIC_ACCESSOR_INPLEMENT(amp_pool)

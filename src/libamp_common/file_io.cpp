@@ -108,7 +108,7 @@ amp_file_read(
 {
 	ptrdiff_t bytesRead;
 	
-	AMP_ERR(static_cast<amp_file*>(file)->read(&bytesRead, amp::span<char>(reinterpret_cast<char*>(buffer), buffer_size)));
+	AMP_ERR((*file)->read(&bytesRead, amp::span<char>(reinterpret_cast<char*>(buffer), buffer_size)));
 
 	*bytes_read = bytesRead;
 
@@ -121,8 +121,7 @@ amp_file_write(
 	const char* buffer,
 	size_t bytes)
 {
-	return amp_err_trace(
-		static_cast<amp_file*>(file)->write(amp_span(buffer, bytes)));
+	return amp_err_trace((*file)->write_full(amp_span(buffer, bytes)));
 }
 
 amp_err_t*
@@ -130,8 +129,7 @@ amp_file_seek(
 	amp_file_t* file,
 	amp_off_t offset)
 {
-	return amp_err_trace(
-		static_cast<amp_file*>(file)->seek(offset));
+	return amp_err_trace((*file)->seek(offset));
 }
 
 amp_err_t*
@@ -139,8 +137,7 @@ amp_file_get_size(
 	amp_off_t* size,
 	amp_file_t* file)
 {
-	return amp_err_trace(
-		static_cast<amp_file*>(file)->get_current_size(size));
+	return amp_err_trace((*file)->get_current_size(size));
 }
 
 amp_off_t
@@ -191,7 +188,7 @@ amp_err_t *amp_file_handle::explicit_destroy()
 }
 
 amp_err_t*
-amp_file_handle::read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer)
+amp_file_handle::read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer) noexcept
 {
 #ifdef _WIN32
 	OVERLAPPED overlapped = {};
@@ -223,7 +220,7 @@ amp_file_handle::read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer
 }
 
 amp_err_t *
-amp_file_handle::get_current_size(amp_off_t *size)
+amp_file_handle::get_current_size(amp_off_t *size) noexcept
 {
 #ifdef _WIN32
 	LARGE_INTEGER r;
@@ -246,7 +243,7 @@ amp_file_handle::get_current_size(amp_off_t *size)
 }
 
 amp_err_t*
-amp_file_handle::write(amp_off_t offset, amp_span buffer)
+amp_file_handle::write_full(amp_off_t offset, amp_span buffer) noexcept
 {
 #ifdef _WIN32
 	OVERLAPPED overlapped = {};
@@ -275,8 +272,9 @@ amp_file_handle::write(amp_off_t offset, amp_span buffer)
 	return AMP_NO_ERROR;
 #endif
 }
+
 amp_err_t* 
-amp_file_handle::truncate(amp_off_t offset)
+amp_file_handle::truncate(amp_off_t offset) noexcept
 {
 #ifdef _WIN32
 	LARGE_INTEGER pos;
@@ -298,7 +296,7 @@ amp_file_handle::truncate(amp_off_t offset)
 }
 
 amp_err_t* 
-amp_file_handle::flush(bool force_to_disk)
+amp_file_handle::flush(bool force_to_disk) noexcept
 {
 #ifdef _WIN32
 	if (force_to_disk)
@@ -313,13 +311,13 @@ amp_file_handle::flush(bool force_to_disk)
 #else
 	if (force_to_disk)
 	{
-		// TODO
-		// Need some ioctls. See sqlite / Subversion
+		if (!fsync(file_descriptor))
+			return amp_err_create(amp_err_get_os(), nullptr, nullptr);
 	}
 	else
 	{
-		// TODO
-		// fflush like
+		if (!fdatasync(file_descriptor))
+			return amp_err_create(amp_err_get_os(), nullptr, nullptr);
 	}
 #endif
 	return AMP_NO_ERROR;

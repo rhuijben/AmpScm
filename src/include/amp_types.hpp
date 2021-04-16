@@ -39,9 +39,16 @@ namespace amp {
 			return m_pool;
 		}
 	};
-
-
 }
+
+#define AMP__PUBLIC_ACCESSOR_DECLARE(type)				\
+	private:											\
+		class amp::type * get_accessor() noexcept;		\
+	public:												\
+		class amp::type * operator->() noexcept { return get_accessor(); }	
+
+#define AMP__PUBLIC_ACCESSOR_INPLEMENT(type)	\
+	inline amp::type * type ## _t::get_accessor() noexcept { return static_cast<amp::type*>(this); }
 
 // Same list as amp_types.h does for .h files
 #include "amp_error.hpp"

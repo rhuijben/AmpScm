@@ -1,24 +1,10 @@
 /** AmpSCM error code definition
  *
- * AmpScm error numbers are designed to contain both APR and OS error numbers on Windows and *nix,
+ * AmpScm error numbers are designed to contain both AMP and OS error numbers on Windows and *nix,
  * while having space for other error ranges.
  */
 
- /* Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/* Explicitly defined to be compatible with the Apache AMP error coded! */
 
 #pragma once
 #include "amp_types.h"
@@ -35,12 +21,11 @@ AMP_C__START
 
 /**
 * @defgroup amp_errno Error Codes
-* @ingroup APR
 * @{
 */
 
 /**
-* AMP_OS_START_ERROR is where the APR specific error values start.
+* AMP_OS_START_ERROR is where the AMP specific error values start.
 */
 #define AMP_OS_START_ERROR     20000
 /**
@@ -50,27 +35,18 @@ AMP_C__START
 */
 #define AMP_OS_ERRSPACE_SIZE 50000
 /**
-* AMP_UTIL_ERRSPACE_SIZE is the size of the space that is reserved for
-* use within apr-util. This space is reserved above that used by APR
-* internally.
-* @note This number MUST be smaller than AMP_OS_ERRSPACE_SIZE by a
-*       large enough amount that APR has sufficient room for its
-*       codes.
-*/
-#define AMP_UTIL_ERRSPACE_SIZE 20000
-/**
-* AMP_OS_START_STATUS is where the APR specific status codes start.
+* AMP_OS_START_STATUS is where the AMP specific status codes start.
 */
 #define AMP_OS_START_STATUS    (AMP_OS_START_ERROR + AMP_OS_ERRSPACE_SIZE)
 /**
-* AMP_UTIL_START_STATUS is where APR-Util starts defining its
+* AMP_UTIL_START_STATUS is where AMP-Util starts defining its
 * status codes.
 */
 #define AMP_UTIL_START_STATUS   (AMP_OS_START_STATUS + \
                            (AMP_OS_ERRSPACE_SIZE - AMP_UTIL_ERRSPACE_SIZE))
 /**
-* AMP_OS_START_USERERR are reserved for applications that use APR that
-*     layer their own error codes along with APR's.  Note that the
+* AMP_OS_START_USERERR are reserved for applications that use AMP that
+*     layer their own error codes along with AMP's.  Note that the
 *     error immediately following this one is set ten times farther
 *     away than usual, so that users of apr have a lot of room in
 *     which to declare custom error codes.
@@ -96,7 +72,7 @@ AMP_C__START
 */
 #define AMP_OS_START_USEERR     AMP_OS_START_USERERR
 /**
-* AMP_OS_START_CANONERR is where APR versions of errno values are defined
+* AMP_OS_START_CANONERR is where AMP versions of errno values are defined
 *     on systems which don't have the corresponding errno.
 */
 #define AMP_OS_START_CANONERR  (AMP_OS_START_USERERR \
@@ -113,10 +89,10 @@ AMP_C__START
 #define AMP_OS_START_SYSERR    (AMP_OS_START_EAIERR + AMP_OS_ERRSPACE_SIZE)
 
 /**
-* @defgroup AMP_ERR_map APR Error Space
+* @defgroup amp_err_map AMP Error Space
 * <PRE>
 * The following attempts to show the relation of the various constants
-* used for mapping APR Status codes.
+* used for mapping AMP Status codes.
 *
 *       0
 *
@@ -152,23 +128,23 @@ AMP_C__START
 /** no error. */
 
 /**
-* @defgroup AMP_Error APR Error Values
+* @defgroup AMP_Error AMP Error Values
 * <PRE>
-* <b>APR ERROR VALUES</b>
-* AMP_ENOSTAT      APR was unable to perform a stat on the file
-* AMP_ENOPOOL      APR was not provided a pool with which to allocate memory
-* AMP_EBADDATE     APR was given an invalid date
-* AMP_EINVALSOCK   APR was given an invalid socket
-* AMP_ENOPROC      APR was not given a process structure
-* AMP_ENOTIME      APR was not given a time structure
-* AMP_ENODIR       APR was not given a directory structure
-* AMP_ENOLOCK      APR was not given a lock structure
-* AMP_ENOPOLL      APR was not given a poll structure
-* AMP_ENOSOCKET    APR was not given a socket
-* AMP_ENOTHREAD    APR was not given a thread structure
-* AMP_ENOTHDKEY    APR was not given a thread key structure
+* <b>AMP ERROR VALUES</b>
+* AMP_ENOSTAT      AMP was unable to perform a stat on the file
+* AMP_ENOPOOL      AMP was not provided a pool with which to allocate memory
+* AMP_EBADDATE     AMP was given an invalid date
+* AMP_EINVALSOCK   AMP was given an invalid socket
+* AMP_ENOPROC      AMP was not given a process structure
+* AMP_ENOTIME      AMP was not given a time structure
+* AMP_ENODIR       AMP was not given a directory structure
+* AMP_ENOLOCK      AMP was not given a lock structure
+* AMP_ENOPOLL      AMP was not given a poll structure
+* AMP_ENOSOCKET    AMP was not given a socket
+* AMP_ENOTHREAD    AMP was not given a thread structure
+* AMP_ENOTHDKEY    AMP was not given a thread key structure
 * AMP_ENOSHMAVAIL  There is no more shared memory available
-* AMP_EDSOOPEN     APR was unable to open the dso object.  For more
+* AMP_EDSOOPEN     AMP was unable to open the dso object.  For more
 *                  information call amp_dso_error().
 * AMP_EGENERAL     General failure (specific information not available)
 * AMP_EBADIP       The specified IP address is invalid
@@ -178,7 +154,7 @@ AMP_C__START
 * </PRE>
 *
 * <PRE>
-* <b>APR STATUS VALUES</b>
+* <b>AMP STATUS VALUES</b>
 * AMP_INCHILD        Program is currently executing in the child
 * AMP_INPARENT       Program is currently executing in the parent
 * AMP_DETACH         The thread is detached
@@ -191,14 +167,14 @@ AMP_C__START
 * AMP_BADCH          Getopt found an option not in the option string
 * AMP_BADARG         Getopt found an option that is missing an argument
 *                    and an argument was specified in the option string
-* AMP_EOF            APR has encountered the end of the file
-* AMP_NOTFOUND       APR was unable to find the socket in the poll structure
-* AMP_ANONYMOUS      APR is using anonymous shared memory
-* AMP_FILEBASED      APR is using a file name as the key to the shared memory
-* AMP_KEYBASED       APR is using a shared key as the key to the shared memory
+* AMP_EOF            AMP has encountered the end of the file
+* AMP_NOTFOUND       AMP was unable to find the socket in the poll structure
+* AMP_ANONYMOUS      AMP is using anonymous shared memory
+* AMP_FILEBASED      AMP is using a file name as the key to the shared memory
+* AMP_KEYBASED       AMP is using a shared key as the key to the shared memory
 * AMP_EINIT          Ininitalizer value.  If no option has been found, but
 *                    the status variable requires a value, this should be used
-* AMP_ENOTIMPL       The APR function has not been implemented on this
+* AMP_ENOTIMPL       The AMP function has not been implemented on this
 *                    platform, either because nobody has gotten to it yet,
 *                    or the function is impossible on this platform.
 * AMP_EMISMATCH      Two passwords do not match.
@@ -207,7 +183,7 @@ AMP_C__START
 * AMP_EINCOMPLETE    The given path was neither relative nor absolute.
 * AMP_EABOVEROOT     The given path was above the root path.
 * AMP_EBUSY          The given lock was busy.
-* AMP_EPROC_UNKNOWN  The given process wasn't recognized by APR
+* AMP_EPROC_UNKNOWN  The given process wasn't recognized by AMP
 * </PRE>
 * @{
 */
@@ -272,88 +248,88 @@ AMP_C__START
 * @warning For any particular error condition, more than one of these tests
 *      may match. This is because platform-specific error codes may not
 *      always match the semantics of the POSIX codes these tests (and the
-*      corresponding APR error codes) are named after. A notable example
+*      corresponding AMP error codes) are named after. A notable example
 *      are the AMP_ERR_IS_ENOENT and AMP_ERR_IS_ENOTDIR tests on
 *      Win32 platforms. The programmer should always be aware of this and
 *      adjust the order of the tests accordingly.
 * @{
 */
 /**
-* APR was unable to perform a stat on the file
+* AMP was unable to perform a stat on the file
 * @warning always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_ENOSTAT(e)        ((e)->status == AMP_ENOSTAT)
+#define AMP_ERR_IS_ENOSTAT(e)        ((e) && (e)->status == AMP_ENOSTAT)
 /**
-* APR was not provided a pool with which to allocate memory
+* AMP was not provided a pool with which to allocate memory
 * @warning always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_ENOPOOL(e)        ((e)->status == AMP_ENOPOOL)
-/** APR was given an invalid date  */
-#define AMP_ERR_IS_EBADDATE(e)       ((e)->status == AMP_EBADDATE)
-/** APR was given an invalid socket */
-#define AMP_ERR_IS_EINVALSOCK(e)     ((e)->status == AMP_EINVALSOCK)
-/** APR was not given a process structure */
-#define AMP_ERR_IS_ENOPROC(e)        ((e)->status == AMP_ENOPROC)
-/** APR was not given a time structure */
-#define AMP_ERR_IS_ENOTIME(e)        ((e)->status == AMP_ENOTIME)
-/** APR was not given a directory structure */
-#define AMP_ERR_IS_ENODIR(e)         ((e)->status == AMP_ENODIR)
-/** APR was not given a lock structure */
-#define AMP_ERR_IS_ENOLOCK(e)        ((e)->status == AMP_ENOLOCK)
-/** APR was not given a poll structure */
-#define AMP_ERR_IS_ENOPOLL(e)        ((e)->status == AMP_ENOPOLL)
-/** APR was not given a socket */
-#define AMP_ERR_IS_ENOSOCKET(e)      ((e)->status == AMP_ENOSOCKET)
-/** APR was not given a thread structure */
-#define AMP_ERR_IS_ENOTHREAD(e)      ((e)->status == AMP_ENOTHREAD)
-/** APR was not given a thread key structure */
-#define AMP_ERR_IS_ENOTHDKEY(e)      ((e)->status == AMP_ENOTHDKEY)
+#define AMP_ERR_IS_ENOPOOL(e)        ((e) && (e)->status == AMP_ENOPOOL)
+/** AMP was given an invalid date  */
+#define AMP_ERR_IS_EBADDATE(e)       ((e) && (e)->status == AMP_EBADDATE)
+/** AMP was given an invalid socket */
+#define AMP_ERR_IS_EINVALSOCK(e)     ((e) && (e)->status == AMP_EINVALSOCK)
+/** AMP was not given a process structure */
+#define AMP_ERR_IS_ENOPROC(e)        ((e) && (e)->status == AMP_ENOPROC)
+/** AMP was not given a time structure */
+#define AMP_ERR_IS_ENOTIME(e)        ((e) && (e)->status == AMP_ENOTIME)
+/** AMP was not given a directory structure */
+#define AMP_ERR_IS_ENODIR(e)         ((e) && (e)->status == AMP_ENODIR)
+/** AMP was not given a lock structure */
+#define AMP_ERR_IS_ENOLOCK(e)        ((e) && (e)->status == AMP_ENOLOCK)
+/** AMP was not given a poll structure */
+#define AMP_ERR_IS_ENOPOLL(e)        ((e) && (e)->status == AMP_ENOPOLL)
+/** AMP was not given a socket */
+#define AMP_ERR_IS_ENOSOCKET(e)      ((e) && (e)->status == AMP_ENOSOCKET)
+/** AMP was not given a thread structure */
+#define AMP_ERR_IS_ENOTHREAD(e)      ((e) && (e)->status == AMP_ENOTHREAD)
+/** AMP was not given a thread key structure */
+#define AMP_ERR_IS_ENOTHDKEY(e)      ((e) && (e)->status == AMP_ENOTHDKEY)
 /** Generic Error which can not be put into another spot */
-#define AMP_ERR_IS_EGENERAL(e)       ((e)->status == AMP_EGENERAL)
+#define AMP_ERR_IS_EGENERAL(e)       ((e) && (e)->status == AMP_EGENERAL)
 /** There is no more shared memory available */
-#define AMP_ERR_IS_ENOSHMAVAIL(e)    ((e)->status == AMP_ENOSHMAVAIL)
+#define AMP_ERR_IS_ENOSHMAVAIL(e)    ((e) && (e)->status == AMP_ENOSHMAVAIL)
 /** The specified IP address is invalid */
-#define AMP_ERR_IS_EBADIP(e)         ((e)->status == AMP_EBADIP)
+#define AMP_ERR_IS_EBADIP(e)         ((e) && (e)->status == AMP_EBADIP)
 /** The specified netmask is invalid */
-#define AMP_ERR_IS_EBADMASK(e)       ((e)->status == AMP_EBADMASK)
+#define AMP_ERR_IS_EBADMASK(e)       ((e) && (e)->status == AMP_EBADMASK)
 /* empty slot: +18 */
 /**
-* APR was unable to open the dso object.
+* AMP was unable to open the dso object.
 * For more information call amp_dso_error().
 */
 #if defined(WIN32)
-#define AMP_ERR_IS_EDSOOPEN(e)       ((e)->status == AMP_EDSOOPEN \
-                       || AMP_ERR_TO_OS(e)->status == ERROR_MOD_NOT_FOUND)
+#define AMP_ERR_IS_EDSOOPEN(e)       ((e) && ((e)->status == AMP_EDSOOPEN \
+                       || AMP_ERR_TO_OS(e->status) == ERROR_MOD_NOT_FOUND))
 #else
-#define AMP_ERR_IS_EDSOOPEN(e)       ((e)->status == AMP_EDSOOPEN)
+#define AMP_ERR_IS_EDSOOPEN(e)       ((e) && (e)->status == AMP_EDSOOPEN)
 #endif
 /** The given path was absolute. */
-#define AMP_ERR_IS_EABSOLUTE(e)      ((e)->status == AMP_EABSOLUTE)
+#define AMP_ERR_IS_EABSOLUTE(e)      ((e) && (e)->status == AMP_EABSOLUTE)
 /** The given path was relative. */
-#define AMP_ERR_IS_ERELATIVE(e)      ((e)->status == AMP_ERELATIVE)
+#define AMP_ERR_IS_ERELATIVE(e)      ((e) && (e)->status == AMP_ERELATIVE)
 /** The given path was neither relative nor absolute. */
-#define AMP_ERR_IS_EINCOMPLETE(e)    ((e)->status == AMP_EINCOMPLETE)
+#define AMP_ERR_IS_EINCOMPLETE(e)    ((e) && (e)->status == AMP_EINCOMPLETE)
 /** The given path was above the root path. */
-#define AMP_ERR_IS_EABOVEROOT(e)     ((e)->status == AMP_EABOVEROOT)
+#define AMP_ERR_IS_EABOVEROOT(e)     ((e) && (e)->status == AMP_EABOVEROOT)
 /** The given path was bad. */
-#define AMP_ERR_IS_EBADPATH(e)       ((e)->status == AMP_EBADPATH)
+#define AMP_ERR_IS_EBADPATH(e)       ((e) && (e)->status == AMP_EBADPATH)
 /** The given path contained wildcards. */
-#define AMP_ERR_IS_EPATHWILD(e)      ((e)->status == AMP_EPATHWILD)
+#define AMP_ERR_IS_EPATHWILD(e)      ((e) && (e)->status == AMP_EPATHWILD)
 /** Could not find the requested symbol.
 * For more information call amp_dso_error().
 */
 #if defined(WIN32)
-#define AMP_ERR_IS_ESYMNOTFOUND(e)   ((e)->status == AMP_ESYMNOTFOUND \
-                       || AMP_ERR_TO_OS(e)->status == ERROR_PROC_NOT_FOUND)
+#define AMP_ERR_IS_ESYMNOTFOUND(e)   ((e) && ((e)->status == AMP_ESYMNOTFOUND \
+                       || AMP_ERR_TO_OS(e->status) == ERROR_PROC_NOT_FOUND))
 #else
-#define AMP_ERR_IS_ESYMNOTFOUND(e)   ((e)->status == AMP_ESYMNOTFOUND)
+#define AMP_ERR_IS_ESYMNOTFOUND(e)   ((e) && (e)->status == AMP_ESYMNOTFOUND)
 #endif
-/** The given process was not recognized by APR. */
-#define AMP_ERR_IS_EPROC_UNKNOWN(e)  ((e)->status == AMP_EPROC_UNKNOWN)
-/** APR could not gather enough entropy to continue. */
-#define AMP_ERR_IS_ENOTENOUGHENTROPY(e) ((e)->status == AMP_ENOTENOUGHENTROPY)
+/** The given process was not recognized by AMP. */
+#define AMP_ERR_IS_EPROC_UNKNOWN(e)  ((e) && (e)->status == AMP_EPROC_UNKNOWN)
+/** AMP could not gather enough entropy to continue. */
+#define AMP_ERR_IS_ENOTENOUGHENTROPY(e) ((e) && (e)->status == AMP_ENOTENOUGHENTROPY)
 
 /** @} */
 
@@ -416,49 +392,49 @@ AMP_C__START
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code */
-#define AMP_ERR_IS_INCHILD(e)        ((e)->status == AMP_INCHILD)
+#define AMP_ERR_IS_INCHILD(e)        ((e) && (e)->status == AMP_INCHILD)
 /**
 * Program is currently executing in the parent
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_INPARENT(e)       ((e)->status == AMP_INPARENT)
+#define AMP_ERR_IS_INPARENT(e)       ((e) && (e)->status == AMP_INPARENT)
 /**
 * The thread is detached
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_DETACH(e)         ((e)->status == AMP_DETACH)
+#define AMP_ERR_IS_DETACH(e)         ((e) && (e)->status == AMP_DETACH)
 /**
 * The thread is not detached
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_NOTDETACH(e)      ((e)->status == AMP_NOTDETACH)
+#define AMP_ERR_IS_NOTDETACH(e)      ((e) && (e)->status == AMP_NOTDETACH)
 /**
 * The child has finished executing
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_CHILD_DONE(e)     ((e)->status == AMP_CHILD_DONE)
+#define AMP_ERR_IS_CHILD_DONE(e)     ((e) && (e)->status == AMP_CHILD_DONE)
 /**
 * The child has not finished executing
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_CHILD_NOTDONE(e)  ((e)->status == AMP_CHILD_NOTDONE)
+#define AMP_ERR_IS_CHILD_NOTDONE(e)  ((e) && (e)->status == AMP_CHILD_NOTDONE)
 /**
 * The operation did not finish before the timeout
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_TIMEUP(e)         ((e)->status == AMP_TIMEUP)
+#define AMP_ERR_IS_TIMEUP(e)         ((e) && (e)->status == AMP_TIMEUP)
 /**
 * The operation was incomplete although some processing was performed
 * and the results are partially valid.
@@ -466,7 +442,7 @@ AMP_C__START
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_INCOMPLETE(e)     ((e)->status == AMP_INCOMPLETE)
+#define AMP_ERR_IS_INCOMPLETE(e)     ((e) && (e)->status == AMP_INCOMPLETE)
 /* empty slot: +9 */
 /* empty slot: +10 */
 /* empty slot: +11 */
@@ -476,7 +452,7 @@ AMP_C__START
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_BADCH(e)          ((e)->status == AMP_BADCH)
+#define AMP_ERR_IS_BADCH(e)          ((e) && (e)->status == AMP_BADCH)
 /**
 * Getopt found an option not in the option string and an argument was
 * specified in the option string
@@ -484,45 +460,45 @@ AMP_C__START
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_BADARG(e)         ((e)->status == AMP_BADARG)
+#define AMP_ERR_IS_BADARG(e)         ((e) && (e)->status == AMP_BADARG)
 /**
-* APR has encountered the end of the file
+* AMP has encountered the end of the file
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_EOF(e)            ((e)->status == AMP_EOF)
+#define AMP_ERR_IS_EOF(e)            ((e) && (e)->status == AMP_EOF)
 /**
-* APR was unable to find the socket in the poll structure
+* AMP was unable to find the socket in the poll structure
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_NOTFOUND(e)       ((e)->status == AMP_NOTFOUND)
+#define AMP_ERR_IS_NOTFOUND(e)       ((e) && (e)->status == AMP_NOTFOUND)
 /* empty slot: +16 */
 /* empty slot: +17 */
 /* empty slot: +18 */
 /**
-* APR is using anonymous shared memory
+* AMP is using anonymous shared memory
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_ANONYMOUS(e)      ((e)->status == AMP_ANONYMOUS)
+#define AMP_ERR_IS_ANONYMOUS(e)      ((e) && (e)->status == AMP_ANONYMOUS)
 /**
-* APR is using a file name as the key to the shared memory
+* AMP is using a file name as the key to the shared memory
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_FILEBASED(e)      ((e)->status == AMP_FILEBASED)
+#define AMP_ERR_IS_FILEBASED(e)      ((e) && (e)->status == AMP_FILEBASED)
 /**
-* APR is using a shared key as the key to the shared memory
+* AMP is using a shared key as the key to the shared memory
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_KEYBASED(e)       ((e)->status == AMP_KEYBASED)
+#define AMP_ERR_IS_KEYBASED(e)       ((e) && (e)->status == AMP_KEYBASED)
 /**
 * Ininitalizer value.  If no option has been found, but
 * the status variable requires a value, this should be used
@@ -530,37 +506,37 @@ AMP_C__START
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_EINIT(e)          ((e)->status == AMP_EINIT)
+#define AMP_ERR_IS_EINIT(e)          ((e) && (e)->status == AMP_EINIT)
 /**
-* The APR function has not been implemented on this
+* The AMP function has not been implemented on this
 * platform, either because nobody has gotten to it yet,
 * or the function is impossible on this platform.
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_ENOTIMPL(e)       ((e)->status == AMP_ENOTIMPL)
+#define AMP_ERR_IS_ENOTIMPL(e)       ((e) && (e)->status == AMP_ENOTIMPL)
 /**
 * Two passwords do not match.
 * @warning
 * always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_EMISMATCH(e)      ((e)->status == AMP_EMISMATCH)
+#define AMP_ERR_IS_EMISMATCH(e)      ((e) && (e)->status == AMP_EMISMATCH)
 /**
 * The given lock was busy
 * @warning always use this test, as platform-specific variances may meet this
 * more than one error code
 */
-#define AMP_ERR_IS_EBUSY(e)          ((e)->status == AMP_EBUSY)
+#define AMP_ERR_IS_EBUSY(e)          ((e) && (e)->status == AMP_EBUSY)
 
 /** @} */
 
 /**
-* @addtogroup AMP_Error APR Error Values
+* @addtogroup AMP_Error AMP Error Values
 * @{
 */
-/* APR CANONICAL ERROR VALUES */
+/* AMP CANONICAL ERROR VALUES */
 /** @see AMP_ERR_IS_EACCES */
 #ifdef EACCES
 #define AMP_EACCES EACCES
@@ -789,8 +765,8 @@ AMP_C__START
 #define amp_err_get_net_os()   (AMP_ERR_FROM_OS(WSAGetLastError()))
 #define amp_err_set_net_os(e)   (WSASetLastError(AMP_ERR_TO_OS(e)))
 
-/* APR CANONICAL ERROR TESTS */
-#define AMP_ERR_IS_EACCES(e)         ((e)->status == AMP_EACCES \
+/* AMP CANONICAL ERROR TESTS */
+#define AMP_ERR_IS_EACCES(e)         ((e) && ((e)->status == AMP_EACCES \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_ACCESS_DENIED \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_CANNOT_MAKE \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_CURRENT_DIRECTORY \
@@ -800,100 +776,96 @@ AMP_C__START
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_LOCK_FAILED \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NOT_LOCKED \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NETWORK_ACCESS_DENIED \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_SHARING_VIOLATION)
-#define AMP_ERR_IS_EEXIST(e)         ((e)->status == AMP_EEXIST \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_SHARING_VIOLATION))
+#define AMP_ERR_IS_EEXIST(e)         ((e) && ((e)->status == AMP_EEXIST \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_FILE_EXISTS \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_ALREADY_EXISTS)
-#define AMP_ERR_IS_ENAMETOOLONG(e)   ((e)->status == AMP_ENAMETOOLONG \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_ALREADY_EXISTS))
+#define AMP_ERR_IS_ENAMETOOLONG(e)   ((e) && ((e)->status == AMP_ENAMETOOLONG \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_FILENAME_EXCED_RANGE \
-                || (e)->status == AMP_OS_START_SYSERR + WSAENAMETOOLONG)
-#define AMP_ERR_IS_ENOENT(e)         ((e)->status == AMP_ENOENT \
+                || (e)->status == AMP_OS_START_SYSERR + WSAENAMETOOLONG))
+#define AMP_ERR_IS_ENOENT(e)         ((e) && ((e)->status == AMP_ENOENT \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_FILE_NOT_FOUND \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_PATH_NOT_FOUND \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_OPEN_FAILED \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_NO_MORE_FILES)
-#define AMP_ERR_IS_ENOTDIR(e)        ((e)->status == AMP_ENOTDIR \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_NO_MORE_FILES))
+#define AMP_ERR_IS_ENOTDIR(e)        ((e) && ((e)->status == AMP_ENOTDIR \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_PATH_NOT_FOUND \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_BAD_NETPATH \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_BAD_NET_NAME \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_BAD_PATHNAME \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_DRIVE \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_DIRECTORY)
-#define AMP_ERR_IS_ENOSPC(e)         ((e)->status == AMP_ENOSPC \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_DISK_FULL)
-#define AMP_ERR_IS_ENOMEM(e)         ((e)->status == AMP_ENOMEM \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_DIRECTORY))
+#define AMP_ERR_IS_ENOSPC(e)         ((e) && ((e)->status == AMP_ENOSPC \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_DISK_FULL))
+#define AMP_ERR_IS_ENOMEM(e)         ((e) && ((e)->status == AMP_ENOMEM \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_ARENA_TRASHED \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NOT_ENOUGH_MEMORY \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_BLOCK \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NOT_ENOUGH_QUOTA \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_OUTOFMEMORY)
-#define AMP_ERR_IS_EMFILE(e)         ((e)->status == AMP_EMFILE \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_TOO_MANY_OPEN_FILES)
-#define AMP_ERR_IS_ENFILE(e)         ((e)->status == AMP_ENFILE)
-#define AMP_ERR_IS_EBADF(e)          ((e)->status == AMP_EBADF \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_OUTOFMEMORY))
+#define AMP_ERR_IS_EMFILE(e)         ((e) && ((e)->status == AMP_EMFILE \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_TOO_MANY_OPEN_FILES))
+#define AMP_ERR_IS_ENFILE(e)         ((e) && (e)->status == AMP_ENFILE)
+#define AMP_ERR_IS_EBADF(e)          ((e) && ((e)->status == AMP_EBADF \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_HANDLE \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_TARGET_HANDLE)
-#define AMP_ERR_IS_EINVAL(e)         ((e)->status == AMP_EINVAL \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_TARGET_HANDLE))
+#define AMP_ERR_IS_EINVAL(e)         ((e) && ((e)->status == AMP_EINVAL \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_ACCESS \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_DATA \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_FUNCTION \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_HANDLE \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_PARAMETER \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_NEGATIVE_SEEK)
-#define AMP_ERR_IS_ESPIPE(e)         ((e)->status == AMP_ESPIPE \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_NEGATIVE_SEEK))
+#define AMP_ERR_IS_ESPIPE(e)         ((e) && ((e)->status == AMP_ESPIPE \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_SEEK_ON_DEVICE \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_NEGATIVE_SEEK)
-#define AMP_ERR_IS_EAGAIN(e)         ((e)->status == AMP_EAGAIN \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_NEGATIVE_SEEK))
+#define AMP_ERR_IS_EAGAIN(e)         ((e) && ((e)->status == AMP_EAGAIN \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NO_DATA \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NO_PROC_SLOTS \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NESTING_NOT_ALLOWED \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_MAX_THRDS_REACHED \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_LOCK_VIOLATION \
-                || (e)->status == AMP_OS_START_SYSERR + WSAEWOULDBLOCK)
-#define AMP_ERR_IS_EINTR(e)          ((e)->status == AMP_EINTR \
-                || (e)->status == AMP_OS_START_SYSERR + WSAEINTR)
-#define AMP_ERR_IS_ENOTSOCK(e)       ((e)->status == AMP_ENOTSOCK \
-                || (e)->status == AMP_OS_START_SYSERR + WSAENOTSOCK)
-#define AMP_ERR_IS_ECONNREFUSED(e)   ((e)->status == AMP_ECONNREFUSED \
-                || (e)->status == AMP_OS_START_SYSERR + WSAECONNREFUSED)
-#define AMP_ERR_IS_EINPROGRESS(e)    ((e)->status == AMP_EINPROGRESS \
-                || (e)->status == AMP_OS_START_SYSERR + WSAEINPROGRESS)
-#define AMP_ERR_IS_ECONNABORTED(e)   ((e)->status == AMP_ECONNABORTED \
-                || (e)->status == AMP_OS_START_SYSERR + WSAECONNABORTED)
-#define AMP_ERR_IS_ECONNRESET(e)     ((e)->status == AMP_ECONNRESET \
+                || (e)->status == AMP_OS_START_SYSERR + WSAEWOULDBLOCK))
+#define AMP_ERR_IS_EINTR(e)          ((e) && ((e)->status == AMP_EINTR \
+                || (e)->status == AMP_OS_START_SYSERR + WSAEINTR))
+#define AMP_ERR_IS_ENOTSOCK(e)       ((e) && ((e)->status == AMP_ENOTSOCK \
+                || (e)->status == AMP_OS_START_SYSERR + WSAENOTSOCK))
+#define AMP_ERR_IS_ECONNREFUSED(e)   ((e) && ((e)->status == AMP_ECONNREFUSED \
+                || (e)->status == AMP_OS_START_SYSERR + WSAECONNREFUSED))
+#define AMP_ERR_IS_EINPROGRESS(e)    ((e) && ((e)->status == AMP_EINPROGRESS \
+                || (e)->status == AMP_OS_START_SYSERR + WSAEINPROGRESS))
+#define AMP_ERR_IS_ECONNABORTED(e)   ((e) && ((e)->status == AMP_ECONNABORTED \
+                || (e)->status == AMP_OS_START_SYSERR + WSAECONNABORTED))
+#define AMP_ERR_IS_ECONNRESET(e)     ((e) && ((e)->status == AMP_ECONNRESET \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_NETNAME_DELETED \
-                || (e)->status == AMP_OS_START_SYSERR + WSAECONNRESET)
-/* XXX deprecated */
-#define AMP_ERR_IS_ETIMEDOUT(e)         ((e)->status == AMP_ETIMEDOUT \
-                || (e)->status == AMP_OS_START_SYSERR + WSAETIMEDOUT \
-                || (e)->status == AMP_OS_START_SYSERR + WAIT_TIMEOUT)
+                || (e)->status == AMP_OS_START_SYSERR + WSAECONNRESET))
 #undef AMP_ERR_IS_TIMEUP
-#define AMP_ERR_IS_TIMEUP(e)         ((e)->status == AMP_TIMEUP \
+#define AMP_ERR_IS_TIMEUP(e)         ((e) && ((e)->status == AMP_TIMEUP \
                 || (e)->status == AMP_OS_START_SYSERR + WSAETIMEDOUT \
-                || (e)->status == AMP_OS_START_SYSERR + WAIT_TIMEOUT)
-#define AMP_ERR_IS_EHOSTUNREACH(e)   ((e)->status == AMP_EHOSTUNREACH \
-                || (e)->status == AMP_OS_START_SYSERR + WSAEHOSTUNREACH)
-#define AMP_ERR_IS_ENETUNREACH(e)    ((e)->status == AMP_ENETUNREACH \
-                || (e)->status == AMP_OS_START_SYSERR + WSAENETUNREACH)
-#define AMP_ERR_IS_EFTYPE(e)         ((e)->status == AMP_EFTYPE \
+                || (e)->status == AMP_OS_START_SYSERR + WAIT_TIMEOUT))
+#define AMP_ERR_IS_EHOSTUNREACH(e)   ((e) && ((e)->status == AMP_EHOSTUNREACH \
+                || (e)->status == AMP_OS_START_SYSERR + WSAEHOSTUNREACH))
+#define AMP_ERR_IS_ENETUNREACH(e)    ((e) && ((e)->status == AMP_ENETUNREACH \
+                || (e)->status == AMP_OS_START_SYSERR + WSAENETUNREACH))
+#define AMP_ERR_IS_EFTYPE(e)         ((e) && ((e)->status == AMP_EFTYPE \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_EXE_MACHINE_TYPE_MISMATCH \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_DLL \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_MODULETYPE \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_BAD_EXE_FORMAT \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_INVALID_EXE_SIGNATURE \
                 || (e)->status == AMP_OS_START_SYSERR + ERROR_FILE_CORRUPT \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_BAD_FORMAT)
-#define AMP_ERR_IS_EPIPE(e)          ((e)->status == AMP_EPIPE \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_BROKEN_PIPE)
-#define AMP_ERR_IS_EXDEV(e)          ((e)->status == AMP_EXDEV \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_NOT_SAME_DEVICE)
-#define AMP_ERR_IS_ENOTEMPTY(e)      ((e)->status == AMP_ENOTEMPTY \
-                || (e)->status == AMP_OS_START_SYSERR + ERROR_DIR_NOT_EMPTY)
-#define AMP_ERR_IS_EAFNOSUPPORT(e)   ((e)->status == AMP_EAFNOSUPPORT \
-                || (e)->status == AMP_OS_START_SYSERR + WSAEAFNOSUPPORT)
-#define AMP_ERR_IS_EOPNOTSUPP(e)     ((e)->status == AMP_EOPNOTSUPP \
-                || (e)->status == AMP_OS_START_SYSERR + WSAEOPNOTSUPP)
-#define AMP_ERR_IS_ERANGE(e)         ((e)->status == AMP_ERANGE)
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_BAD_FORMAT))
+#define AMP_ERR_IS_EPIPE(e)          ((e) && ((e)->status == AMP_EPIPE \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_BROKEN_PIPE))
+#define AMP_ERR_IS_EXDEV(e)          ((e) && ((e)->status == AMP_EXDEV \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_NOT_SAME_DEVICE))
+#define AMP_ERR_IS_ENOTEMPTY(e)      ((e) && ((e)->status == AMP_ENOTEMPTY \
+                || (e)->status == AMP_OS_START_SYSERR + ERROR_DIR_NOT_EMPTY))
+#define AMP_ERR_IS_EAFNOSUPPORT(e)   ((e) && ((e)->status == AMP_EAFNOSUPPORT \
+                || (e)->status == AMP_OS_START_SYSERR + WSAEAFNOSUPPORT))
+#define AMP_ERR_IS_EOPNOTSUPP(e)     ((e) && ((e)->status == AMP_EOPNOTSUPP \
+                || (e)->status == AMP_OS_START_SYSERR + WSAEOPNOTSUPP))
+#define AMP_ERR_IS_ERANGE(e)         ((e) && (e)->status == AMP_ERANGE)
 #else 
 
 /*
@@ -916,11 +888,11 @@ AMP_C__START
 */
 
 /** permission denied */
-#define AMP_ERR_IS_EACCES(e)         ((e)->status == AMP_EACCES)
+#define AMP_ERR_IS_EACCES(e)         ((e) && (e)->status == AMP_EACCES)
 /** file exists */
-#define AMP_ERR_IS_EEXIST(e)         ((e)->status == AMP_EEXIST)
+#define AMP_ERR_IS_EEXIST(e)         ((e) && (e)->status == AMP_EEXIST)
 /** path name is too long */
-#define AMP_ERR_IS_ENAMETOOLONG(e)   ((e)->status == AMP_ENAMETOOLONG)
+#define AMP_ERR_IS_ENAMETOOLONG(e)   ((e) && (e)->status == AMP_ENAMETOOLONG)
 /**
 * no such file or directory
 * @remark
@@ -928,51 +900,51 @@ AMP_C__START
 * paths which do not exist.
 */
 #ifdef EMVSCATLG
-#define AMP_ERR_IS_ENOENT(e)         ((e)->status == AMP_ENOENT \
+#define AMP_ERR_IS_ENOENT(e)         ((e) && (e)->status == AMP_ENOENT \
                                       || (e)->status == EMVSCATLG)
 #else
-#define AMP_ERR_IS_ENOENT(e)         ((e)->status == AMP_ENOENT)
+#define AMP_ERR_IS_ENOENT(e)         ((e) && (e)->status == AMP_ENOENT)
 #endif
 /** not a directory */
-#define AMP_ERR_IS_ENOTDIR(e)        ((e)->status == AMP_ENOTDIR)
+#define AMP_ERR_IS_ENOTDIR(e)        ((e) && (e)->status == AMP_ENOTDIR)
 /** no space left on device */
 #ifdef EDQUOT
-#define AMP_ERR_IS_ENOSPC(e)         ((e)->status == AMP_ENOSPC \
+#define AMP_ERR_IS_ENOSPC(e)         ((e) && (e)->status == AMP_ENOSPC \
                                       || (e)->status == EDQUOT)
 #else
-#define AMP_ERR_IS_ENOSPC(e)         ((e)->status == AMP_ENOSPC)
+#define AMP_ERR_IS_ENOSPC(e)         ((e) && (e)->status == AMP_ENOSPC)
 #endif
 /** not enough memory */
-#define AMP_ERR_IS_ENOMEM(e)         ((e)->status == AMP_ENOMEM)
+#define AMP_ERR_IS_ENOMEM(e)         ((e) && (e)->status == AMP_ENOMEM)
 /** too many open files */
-#define AMP_ERR_IS_EMFILE(e)         ((e)->status == AMP_EMFILE)
+#define AMP_ERR_IS_EMFILE(e)         ((e) && (e)->status == AMP_EMFILE)
 /** file table overflow */
-#define AMP_ERR_IS_ENFILE(e)         ((e)->status == AMP_ENFILE)
+#define AMP_ERR_IS_ENFILE(e)         ((e) && (e)->status == AMP_ENFILE)
 /** bad file # */
-#define AMP_ERR_IS_EBADF(e)          ((e)->status == AMP_EBADF)
+#define AMP_ERR_IS_EBADF(e)          ((e) && (e)->status == AMP_EBADF)
 /** invalid argument */
-#define AMP_ERR_IS_EINVAL(e)         ((e)->status == AMP_EINVAL)
+#define AMP_ERR_IS_EINVAL(e)         ((e) && (e)->status == AMP_EINVAL)
 /** illegal seek */
-#define AMP_ERR_IS_ESPIPE(e)         ((e)->status == AMP_ESPIPE)
+#define AMP_ERR_IS_ESPIPE(e)         ((e) && (e)->status == AMP_ESPIPE)
 
 /** operation would block */
 #if !defined(EWOULDBLOCK) || !defined(EAGAIN)
-#define AMP_ERR_IS_EAGAIN(e)         ((e)->status == AMP_EAGAIN)
+#define AMP_ERR_IS_EAGAIN(e)         ((e) && (e)->status == AMP_EAGAIN)
 #elif (EWOULDBLOCK == EAGAIN)
-#define AMP_ERR_IS_EAGAIN(e)         ((e)->status == AMP_EAGAIN)
+#define AMP_ERR_IS_EAGAIN(e)         ((e) && (e)->status == AMP_EAGAIN)
 #else
-#define AMP_ERR_IS_EAGAIN(e)         ((e)->status == AMP_EAGAIN \
-                                      || (e)->status == EWOULDBLOCK)
+#define AMP_ERR_IS_EAGAIN(e)         ((e) && ((e)->status == AMP_EAGAIN \
+                                      || (e)->status == EWOULDBLOCK))
 #endif
 
 /** interrupted system call */
-#define AMP_ERR_IS_EINTR(e)          ((e)->status == AMP_EINTR)
+#define AMP_ERR_IS_EINTR(e)          ((e) && (e)->status == AMP_EINTR)
 /** socket operation on a non-socket */
-#define AMP_ERR_IS_ENOTSOCK(e)       ((e)->status == AMP_ENOTSOCK)
+#define AMP_ERR_IS_ENOTSOCK(e)       ((e) && (e)->status == AMP_ENOTSOCK)
 /** Connection Refused */
-#define AMP_ERR_IS_ECONNREFUSED(e)   ((e)->status == AMP_ECONNREFUSED)
+#define AMP_ERR_IS_ECONNREFUSED(e)   ((e) && (e)->status == AMP_ECONNREFUSED)
 /** operation now in progress */
-#define AMP_ERR_IS_EINPROGRESS(e)    ((e)->status == AMP_EINPROGRESS)
+#define AMP_ERR_IS_EINPROGRESS(e)    ((e) && (e)->status == AMP_EINPROGRESS)
 
 /**
 * Software caused connection abort
@@ -986,37 +958,37 @@ AMP_C__START
 * example.  It's hard to handle both uses of EPROTO.
 */
 #ifdef EPROTO
-#define AMP_ERR_IS_ECONNABORTED(e)    ((e)->status == AMP_ECONNABORTED \
-                                       || (e)->status == EPROTO)
+#define AMP_ERR_IS_ECONNABORTED(e)    ((e) && ((e)->status == AMP_ECONNABORTED \
+                                       || (e)->status == EPROTO))
 #else
-#define AMP_ERR_IS_ECONNABORTED(e)    ((e)->status == AMP_ECONNABORTED)
+#define AMP_ERR_IS_ECONNABORTED(e)    ((e) && (e)->status == AMP_ECONNABORTED)
 #endif
 
 /** Connection Reset by peer */
-#define AMP_ERR_IS_ECONNRESET(e)      ((e)->status == AMP_ECONNRESET)
+#define AMP_ERR_IS_ECONNRESET(e)      ((e) && (e)->status == AMP_ECONNRESET)
 /** Operation timed out
 *  @deprecated */
-#define AMP_ERR_IS_ETIMEDOUT(e)      ((e)->status == AMP_ETIMEDOUT)
+#define AMP_ERR_IS_ETIMEDOUT(e)      ((e) && (e)->status == AMP_ETIMEDOUT)
 /** no route to host */
-#define AMP_ERR_IS_EHOSTUNREACH(e)    ((e)->status == AMP_EHOSTUNREACH)
+#define AMP_ERR_IS_EHOSTUNREACH(e)    ((e) && (e)->status == AMP_EHOSTUNREACH)
 /** network is unreachable */
-#define AMP_ERR_IS_ENETUNREACH(e)     ((e)->status == AMP_ENETUNREACH)
+#define AMP_ERR_IS_ENETUNREACH(e)     ((e) && (e)->status == AMP_ENETUNREACH)
 /** inappropriate file type or format */
-#define AMP_ERR_IS_EFTYPE(e)          ((e)->status == AMP_EFTYPE)
+#define AMP_ERR_IS_EFTYPE(e)          ((e) && (e)->status == AMP_EFTYPE)
 /** broken pipe */
-#define AMP_ERR_IS_EPIPE(e)           ((e)->status == AMP_EPIPE)
+#define AMP_ERR_IS_EPIPE(e)           ((e) && (e)->status == AMP_EPIPE)
 /** cross device link */
-#define AMP_ERR_IS_EXDEV(e)           ((e)->status == AMP_EXDEV)
+#define AMP_ERR_IS_EXDEV(e)           ((e) && (e)->status == AMP_EXDEV)
 /** Directory Not Empty */
-#define AMP_ERR_IS_ENOTEMPTY(e)       ((e)->status == AMP_ENOTEMPTY || \
-                                          (e)->status == AMP_EEXIST)
+#define AMP_ERR_IS_ENOTEMPTY(e)       ((e) && ((e)->status == AMP_ENOTEMPTY || \
+                                          (e)->status == AMP_EEXIST))
 /** Address Family not supported */
-#define AMP_ERR_IS_EAFNOSUPPORT(e)    ((e)->status == AMP_EAFNOSUPPORT)
+#define AMP_ERR_IS_EAFNOSUPPORT(e)    ((e) && (e)->status == AMP_EAFNOSUPPORT)
 /** Socket operation not supported */
-#define AMP_ERR_IS_EOPNOTSUPP(e)      ((e)->status == AMP_EOPNOTSUPP)
+#define AMP_ERR_IS_EOPNOTSUPP(e)      ((e) && (e)->status == AMP_EOPNOTSUPP)
 
 /** Numeric value not representable */
-#define AMP_ERR_IS_ERANGE(e)         ((e)->status == AMP_ERANGE)
+#define AMP_ERR_IS_ERANGE(e)         ((e) && (e)->status == AMP_ERANGE)
 /** @} */
 
 #endif /* !defined(WIN32) */
