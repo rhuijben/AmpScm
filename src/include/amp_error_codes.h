@@ -117,12 +117,6 @@ AMP_C__START
 				   AMP_ERR_BAD_CATEGORY_START + 4,
 				   "Bogus mime-type")
 
-		/** @since New in 1.5.
-		 *
-		 * Note that there was an unused slot sitting here at
-		 * AMP_ERR_BAD_CATEGORY_START + 5, so error codes after this aren't
-		 * necessarily "New in 1.5" just because they come later.
-		 */
 		AMP_ERRDEF(AMP_ERR_BAD_PROPERTY_VALUE,
 				   AMP_ERR_BAD_CATEGORY_START + 5,
 				   "Wrong or unexpected property value")
@@ -196,6 +190,10 @@ AMP_C__START
 		AMP_ERRDEF(AMP_ERR_ASSERTION_FAIL,
 				   AMP_ERR_BAD_CATEGORY_START + 21,
 				   "Assertion failed")
+
+		AMP_ERRDEF(AMP_ERR_NOT_SUPPORTED,
+				   AMP_ERR_BAD_CATEGORY_START + 22,
+				   "Feature not supported")
 
 		/* xml errors */
 

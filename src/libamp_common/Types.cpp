@@ -2,6 +2,8 @@
 
 using namespace amp;
 
+#pragma comment(lib, "bcrypt.lib")
+
 static int pool_managed_cleanup(void* data)
 {
 	auto pm = reinterpret_cast<amp_pool_managed*>(data);
