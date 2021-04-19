@@ -159,10 +159,14 @@ namespace amp
 		}
 
 		amp_err_t* seek(amp_off_t offset) noexcept
-		{
-			if (offset == 0)
+		{			
+			AMP_ASSERT(offset >= 0);
+
+			if (offset < 0)
+				return amp_err_create(AMP_BADARG, nullptr, nullptr);
+			else if (offset == 0 || offset <= position)
 			{
-				position = 0;
+				position = offset;
 				return AMP_NO_ERROR;
 			}
 

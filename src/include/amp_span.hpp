@@ -83,6 +83,16 @@ namespace amp
 				return span(m_data + offset, count);
 		}
 
+		constexpr span min_subspan(size_type offset, size_type count) const
+		{
+			AMP_ASSERT(offset >= 0 && count >= 0);
+
+			if (offset + count > m_size)
+				return span(m_data + offset, m_size - offset);
+			else
+				return span(m_data + offset, count);
+		}
+
 		constexpr span subspan(size_type offset) const
 		{
 			AMP_ASSERT(offset >= 0 && offset <= m_size);

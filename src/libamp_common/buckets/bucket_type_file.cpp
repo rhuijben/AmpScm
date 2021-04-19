@@ -40,6 +40,11 @@ amp_bucket_file::amp_bucket_file(amp_file_t* file, amp_allocator_t* allocator)
 void amp_bucket_file::destroy(amp_pool_t* pool)
 {
 	amp_allocator_free(buffer.data(), allocator);
+	buffer = span<char>();
+	position = 0;
+
+	if (available > 0)
+		amp_err_clear((*file)->seek((*file)->get_current_position() - available));	
 
 	amp_bucket::destroy(pool);
 }

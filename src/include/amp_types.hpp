@@ -2,6 +2,10 @@
 
 #include "amp_types.h"
 
+#ifdef _MSC_VER
+#pragma warning(disable: 26812)
+#endif
+
 namespace amp {
 
 	class amp_destroyable

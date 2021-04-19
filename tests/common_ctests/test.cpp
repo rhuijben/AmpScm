@@ -140,3 +140,59 @@ TEST_F(BasicTest, SimpleBucketRead)
 
 	amp_bucket_destroy(bk, pool);
 }
+
+TEST_F(BasicTest, SimpleBucketCreateRead)
+{
+	amp_allocator_t* allocator = (*pool)->get_allocator();
+
+	auto bk = amp_bucket_aggregate_create(allocator);
+
+	amp_bucket_aggregate_append(bk, amp_bucket_simple_create("blob 26\n", 8, allocator));
+	amp_bucket_aggregate_append(bk, amp_bucket_simple_create("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 26, allocator));
+
+
+	amp_hash_result_t* hash_result_sha1 = nullptr;
+	amp_hash_result_t* hash_result_sha256 = nullptr;
+	amp_hash_result_t* hash_result_md5 = nullptr;
+	TEST_ERR(
+		amp_bucket_hash_create(&bk, &hash_result_sha1,
+							  bk, amp_hash_algorithm_sha1, nullptr,
+						      allocator, pool));
+	TEST_ERR(
+		amp_bucket_hash_create(&bk, &hash_result_sha256,
+							   bk, amp_hash_algorithm_sha256, nullptr,
+							   allocator, pool));
+	TEST_ERR(
+		amp_bucket_hash_create(&bk, &hash_result_md5,
+							   bk, amp_hash_algorithm_md5, nullptr,
+							   allocator, pool));
+
+	ASSERT_NE(hash_result_sha1, nullptr);
+	ASSERT_EQ(hash_result_sha1->hash_algorithm, amp_hash_algorithm_sha1);
+	ASSERT_EQ(hash_result_sha1->bytes[0], 0);
+
+	const char* buf;
+	size_t sz;
+	TEST_ERR(amp_bucket_read(&buf, &sz, bk, AMP_READ_ALL_AVAIL, pool));
+	ASSERT_EQ(sz, 8);
+	ASSERT_EQ(0, memcmp("blob 26\n", buf, 8));
+
+	TEST_ERR(amp_bucket_read(&buf, &sz, bk, AMP_READ_ALL_AVAIL, pool));
+	ASSERT_EQ(sz, 26);
+	ASSERT_EQ(0, memcmp("ABCDEFGHIJKLMNOPQRSTUVWXYZ", buf, 26));
+
+	auto err = amp_bucket_read(&buf, &sz, bk, AMP_READ_ALL_AVAIL, pool);
+	ASSERT_TRUE(AMP_ERR_IS_EOF(err));
+	ASSERT_EQ(sz, 0);
+	amp_err_clear(err);
+
+	ASSERT_NE(hash_result_sha1, nullptr);
+	ASSERT_EQ(hash_result_sha1->hash_algorithm, amp_hash_algorithm_sha1);
+	ASSERT_NE(hash_result_sha1->bytes[0], 0);
+
+	amp_bucket_destroy(bk, pool);
+
+	ASSERT_STREQ("A3376BEEFF28183E2A4EFE532F17592CDE996189", amp_hash_result_to_cstring(hash_result_sha1, true, pool));
+	ASSERT_STREQ("58477859E5F1AFE259FF8234C20943B1C35B93B0B1D11483B5D882B3EBA16501", amp_hash_result_to_cstring(hash_result_sha256, true, pool));
+	ASSERT_STREQ("305CA3AC86979B00226D432F70533BC2", amp_hash_result_to_cstring(hash_result_md5, true, pool));
+}

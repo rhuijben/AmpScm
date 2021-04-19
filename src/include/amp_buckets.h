@@ -22,15 +22,41 @@ struct iovec
 #endif /* !APR_IOVEC_DEFINED */
 #endif
 
+enum amp_hash_algorithm_t
+{
+	amp_hash_algorithm_none,
+	amp_hash_algorithm_md5,
+	amp_hash_algorithm_sha1,
+	amp_hash_algorithm_sha256
+};
 
-#define SERF_ERROR_WAIT_CONN 99921919 // TODO: Replace with something sane
+typedef struct amp_hash_result_t
+{
+	size_t hash_bytes;
+	amp_hash_algorithm_t hash_algorithm;
+	unsigned char bytes[1];
+} amp_hash_result_t;
+
+amp_hash_result_t *
+amp_hash_result_create(
+	amp_hash_algorithm_t algorithm,
+	amp_pool_t* result_pool);
+
+const char*
+amp_hash_result_to_cstring(
+	amp_hash_result_t* result,
+	amp_boolean_t for_display,
+	amp_pool_t* result_pool);
+
+
+#define AMP_ERR_WAIT_CONN 99921919 // TODO: Replace with something sane
 
 #define AMP_READ_ALL_AVAIL MAXINT_PTR
 
 #define AMP_IS_BUCKET_READ_ERROR(err) ((err) \
                                         && !AMP_ERR_IS_EOF(err) \
                                         && !AMP_ERR_IS_EAGAIN(err) \
-                                        && (SERF_ERROR_WAIT_CONN != err->status))
+                                        && (AMP_ERR_WAIT_CONN != err->status))
 
 
 AMP_DECLARE(amp_err_t*)
@@ -61,5 +87,39 @@ amp_bucket_file_create(
 	amp_file_t* file,
 	amp_allocator_t* allocator,
 	amp_pool_t* scratch_pool);
+
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_aggregate_create(amp_allocator_t* allocator);
+
+AMP_DECLARE(void)
+amp_bucket_aggregate_append(
+		amp_bucket_t* aggregate,
+		amp_bucket_t* to_prepend);
+
+AMP_DECLARE(void)
+amp_bucket_aggregate_append(
+	amp_bucket_t* aggregate,
+	amp_bucket_t* to_prepend);
+
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_simple_create(const char *data, ptrdiff_t size, amp_allocator_t* allocator);
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_simple_own_create(const char *data, ptrdiff_t size, amp_allocator_t* allocator);
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_simple_copy_create(const char *data, ptrdiff_t size, amp_allocator_t* allocator);
+
+AMP_DECLARE(amp_err_t*)
+amp_bucket_hash_create(
+	amp_bucket_t** new_bucket,
+	amp_hash_result_t** hash_result,
+	amp_bucket_t* wrapped_bucket,
+	amp_hash_algorithm_t algorithm,
+	const amp_hash_result_t* expected_result,
+	amp_allocator_t* allocator,
+	amp_pool_t* result_pool); // result pool for hash_result
 
 AMP_C__END
