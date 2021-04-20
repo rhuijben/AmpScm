@@ -123,7 +123,7 @@ TEST_F(BasicTest, SimpleBucketRead)
 
 	amp_span data;
 	amp_newline_t which;
-	
+
 	TEST_ERR((*bk)->read_until_eol(&data, &which, amp_newline_any, AMP_READ_ALL_AVAIL, pool));
 
 	ASSERT_EQ(which, amp_newline_lf);
@@ -147,7 +147,7 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 
 	auto bk = amp_bucket_aggregate_create(allocator);
 
-	amp_bucket_aggregate_append(bk, amp_bucket_simple_create("blob 26\n", 8, allocator));
+	amp_bucket_aggregate_append(bk, amp_bucket_simple_create("blob 26\0", 8, allocator));
 	amp_bucket_aggregate_append(bk, amp_bucket_simple_create("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 26, allocator));
 
 
@@ -156,8 +156,8 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 	amp_hash_result_t* hash_result_md5 = nullptr;
 	TEST_ERR(
 		amp_bucket_hash_create(&bk, &hash_result_sha1,
-							  bk, amp_hash_algorithm_sha1, nullptr,
-						      allocator, pool));
+							   bk, amp_hash_algorithm_sha1, nullptr,
+							   allocator, pool));
 	TEST_ERR(
 		amp_bucket_hash_create(&bk, &hash_result_sha256,
 							   bk, amp_hash_algorithm_sha256, nullptr,
@@ -175,7 +175,7 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 	size_t sz;
 	TEST_ERR(amp_bucket_read(&buf, &sz, bk, AMP_READ_ALL_AVAIL, pool));
 	ASSERT_EQ(sz, 8);
-	ASSERT_EQ(0, memcmp("blob 26\n", buf, 8));
+	ASSERT_EQ(0, memcmp("blob 26", buf, 8)); // Includes extra '\0'!
 
 	TEST_ERR(amp_bucket_read(&buf, &sz, bk, AMP_READ_ALL_AVAIL, pool));
 	ASSERT_EQ(sz, 26);
@@ -192,7 +192,94 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 
 	amp_bucket_destroy(bk, pool);
 
-	ASSERT_STREQ("A3376BEEFF28183E2A4EFE532F17592CDE996189", amp_hash_result_to_cstring(hash_result_sha1, true, pool));
-	ASSERT_STREQ("58477859E5F1AFE259FF8234C20943B1C35B93B0B1D11483B5D882B3EBA16501", amp_hash_result_to_cstring(hash_result_sha256, true, pool));
-	ASSERT_STREQ("305CA3AC86979B00226D432F70533BC2", amp_hash_result_to_cstring(hash_result_md5, true, pool));
+	ASSERT_STREQ("a6860d918dfcb4ddb154a7fef822619e7a26f05b", amp_hash_result_to_cstring(hash_result_sha1, true, pool));
+	ASSERT_STREQ("f286a167d6c6ec184dfc744ded39add1c0112347f6bcc2d101a9b57295178d4b", amp_hash_result_to_cstring(hash_result_sha256, true, pool));
+	ASSERT_STREQ("524b0f3b0a2aa56109136e3a7b890275", amp_hash_result_to_cstring(hash_result_md5, true, pool));
+}
+
+
+// Git blob of "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+static unsigned char test_git__git_objects_a6_860d918dfcb4ddb154a7fef822619e7a26f05b[] = {
+	0x78, 0x01, 0x4b, 0xca, 0xc9, 0x4f, 0x52, 0x30, 0x32, 0x63, 0x70, 0x74,
+	0x72, 0x76, 0x71, 0x75, 0x73, 0xf7, 0xf0, 0xf4, 0xf2, 0xf6, 0xf1, 0xf5,
+	0xf3, 0x0f, 0x08, 0x0c, 0x0a, 0x0e, 0x09, 0x0d, 0x0b, 0x8f, 0x88, 0x8c,
+	0x02, 0x00, 0xa8, 0xae, 0x0a, 0x07
+};
+
+TEST_F(BasicTest, SimpleReadGitBlob)
+{
+	amp_allocator_t* allocator = (*pool)->get_allocator();
+
+	amp_bucket_t* r = amp_bucket_simple_create(&test_git__git_objects_a6_860d918dfcb4ddb154a7fef822619e7a26f05b,
+											   sizeof(test_git__git_objects_a6_860d918dfcb4ddb154a7fef822619e7a26f05b),
+											   allocator);
+
+	amp_hash_result_t* hash_result_sha1;
+	TEST_ERR(amp_bucket_decompress_create(&r, r, amp_compression_algorithm_zlib, -1, allocator));
+	TEST_ERR(amp_bucket_hash_create(&r, &hash_result_sha1, r, amp_hash_algorithm_sha1, nullptr,
+									allocator, pool));
+
+	const char* buf;
+	size_t sz;
+	amp_newline_t found;
+	TEST_ERR(amp_bucket_read_until_eol(&buf, &sz, &found, r, amp_newline_0, AMP_READ_ALL_AVAIL, pool));
+	ASSERT_EQ(sz, 8);
+	ASSERT_EQ(found, amp_newline_0);
+	ASSERT_EQ(0, memcmp("blob 26", buf, 8));
+
+
+	TEST_ERR(amp_bucket_read(&buf, &sz, r, AMP_READ_ALL_AVAIL, pool));
+	ASSERT_EQ(sz, 26);
+	ASSERT_EQ(0, memcmp("ABCDEFGHIJKLMNOPQRSTUVWXYZ", buf, 26));
+
+
+	auto err = amp_bucket_read(&buf, &sz, r, AMP_READ_ALL_AVAIL, pool);
+	ASSERT_TRUE(AMP_ERR_IS_EOF(err));
+	amp_err_clear(err);
+
+	amp_bucket_destroy(r, pool);
+
+	ASSERT_STREQ("a6860d918dfcb4ddb154a7fef822619e7a26f05b", amp_hash_result_to_cstring(hash_result_sha1, true, pool));
+}
+
+TEST_F(BasicTest, BlobAllCompressions)
+{
+	amp_allocator_t* allocator = (*pool)->get_allocator();
+
+	for (amp_compression_algorithm_t alg = amp_compression_algorithm_none; alg < amp_compression_algorithm_gzip; alg = (amp_compression_algorithm_t)(alg + 1))
+	{
+		amp_bucket_t* r = amp_bucket_simple_create("blob 26\0ABCDEFGHIJKLMNOPQRSTUVWXYZ", 26 + 8, allocator);
+
+		TEST_ERR(amp_bucket_compress_create(&r, r, alg, -1, -1, allocator));
+		amp_hash_result_t* hash_result_compressed_sha1;
+		TEST_ERR(amp_bucket_hash_create(&r, &hash_result_compressed_sha1, r, amp_hash_algorithm_sha1, nullptr,
+										allocator, pool));
+
+		TEST_ERR(amp_bucket_decompress_create(&r, r, alg, -1, allocator));
+		amp_hash_result_t* hash_result_sha1;
+		TEST_ERR(amp_bucket_hash_create(&r, &hash_result_sha1, r, amp_hash_algorithm_sha1, nullptr,
+										allocator, pool));
+
+		const char* buf;
+		size_t sz;
+		amp_newline_t found;
+		TEST_ERR(amp_bucket_read_until_eol(&buf, &sz, &found, r, amp_newline_0, AMP_READ_ALL_AVAIL, pool));
+		ASSERT_EQ(sz, 8);
+		ASSERT_EQ(found, amp_newline_0);
+		ASSERT_EQ(0, memcmp("blob 26", buf, 8));
+
+
+		TEST_ERR(amp_bucket_read(&buf, &sz, r, AMP_READ_ALL_AVAIL, pool));
+		ASSERT_EQ(sz, 26);
+		ASSERT_EQ(0, memcmp("ABCDEFGHIJKLMNOPQRSTUVWXYZ", buf, 26));
+
+
+		auto err = amp_bucket_read(&buf, &sz, r, AMP_READ_ALL_AVAIL, pool);
+		ASSERT_TRUE(AMP_ERR_IS_EOF(err));
+		amp_err_clear(err);
+
+		amp_bucket_destroy(r, pool);
+
+		ASSERT_STREQ("a6860d918dfcb4ddb154a7fef822619e7a26f05b", amp_hash_result_to_cstring(hash_result_sha1, true, pool));
+	}
 }

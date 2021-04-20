@@ -436,25 +436,80 @@ namespace amp
 	class amp_bucket_compression abstract : public amp_bucket
 	{
 	protected:
-		amp::span<char> buffer;
-		ptrdiff_t offset;
+		amp_bucket_t* wrapped;
+		bool read_eof;
+		amp_compression_algorithm_t algorithm;
+		amp_span read_buffer;
+		ptrdiff_t read_position;
+
+		amp::span<char> write_buffer;
+		ptrdiff_t write_position;
+		ptrdiff_t write_read_position;
+		void* p0;
 
 	protected:
-		amp_bucket_compression(const amp_bucket_type_t* bucket_type, ptrdiff_t buffer_size);
+		amp_bucket_compression(const amp_bucket_type_t* bucket_type, amp_bucket_t* wrapped_bucket, ptrdiff_t buffer_size, amp_allocator_t* allocator);
+		virtual amp_err_t*
+			init() = 0;
+		virtual void
+			done() = 0;
+
+		virtual amp_err_t*
+			refill(ptrdiff_t requested, amp_pool_t* scratch_pool) = 0;
 	public:
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* peek(
+			amp_span* data,
+			bool no_poll,
+			amp_pool_t* scratch_pool) override;
 
 	public:
 		virtual void destroy(amp_pool_t* scratch_pool) override;
 	};
 
-	class amp_bucket_decompress abstract : public amp_bucket_compression
+	class amp_bucket_decompress : public amp_bucket_compression
 	{
+	public:
+		amp_bucket_decompress(
+			amp_bucket_t* wrapped_bucket,
+			amp_compression_algorithm_t compression_algorithm,
+			ptrdiff_t bufsize,
+			amp_allocator_t* allocator);
 
+	protected:
+		virtual amp_err_t*
+			init() override;
+		virtual void
+			done() override;
+
+		virtual amp_err_t*
+			refill(ptrdiff_t requested, amp_pool_t* scratch_pool) override;
 	};
 
-	class amp_bucket_compress abstract : public amp_bucket_compression
+	class amp_bucket_compress : public amp_bucket_compression
 	{
+	private:
+		int compression_level;
+	public:
+		amp_bucket_compress(
+			amp_bucket_t* wrapped_bucket,
+			amp_compression_algorithm_t compression_algorithm,
+			ptrdiff_t bufsize,
+			int level,
+			amp_allocator_t* allocator);
 
+	protected:
+		virtual amp_err_t*
+			init() override;
+		virtual void
+			done() override;
+
+		virtual amp_err_t*
+			refill(ptrdiff_t requested, amp_pool_t* scratch_pool) override;
 	};
 
 	class amp_bucket_hash : public amp_bucket

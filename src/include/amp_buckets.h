@@ -30,6 +30,16 @@ enum amp_hash_algorithm_t
 	amp_hash_algorithm_sha256
 };
 
+enum amp_compression_algorithm_t
+{
+	amp_compression_algorithm_none,
+	amp_compression_algorithm_deflate,	// deflate, no wrapping (http)
+	amp_compression_algorithm_zlib,		// deflate, zlib wrapping (git)
+	amp_compression_algorithm_gzip		// deflate, gzip wrapping (gzip)
+
+	// TODO: Brotli?
+};
+
 typedef struct amp_hash_result_t
 {
 	size_t hash_bytes;
@@ -37,7 +47,7 @@ typedef struct amp_hash_result_t
 	unsigned char bytes[1];
 } amp_hash_result_t;
 
-amp_hash_result_t *
+amp_hash_result_t*
 amp_hash_result_create(
 	amp_hash_algorithm_t algorithm,
 	amp_pool_t* result_pool);
@@ -68,7 +78,7 @@ amp_bucket_read(
 	amp_pool_t* scratch_pool);
 
 AMP_DECLARE(amp_err_t*)
-amp_bucket_read_eol(
+amp_bucket_read_until_eol(
 	const char** data,
 	size_t* data_len,
 	amp_newline_t* found,
@@ -104,13 +114,13 @@ amp_bucket_aggregate_append(
 
 
 AMP_DECLARE(amp_bucket_t*)
-amp_bucket_simple_create(const char *data, ptrdiff_t size, amp_allocator_t* allocator);
+amp_bucket_simple_create(const void* data, ptrdiff_t size, amp_allocator_t* allocator);
 
 AMP_DECLARE(amp_bucket_t*)
-amp_bucket_simple_own_create(const char *data, ptrdiff_t size, amp_allocator_t* allocator);
+amp_bucket_simple_own_create(const void* data, ptrdiff_t size, amp_allocator_t* allocator);
 
 AMP_DECLARE(amp_bucket_t*)
-amp_bucket_simple_copy_create(const char *data, ptrdiff_t size, amp_allocator_t* allocator);
+amp_bucket_simple_copy_create(const void* data, ptrdiff_t size, amp_allocator_t* allocator);
 
 AMP_DECLARE(amp_err_t*)
 amp_bucket_hash_create(
@@ -121,5 +131,22 @@ amp_bucket_hash_create(
 	const amp_hash_result_t* expected_result,
 	amp_allocator_t* allocator,
 	amp_pool_t* result_pool); // result pool for hash_result
+
+AMP_DECLARE(amp_err_t*)
+amp_bucket_compress_create(
+	amp_bucket_t** new_bucket,
+	amp_bucket_t* to_compress,
+	amp_compression_algorithm_t algorithm,
+	int level,
+	ptrdiff_t buffer_size,
+	amp_allocator_t* allocator);
+
+AMP_DECLARE(amp_err_t*)
+amp_bucket_decompress_create(
+	amp_bucket_t** new_bucket,
+	amp_bucket_t* to_compress,
+	amp_compression_algorithm_t algorithm,
+	ptrdiff_t buffer_size,
+	amp_allocator_t* allocator);
 
 AMP_C__END

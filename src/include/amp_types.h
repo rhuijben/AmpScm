@@ -65,10 +65,12 @@ typedef enum amp_newline_t
 	amp_newline_lf = 0x01,
 	amp_newline_cr = 0x02,
 	amp_newline_crlf = 0x04,
+	amp_newline_0 = 0x08,
 
-	amp_newline_crlf_split = 0x10,
+	amp_newline_crlf_split = 0x100, // Single '\r' without knowledge about next char
 
-	amp_newline_any = amp_newline_lf | amp_newline_cr | amp_newline_crlf
+	amp_newline_any = amp_newline_lf | amp_newline_cr | amp_newline_crlf,
+	amp_newline_any_split = amp_newline_any | amp_newline_0
 } amp_newline_t;
 
 typedef amp_err_t* (*amp_error_chain_func_t)(

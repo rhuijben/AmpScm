@@ -129,3 +129,21 @@ amp_bucket_simple_const::destroy(amp_pool_t* scratch_pool)
 {
 	amp_bucket_simple::destroy(scratch_pool);
 }
+
+amp_bucket_t*
+amp_bucket_simple_create(const void* data, ptrdiff_t size, amp_allocator_t* allocator)
+{
+	return AMP_ALLOCATOR_NEW(amp_bucket_simple_const, allocator, amp_span((const char*)data, size), allocator);
+}
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_simple_own_create(const void* data, ptrdiff_t size, amp_allocator_t* allocator)
+{
+	return AMP_ALLOCATOR_NEW(amp_bucket_simple_own, allocator, amp_span((const char*)data, size), allocator);
+}
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_simple_copy_create(const void* data, ptrdiff_t size, amp_allocator_t* allocator)
+{
+	return AMP_ALLOCATOR_NEW(amp_bucket_simple_copy, allocator, amp_span((const char*)data, size), allocator);
+}

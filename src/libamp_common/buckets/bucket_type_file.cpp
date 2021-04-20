@@ -55,23 +55,25 @@ amp_bucket_file::refill(ptrdiff_t requested)
 	if (available > 4096 || available > requested)
 		return AMP_NO_ERROR; // Nothing to refill, or we must move more data than we want
 
-
+	
 	// Modern disks and OS caches generally work in 4KB or bigger blocks. Let's keep things nicely
 	// aligned. Typically on 64 KByte, but on 4K when using eol read refills
 	// Note that get_current_position() is just a 
+	const ptrdiff_t bufferm1 = (BUFFER_MIN_ALIGN - 1);
 
-	ptrdiff_t fixup = ((*file)->get_current_position() & (BUFFER_MIN_ALIGN - 1));
+	ptrdiff_t fixup = ((*file)->get_current_position() & bufferm1);
 
 	if (fixup)
 		fixup = (BUFFER_MIN_ALIGN - fixup);
 
 	if (available > 0)
-	{		
+	{
+		if (position > 8192) // Might be false when runnign against EOF
 		{	
 			// Move data to the first 4KB
-			ptrdiff_t new_pos = position & (BUFFER_MIN_ALIGN - 1) + fixup;
+			ptrdiff_t new_pos = (position & bufferm1) + fixup;
 
-			AMP_ASSERT(new_pos + available < position); // Regions can't overlap with memcpy
+			AMP_ASSERT(new_pos + available <= position); // Regions can't overlap with memcpy
 
 			memcpy(&buffer[new_pos], &buffer[position], available);
 			position = new_pos;

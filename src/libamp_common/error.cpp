@@ -595,7 +595,7 @@ amp_err_str_from_status(amp_status_t status_code, amp_pool_t* pool)
 	DWORD len = FormatMessageW(
 		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL /* source */,
-		AMP_ERR_TO_OS(status_code),
+		(DWORD)AMP_ERR_TO_OS(status_code),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
 		staticBuffer, sz,
 		nullptr /* va_args */);
