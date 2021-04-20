@@ -123,7 +123,7 @@ void amp_bucket_hash::setupHashing()
 	}
 
 	p3sz = objectLength;
-	p3 = (*allocator)->alloc(objectLength);
+	p3 = (*allocator)->alloc(p3sz);
 	memset(p3, 0, p3sz);
 
 	if (BCryptCreateHash(hAlg, &p2, (PUCHAR)p3, p3sz, nullptr, 0, 0) < 0)
@@ -290,8 +290,8 @@ amp_hash_result_to_cstring(
 	{
 		int b = result->bytes[i];
 
-		rs[2 * i] = "0123456789ABCDEF"[b >> 4];
-		rs[2 * i +1] = "0123456789ABCDEF"[b & 0xF];
+		rs[2 * i] = "0123456789abcdef"[b >> 4];
+		rs[2 * i +1] = "0123456789abcdef"[b & 0xF];
 	}
 	rs[result->hash_bytes * 2] = 0;
 	return rs;

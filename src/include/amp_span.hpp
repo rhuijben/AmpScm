@@ -26,7 +26,7 @@ namespace amp
 
 		span(T* data, ptrdiff_t size)
 		{
-			AMP_ASSERT(data && size >= 0);
+			AMP_ASSERT((data && size >= 0) || (size == 0 && !data));
 			m_data = data;
 			m_size = size;
 		}
@@ -57,13 +57,13 @@ namespace amp
 			return m_data;
 		}
 
-		constexpr reference back() const
+		constexpr reference back() const noexcept
 		{
 			return m_data + m_size - 1;
 		}
 
 	public:
-		constexpr span first(size_type size) const
+		constexpr span first(size_type size) const noexcept
 		{
 			AMP_ASSERT(size >= 0);
 
@@ -73,7 +73,7 @@ namespace amp
 				return span(m_data, m_size);
 		}
 
-		constexpr span subspan(size_type offset, size_type count) const
+		constexpr span subspan(size_type offset, size_type count) const noexcept
 		{
 			AMP_ASSERT(offset >= 0 && offset <= m_size && count >= 0);
 
@@ -83,7 +83,7 @@ namespace amp
 				return span(m_data + offset, count);
 		}
 
-		constexpr span min_subspan(size_type offset, size_type count) const
+		constexpr span min_subspan(size_type offset, size_type count) const noexcept
 		{
 			AMP_ASSERT(offset >= 0 && count >= 0);
 
@@ -93,14 +93,14 @@ namespace amp
 				return span(m_data + offset, count);
 		}
 
-		constexpr span subspan(size_type offset) const
+		constexpr span subspan(size_type offset) const noexcept
 		{
 			AMP_ASSERT(offset >= 0 && offset <= m_size);
 
 			return span(m_data + offset, m_size - offset);
 		}
 
-		constexpr span last(size_type size) const
+		constexpr span last(size_type size) const noexcept
 		{
 			AMP_ASSERT(size >= 0);
 
@@ -135,7 +135,7 @@ namespace amp
 			return m_data;
 		}
 
-		const reference operator[](size_type idx) const
+		const reference operator[](size_type idx) const noexcept
 		{
 			AMP_ASSERT(idx >= 0 && idx < m_size);
 

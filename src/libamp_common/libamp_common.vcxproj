@@ -204,6 +204,7 @@
     <ClCompile Include="allocators.cpp" />
     <ClCompile Include="buckets.cpp" />
     <ClCompile Include="buckets\bucket_type_aggregate.cpp" />
+    <ClCompile Include="buckets\bucket_type_compression.cpp" />
     <ClCompile Include="buckets\bucket_type_file.cpp" />
     <ClCompile Include="buckets\bucket_type_hash.cpp" />
     <ClCompile Include="buckets\bucket_type_simple.cpp" />

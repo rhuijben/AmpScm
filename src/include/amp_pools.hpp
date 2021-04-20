@@ -155,6 +155,12 @@ namespace amp {
 	}
 
 	template<typename T>
+	inline T* amp_allocator_calloc(amp_allocator_t* allocator)
+	{
+		return (T*)memset(amp_allocator_alloc(sizeof(T), allocator), 0, sizeof(T));
+	}
+
+	template<typename T>
 	inline T* amp_allocator_alloc_n(size_t count, amp_allocator_t* allocator)
 	{
 		return (T*)amp_allocator_alloc(sizeof(T) * count, allocator);
