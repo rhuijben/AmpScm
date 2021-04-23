@@ -154,6 +154,8 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 	amp_hash_result_t* hash_result_sha1 = nullptr;
 	amp_hash_result_t* hash_result_sha256 = nullptr;
 	amp_hash_result_t* hash_result_md5 = nullptr;
+	amp_hash_result_t* hash_result_crc32 = nullptr;
+	amp_hash_result_t* hash_result_adler32 = nullptr;
 	TEST_ERR(
 		amp_bucket_hash_create(&bk, &hash_result_sha1,
 							   bk, amp_hash_algorithm_sha1, nullptr,
@@ -165,6 +167,14 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 	TEST_ERR(
 		amp_bucket_hash_create(&bk, &hash_result_md5,
 							   bk, amp_hash_algorithm_md5, nullptr,
+							   allocator, pool));
+	TEST_ERR(
+		amp_bucket_hash_create(&bk, &hash_result_crc32,
+							   bk, amp_hash_algorithm_crc32, nullptr,
+							   allocator, pool));
+	TEST_ERR(
+		amp_bucket_hash_create(&bk, &hash_result_adler32,
+							   bk, amp_hash_algorithm_adler32, nullptr,
 							   allocator, pool));
 
 	ASSERT_NE(hash_result_sha1, nullptr);
@@ -182,6 +192,8 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 	ASSERT_EQ(0, memcmp("ABCDEFGHIJKLMNOPQRSTUVWXYZ", buf, 26));
 
 	auto err = amp_bucket_read(&buf, &sz, bk, AMP_READ_ALL_AVAIL, pool);
+	if (!AMP_ERR_IS_EOF(err))
+		TEST_ERR(err);
 	ASSERT_TRUE(AMP_ERR_IS_EOF(err));
 	ASSERT_EQ(sz, 0);
 	amp_err_clear(err);
@@ -195,6 +207,8 @@ TEST_F(BasicTest, SimpleBucketCreateRead)
 	ASSERT_STREQ("a6860d918dfcb4ddb154a7fef822619e7a26f05b", amp_hash_result_to_cstring(hash_result_sha1, true, pool));
 	ASSERT_STREQ("f286a167d6c6ec184dfc744ded39add1c0112347f6bcc2d101a9b57295178d4b", amp_hash_result_to_cstring(hash_result_sha256, true, pool));
 	ASSERT_STREQ("524b0f3b0a2aa56109136e3a7b890275", amp_hash_result_to_cstring(hash_result_md5, true, pool));
+	ASSERT_STREQ("81720e6c", amp_hash_result_to_cstring(hash_result_crc32, true, pool));
+	ASSERT_STREQ("a88c0a06", amp_hash_result_to_cstring(hash_result_adler32, true, pool));
 }
 
 

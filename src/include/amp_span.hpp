@@ -77,8 +77,13 @@ namespace amp
 		{
 			AMP_ASSERT(offset >= 0 && offset <= m_size && count >= 0);
 
-			if (offset + count > m_size)
-				return span(m_data + offset, m_size - offset);
+			if (offset >= m_size)
+				return span();
+
+			ptrdiff_t new_size = m_size - offset;
+
+			if (count >= new_size)
+				return span(m_data + offset, new_size);
 			else
 				return span(m_data + offset, count);
 		}
@@ -87,8 +92,13 @@ namespace amp
 		{
 			AMP_ASSERT(offset >= 0 && count >= 0);
 
-			if (offset + count > m_size)
-				return span(m_data + offset, m_size - offset);
+			if (offset > m_size)
+				return span();
+
+			ptrdiff_t new_size = m_size - offset;
+
+			if (count >= new_size)
+				return span(m_data + offset, new_size);
 			else
 				return span(m_data + offset, count);
 		}

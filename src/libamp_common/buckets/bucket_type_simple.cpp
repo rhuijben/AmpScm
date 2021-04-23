@@ -53,6 +53,7 @@ amp_bucket_simple::read_skip(
 		return amp_err_create(AMP_EOF, nullptr, nullptr);
 	else if (requested <= (amp_off_t)buffer.size() - offset)
 	{
+		*skipped = requested;
 		offset += (ptrdiff_t)requested;
 		return AMP_NO_ERROR;
 	}
@@ -70,8 +71,14 @@ amp_bucket_simple::read_remaining_bytes(
 			amp_pool_t* scratch_pool)
 {
 	AMP_UNUSED(scratch_pool);
-	*remaining = (buffer.size() - offset);
+	*remaining = (amp_off_t)buffer.size() - offset;
 	return AMP_NO_ERROR;
+}
+
+amp_off_t
+amp_bucket_simple::get_position()
+{
+	return offset;
 }
 
 amp_err_t* 
@@ -83,10 +90,27 @@ amp_bucket_simple::reset(
 	return AMP_NO_ERROR;
 }
 
-amp_err_t* amp_bucket_simple::duplicate(amp_bucket_t** new_bucket, amp_pool_t* scratch_pool)
+amp_err_t* 
+amp_bucket_simple::duplicate(
+	amp_bucket_t** new_bucket, 
+	bool for_reset,
+	amp_pool_t* scratch_pool)
 {
 	AMP_UNUSED(scratch_pool);
-	*new_bucket = AMP_ALLOCATOR_NEW(amp_bucket_simple_copy, allocator, buffer.subspan(offset), allocator);
+
+	if (for_reset)
+	{
+		//  - copy the entire buffer... to allow resetting (git scenario)
+		amp_bucket_simple * s = AMP_ALLOCATOR_NEW(amp_bucket_simple_copy, allocator, buffer, allocator);
+		s->offset = offset;
+
+		*new_bucket = s;
+	}
+	else
+	{
+		//  - copy only what is really needed
+		*new_bucket = AMP_ALLOCATOR_NEW(amp_bucket_simple_copy, allocator, buffer.subspan(offset), allocator);
+	}
 
 	return AMP_NO_ERROR;
 }

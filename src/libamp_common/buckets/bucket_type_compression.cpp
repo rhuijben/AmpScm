@@ -12,8 +12,8 @@
 
 using namespace amp;
 
-static amp::amp_bucket::amp_bucket_type amp_aggregate_bucket_type_compress("amp.compress");
-static amp::amp_bucket::amp_bucket_type amp_aggregate_bucket_type_decompress("amp.decompress");
+static amp::amp_bucket::amp_bucket_type compress_bucket_type("amp.compress");
+static amp::amp_bucket::amp_bucket_type decompress_bucket_type("amp.decompress");
 
 
 amp_err_t*
@@ -60,6 +60,7 @@ amp_bucket_compression::amp_bucket_compression(const amp_bucket_type_t* bucket_t
 	write_position = 0;
 	write_read_position = 0;
 	p0 = nullptr;
+	position = 0;
 }
 
 void
@@ -99,7 +100,7 @@ amp_bucket_decompress::amp_bucket_decompress(
 	amp_compression_algorithm_t compression_algorithm,
 	ptrdiff_t bufsize,
 	amp_allocator_t* allocator)
-	: amp_bucket_compression(&amp_aggregate_bucket_type_decompress, wrapped_bucket, bufsize, allocator)
+	: amp_bucket_compression(&decompress_bucket_type, wrapped_bucket, bufsize, allocator)
 {
 	AMP_ASSERT(ALGORITHM_ZLIB(compression_algorithm) || compression_algorithm == amp_compression_algorithm_none);
 
@@ -173,20 +174,34 @@ amp_bucket_decompress::refill(ptrdiff_t requested, amp_pool_t* scratch_pool)
 	do
 	{
 		retry_refill = false;
+		bool did_peek = false;
 
 		if (!read_eof && read_position >= read_buffer.size_bytes())
 		{
 			read_position = 0;
-			auto err = (*wrapped)->read(&read_buffer, requested, scratch_pool);
-			if (err)
+
+			amp_err_t* err = (*wrapped)->peek(&read_buffer, false, scratch_pool);
+
+			if (err || read_buffer.size_bytes() == 0)
 			{
-				read_buffer = amp_span();
-
-				if (!AMP_ERR_IS_EOF(err))
-					return amp_err_trace(err);
-
 				amp_err_clear(err);
-				read_eof = true;
+
+				err = (*wrapped)->read(&read_buffer, 1, scratch_pool);
+
+				if (err)
+				{
+					read_buffer = amp_span();
+
+					if (!AMP_ERR_IS_EOF(err))
+						return amp_err_trace(err);
+
+					amp_err_clear(err);
+					read_eof = true;
+				}
+			}
+			else
+			{
+				did_peek = true;
 			}
 		}
 
@@ -236,6 +251,19 @@ amp_bucket_decompress::refill(ptrdiff_t requested, amp_pool_t* scratch_pool)
 			read_position += szcopy;
 			write_position += szcopy;
 		}
+
+		if (did_peek)
+		{
+			// We only peeked the data, and performed no actual read. Let's perform the requested read now
+			amp_err_t *err = amp_err_trace((*wrapped)->read(&read_buffer, read_position, scratch_pool));
+
+			if (AMP_IS_BUCKET_READ_ERROR(err))
+				return err;
+			else if (err)
+				amp_err_clear(err);
+
+			AMP_ASSERT(read_buffer.size_bytes() == read_position); // We are at the end of the read buffer.
+		}
 	} while (retry_refill && !read_eof);
 
 	return AMP_NO_ERROR;
@@ -247,7 +275,7 @@ amp_bucket_compress::amp_bucket_compress(
 	ptrdiff_t bufsize,
 	int level,
 	amp_allocator_t* allocator)
-	: amp_bucket_compression(&amp_aggregate_bucket_type_decompress, wrapped_bucket, bufsize, allocator)
+	: amp_bucket_compression(&compress_bucket_type, wrapped_bucket, bufsize, allocator)
 {
 	AMP_ASSERT(ALGORITHM_ZLIB(compression_algorithm) || algorithm == amp_compression_algorithm_none);
 
@@ -408,6 +436,7 @@ amp_bucket_compression::read(
 
 	*data_in = write_buffer.min_subspan(write_read_position, MIN(requested, write_position - write_read_position));
 	write_read_position += data_in->size_bytes();
+	position += data_in->size_bytes();
 
 	if (data_in->size_bytes())
 		return AMP_NO_ERROR;
@@ -425,7 +454,7 @@ amp_bucket_compression::peek(
 			bool no_poll,
 			amp_pool_t* scratch_pool)
 {
-	if (write_read_position >= write_position)
+	if (write_read_position >= write_position && !no_poll)
 		AMP_ERR(refill(AMP_READ_ALL_AVAIL, scratch_pool));
 
 	*data = write_buffer.min_subspan(write_read_position, write_position - write_read_position);
@@ -434,4 +463,10 @@ amp_bucket_compression::peek(
 		return AMP_NO_ERROR;
 	else
 		return amp_err_create(AMP_EOF, nullptr, nullptr);
+}
+
+amp_off_t
+amp_bucket_compression::get_position()
+{
+	return position;
 }

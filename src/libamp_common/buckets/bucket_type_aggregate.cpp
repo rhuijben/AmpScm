@@ -324,6 +324,7 @@ amp_bucket_aggregate::reset(
 amp_err_t*
 amp_bucket_aggregate::duplicate(
 	amp_bucket_t **result,
+	bool for_reset,
 	amp_pool_t* scratch_pool)
 {
 	amp_bucket_aggregate* bk = AMP_ALLOCATOR_NEW(amp_bucket_aggregate, allocator, keep_open, allocator);
@@ -333,7 +334,7 @@ amp_bucket_aggregate::duplicate(
 	if (cur)
 	{
 		amp_bucket_t* new_cur;
-		amp_err_t* err = (*cur->bucket)->duplicate(&new_cur, scratch_pool);
+		amp_err_t* err = (*cur->bucket)->duplicate(&new_cur, for_reset, scratch_pool);
 
 		if (err)
 		{
@@ -347,7 +348,7 @@ amp_bucket_aggregate::duplicate(
 	while (t)
 	{
 		amp_bucket_t* new_prev;
-		amp_err_t* err = (*t->bucket)->duplicate(&new_prev, scratch_pool);
+		amp_err_t* err = (*t->bucket)->duplicate(&new_prev, for_reset, scratch_pool);
 
 		if (err)
 		{
@@ -363,7 +364,7 @@ amp_bucket_aggregate::duplicate(
 	while (t)
 	{
 		amp_bucket_t* new_prev;
-		amp_err_t* err = (*t->bucket)->duplicate(&new_prev, scratch_pool);
+		amp_err_t* err = (*t->bucket)->duplicate(&new_prev, for_reset, scratch_pool);
 
 		if (err)
 		{

@@ -25,6 +25,8 @@ struct iovec
 enum amp_hash_algorithm_t
 {
 	amp_hash_algorithm_none,
+	amp_hash_algorithm_adler32,
+	amp_hash_algorithm_crc32,
 	amp_hash_algorithm_md5,
 	amp_hash_algorithm_sha1,
 	amp_hash_algorithm_sha256
@@ -44,6 +46,7 @@ typedef struct amp_hash_result_t
 {
 	size_t hash_bytes;
 	amp_hash_algorithm_t hash_algorithm;
+	amp_off_t original_size;
 	unsigned char bytes[1];
 } amp_hash_result_t;
 
@@ -148,5 +151,9 @@ amp_bucket_decompress_create(
 	amp_compression_algorithm_t algorithm,
 	ptrdiff_t buffer_size,
 	amp_allocator_t* allocator);
+
+AMP_DECLARE(amp_bucket_t*)
+amp_bucket_block_create(amp_bucket_t* wrapped,
+						amp_allocator_t* allocator);
 
 AMP_C__END
