@@ -190,12 +190,15 @@
     <ClInclude Include="..\include\amp_common.hpp" />
     <ClInclude Include="..\include\amp_errno.h" />
     <ClInclude Include="..\include\amp_error.h" />
+    <ClInclude Include="..\include\amp_error.hpp" />
     <ClInclude Include="..\include\amp_error_codes.h" />
     <ClInclude Include="..\include\amp_files.h" />
     <ClInclude Include="..\include\amp_files.hpp" />
     <ClInclude Include="..\include\amp_pools.h" />
     <ClInclude Include="..\include\amp_pools.hpp" />
     <ClInclude Include="..\include\amp_span.hpp" />
+    <ClInclude Include="..\include\amp_src_git.h" />
+    <ClInclude Include="..\include\amp_src_git.hpp" />
     <ClInclude Include="..\include\amp_types.h" />
     <ClInclude Include="..\include\amp_types.hpp" />
     <ClInclude Include="framework.h" />
@@ -204,6 +207,7 @@
     <ClCompile Include="allocators.cpp" />
     <ClCompile Include="buckets.cpp" />
     <ClCompile Include="buckets\bucket_type_aggregate.cpp" />
+    <ClCompile Include="buckets\bucket_type_block.cpp" />
     <ClCompile Include="buckets\bucket_type_compression.cpp" />
     <ClCompile Include="buckets\bucket_type_file.cpp" />
     <ClCompile Include="buckets\bucket_type_hash.cpp" />
@@ -211,8 +215,8 @@
     <ClCompile Include="common.cpp" />
     <ClCompile Include="error.cpp" />
     <ClCompile Include="files.cpp" />
-    <ClCompile Include="libamp_common.cpp" />
     <ClCompile Include="pools.cpp" />
+    <ClCompile Include="src_git.cpp" />
     <ClCompile Include="Types.cpp" />
   </ItemGroup>
   <ItemGroup>

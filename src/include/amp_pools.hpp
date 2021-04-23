@@ -1,6 +1,7 @@
 #pragma once
 
 #include "amp_types.hpp"
+#include <memory>
 
 namespace amp
 {

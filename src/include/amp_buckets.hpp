@@ -93,57 +93,25 @@ namespace amp
 					ptrdiff_t requested,
 					amp_pool_t* scratch_pool);
 
-#if 0
-		/*
-		 * Read a set of pointer/length pairs from the bucket.
+		/**
+		 * Look within @a bucket for a bucket of the given @a type. The bucket
+		 * must be the "initial" data because it will be consumed by this
+		 * function. If the given bucket type is available, then read and consume
+		 * it, and return it to the caller.
 		 *
-		 * The size of the @a vecs array is specified by @a vecs_size. The
-		 * bucket should fill in elements of the array, and return the number
-		 * used in @a vecs_used.
+		 * This function is usually used by readers that have custom handling
+		 * for specific bucket types (e.g. looking for a file bucket to pass
+		 * to apr_socket_sendfile).
 		 *
-		 * Each element of @a vecs should specify a pointer to a block of
-		 * data and a length of that data.
+		 * If a bucket of the given type is not found, then NULL is returned.
 		 *
-		 * The total length of all data elements should not exceed the
-		 * amount specified in @a requested.
-		 *
-		 * The lifetime of the data is the same as that of the @see read
-		 * function above.
+		 * The returned bucket becomes the responsibility of the caller. When
+		 * the caller is done with the bucket, it should be destroyed.
 		 */
-		virtual amp_err_t* read_iovec(
-				int* vecs_used,
-				ptrdiff_t requested,
-				struct iovec* vecs,
-				int vecs_count,
-				amp_pool_t* scratch_pool)
-#endif
-
-			/**
-			 * Look within @a bucket for a bucket of the given @a type. The bucket
-			 * must be the "initial" data because it will be consumed by this
-			 * function. If the given bucket type is available, then read and consume
-			 * it, and return it to the caller.
-			 *
-			 * This function is usually used by readers that have custom handling
-			 * for specific bucket types (e.g. looking for a file bucket to pass
-			 * to apr_socket_sendfile).
-			 *
-			 * If a bucket of the given type is not found, then NULL is returned.
-			 *
-			 * The returned bucket becomes the responsibility of the caller. When
-			 * the caller is done with the bucket, it should be destroyed.
-			 */
-			virtual amp_err_t* read_bucket(
-					amp_bucket_t** result,
-					const amp_bucket_type_t* bucket_type,
-					amp_pool_t* scratch_pool)
-		{
-			AMP_UNUSED(scratch_pool);
-			AMP_UNUSED(bucket_type);
-
-			*result = nullptr;
-			return AMP_NO_ERROR;
-		}
+		virtual amp_err_t* read_bucket(
+				amp_bucket_t** result,
+				const amp_bucket_type_t* bucket_type,
+				amp_pool_t* scratch_pool);
 
 		/**
 		 * Peek, but don't consume, the data in @a bucket.
@@ -167,14 +135,7 @@ namespace amp
 		virtual amp_err_t* peek(
 				amp_span* data,
 				bool no_poll,
-				amp_pool_t* scratch_pool)
-		{
-			AMP_UNUSED(scratch_pool);
-			AMP_UNUSED(no_poll);
-
-			*data = amp_span("", 0);
-			return AMP_NO_ERROR;
-		}
+				amp_pool_t* scratch_pool);
 
 		/**
 		 * @brief Tries to read @a requested bytes, without actually looking at them
@@ -186,19 +147,7 @@ namespace amp
 		virtual amp_err_t* read_skip(
 			amp_off_t* skipped,
 			amp_off_t requested,
-			amp_pool_t* scratch_pool
-		)
-		{
-			amp_span result;
-
-			if (requested > INTPTR_MAX)
-				requested = INTPTR_MAX;
-
-			AMP_ERR(read(&result, (ptrdiff_t)requested, scratch_pool));
-
-			*skipped = result.size_bytes();
-			return AMP_NO_ERROR;
-		}
+			amp_pool_t* scratch_pool);
 
 		/**
 		 * Returns length of remaining data to be read in @a bucket. Returns
@@ -207,13 +156,7 @@ namespace amp
 		virtual amp_err_t*
 			read_remaining_bytes(
 					amp_off_t* remaining,
-					amp_pool_t* scratch_pool)
-		{
-			AMP_UNUSED(scratch_pool);
-			*remaining = -1;
-
-			return amp_err_create(AMP_ERR_NOT_SUPPORTED, nullptr, nullptr);
-		}
+					amp_pool_t* scratch_pool);
 
 		/**
 		 * @brief Resets the bucket to its original location *or* returns
@@ -223,12 +166,8 @@ namespace amp
 		 * if the function returns an error implying that the function
 		 * is not implemented
 		*/
-		virtual amp_err_t* reset(amp_pool_t* scratch_pool)
-		{
-			AMP_UNUSED(scratch_pool);
-
-			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
-		}
+		virtual amp_err_t*
+			reset(amp_pool_t* scratch_pool);
 
 		/**
 		 * @brief Duplicates the stream to two streams that will now return
@@ -240,13 +179,16 @@ namespace amp
 		*/
 		virtual amp_err_t* duplicate(
 			amp_bucket_t** result,
-			amp_pool_t* scratch_pool)
+			bool for_reset,
+			amp_pool_t* scratch_pool);
+
+		/**
+		 * @brief Gets the current byte position within the bucket or -1 if not available
+		 * @return
+		*/
+		virtual amp_off_t get_position()
 		{
-			AMP_UNUSED(scratch_pool);
-
-			*result = nullptr;
-
-			return amp_err_create(AMP_ERR_NOT_IMPLEMENTED, nullptr, nullptr);
+			return -1;
 		}
 
 	public:
@@ -305,6 +247,8 @@ namespace amp
 		virtual amp_err_t* read_remaining_bytes(
 				amp_off_t* remaining,
 				amp_pool_t* scratch_pool) override;
+
+		virtual amp_off_t get_position() override;
 
 	public:
 		virtual void destroy(amp_pool_t* pool) override;
@@ -372,6 +316,7 @@ namespace amp
 
 		virtual amp_err_t* duplicate(
 			amp_bucket_t** new_bucket,
+			bool for_reset,
 			amp_pool_t* scratch_pool) override;
 	};
 
@@ -409,7 +354,10 @@ namespace amp
 
 		virtual amp_err_t* duplicate(
 			amp_bucket_t** new_bucket,
-			amp_pool_t* scratch_pool) final;
+			bool for_reset,
+			amp_pool_t* scratch_pool) override final;
+
+		virtual amp_off_t get_position() override;
 	};
 
 	class amp_bucket_simple_copy : public amp_bucket_simple
@@ -441,6 +389,7 @@ namespace amp
 		amp_compression_algorithm_t algorithm;
 		amp_span read_buffer;
 		ptrdiff_t read_position;
+		amp_off_t position;
 
 		amp::span<char> write_buffer;
 		ptrdiff_t write_position;
@@ -466,6 +415,8 @@ namespace amp
 			amp_span* data,
 			bool no_poll,
 			amp_pool_t* scratch_pool) override;
+
+		virtual amp_off_t get_position() override;
 
 	public:
 		virtual void destroy(amp_pool_t* scratch_pool) override;
@@ -522,6 +473,7 @@ namespace amp
 		void* p1, * p2, * p3; // CNG or OpenSSL state
 		size_t p3sz;
 		bool done;
+		amp_off_t hashed_bytes;
 
 	public:
 		amp_bucket_hash(amp_bucket_t* wrap_bucket,
@@ -554,6 +506,110 @@ namespace amp
 			amp_span* data,
 			bool no_poll,
 			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* reset(
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t*
+			read_remaining_bytes(
+				amp_off_t* remaining,
+				amp_pool_t* scratch_pool) override;
+
+		virtual amp_off_t
+			get_position() override;
+	};
+
+	class amp_bucket_limit : public amp_bucket
+	{
+	private:
+		amp_bucket_t* wrapped;
+		amp_off_t position;
+	public:
+		amp_bucket_limit(amp_bucket_t* wrap_bucket,
+						amp_off_t start_offset,
+						amp_off_t max_read,
+						bool read_until_eof,
+						amp_allocator_t* allocator);
+
+		virtual void destroy(amp_pool_t* scratch_pool) override;
+
+	public:
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_until_eol(
+			amp_span* data,
+			amp_newline_t* found,
+			amp_newline_t acceptable,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* peek(
+			amp_span* data,
+			bool no_poll,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* reset(
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t*
+			read_remaining_bytes(
+				amp_off_t* remaining,
+				amp_pool_t* scratch_pool) override;
+
+		virtual amp_off_t
+			get_position() override;
+	};
+
+	class amp_bucket_block final : public amp_bucket
+	{
+	private:
+		amp_bucket_t* wrapped;
+	public:
+		amp_bucket_block(amp_bucket_t* wrapped_bucket, amp_allocator_t* allocator);
+
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_until_eol(
+			amp_span* data,
+			amp_newline_t* found,
+			amp_newline_t acceptable,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_bucket(
+				amp_bucket_t** result,
+				const amp_bucket_type_t* bucket_type,
+				amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* peek(
+			amp_span* data,
+			bool no_poll,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_skip(
+			amp_off_t* skipped,
+			amp_off_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t*
+			read_remaining_bytes(
+				amp_off_t* remaining,
+				amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* reset(amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* duplicate(
+			amp_bucket_t** result,
+			bool for_reset,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_off_t get_position() override;
 	};
 }
 

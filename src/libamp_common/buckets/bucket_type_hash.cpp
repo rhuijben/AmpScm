@@ -4,18 +4,19 @@
 #else
 // TODO: Add OPENSSL variant
 #endif
+#include <zlib.h>
 
 #include <amp_buckets.hpp>
 #include <amp_files.hpp>
 
 using namespace amp;
 
-static amp::amp_bucket::amp_bucket_type amp_hash_bucket_type("amp.hash");
+static amp::amp_bucket::amp_bucket_type hash_bucket_type("amp.hash");
 
-amp_hash_result_t *
+amp_hash_result_t*
 amp_hash_result_create(
 	amp_hash_algorithm_t algorithm,
-	amp_pool_t *result_pool)
+	amp_pool_t* result_pool)
 {
 	size_t bytes;
 	switch (algorithm)
@@ -28,6 +29,10 @@ amp_hash_result_create(
 			break;
 		case amp_hash_algorithm_sha256:
 			bytes = 32;
+			break;
+		case amp_hash_algorithm_adler32:
+		case amp_hash_algorithm_crc32:
+			bytes = (32 / 8);
 			break;
 		default:
 			AMP_ASSERT(algorithm && "is unsupported");
@@ -46,11 +51,11 @@ amp_bucket_hash::amp_bucket_hash(
 				amp_hash_result_t* fill_result,
 				const amp_hash_result_t* expect_result,
 				amp_allocator_t* allocator)
-	: amp_bucket(&amp_hash_bucket_type, allocator)
+	: amp_bucket(&hash_bucket_type, allocator)
 {
 	AMP_ASSERT(wrap_bucket && (!fill_result ^ !expect_result)
-				&& (!fill_result || fill_result->hash_bytes >= 16)
-			   && (!expect_result || expect_result->hash_bytes >= 16)
+				&& (!fill_result || fill_result->hash_bytes >= 4)
+			   && (!expect_result || expect_result->hash_bytes >= 4)
 	);
 
 	wrapped = wrap_bucket;
@@ -62,6 +67,7 @@ amp_bucket_hash::amp_bucket_hash(
 		memset(new_result->bytes, 0, new_result->hash_bytes);
 
 	p1 = p2 = p3 = nullptr;
+	hashed_bytes = 0;
 
 	setupHashing();
 	done = false;
@@ -77,6 +83,12 @@ amp_bucket_hash::destroy(amp_pool_t* scratch_pool)
 
 void amp_bucket_hash::setupHashing()
 {
+	hashed_bytes = 0;
+	if (algorithm == amp_hash_algorithm_adler32 || algorithm == amp_hash_algorithm_crc32 || algorithm == amp_hash_algorithm_none)
+	{
+		p3 = amp_allocator_calloc<uLong>(allocator);
+		return;
+	}
 #ifdef _WIN32
 	BCRYPT_ALG_HANDLE hAlg;
 	const wchar_t* alg;
@@ -134,17 +146,48 @@ void amp_bucket_hash::setupHashing()
 #endif
 }
 
-amp_err_t *
+amp_err_t*
 amp_bucket_hash::finishHashing(bool useResult)
 {
 	if (algorithm == amp_hash_algorithm_none)
 		return amp_err_create(AMP_EGENERAL, nullptr, "Unable to setup hashing");
+
+	if (useResult && new_result)
+		new_result->original_size = hashed_bytes;
+
+	if (algorithm == amp_hash_algorithm_adler32 || algorithm == amp_hash_algorithm_crc32)
+	{
+		if (useResult)
+		{
+			uLong result = *reinterpret_cast<uLong*>(p3);
+			int r;
+			unsigned char* pResult = new_result ? new_result->bytes : (unsigned char*)&r;
+
+			pResult[0] = (result >> 24) & 0xFF;
+			pResult[1] = (result >> 16) & 0xFF;
+			pResult[2] = (result >> 8) & 0xFF;
+			pResult[3] = (result >> 0) & 0xFF;
+
+			if (expected_result && memcmp(expected_result->bytes, pResult, 4))
+				return amp_err_create(AMP_EGENERAL, nullptr, "Checksum mismatch");
+		}
+
+		if (p3)
+		{
+			(*allocator)->free(p3);
+			p3 = nullptr;
+		}
+		return AMP_NO_ERROR;
+	}
 #ifdef _WIN32
 	if (useResult)
 	{
+		unsigned char dummyBuf[64];
 		size_t sz = new_result ? new_result->hash_bytes : expected_result->hash_bytes;
-		unsigned char* pResult = new_result ? new_result->bytes : (unsigned char*)alloca(sz);
-		
+		unsigned char* pResult = new_result ? new_result->bytes : dummyBuf;
+
+		AMP_ASSERT(sizeof(dummyBuf) >= sz);
+
 		if (BCryptFinishHash(p2, pResult, new_result ? new_result->hash_bytes : expected_result->hash_bytes, 0) < 0)
 			return amp_err_create(AMP_EGENERAL, nullptr, "Unable to finish hashing");
 
@@ -162,20 +205,32 @@ amp_bucket_hash::finishHashing(bool useResult)
 		BCryptCloseAlgorithmProvider(p1, 0);
 		p1 = nullptr;
 	}
+#endif
 	if (p3)
 	{
 		(*allocator)->free(p3);
 		p3 = nullptr;
 	}
-#endif
 	return AMP_NO_ERROR;
 }
 
 void
 amp_bucket_hash::hashData(amp_span span)
 {
+	hashed_bytes += span.size_bytes();
+
 	if (algorithm == amp_hash_algorithm_none)
 		return; // Already in error
+	else if ((algorithm == amp_hash_algorithm_adler32 || algorithm == amp_hash_algorithm_crc32))
+	{
+		uLong* pValue = reinterpret_cast<uLong*>(p3);
+
+		if (algorithm == amp_hash_algorithm_crc32)
+			*pValue = crc32(*pValue, (const Bytef*)span.data(), span.size_bytes());
+		else
+			*pValue = adler32(*pValue, (const Bytef*)span.data(), span.size_bytes());
+		return;
+	}
 #ifdef _WIN32
 	if (!p2 || BCryptHashData(p2, (PUCHAR)span.data(), span.size_bytes(), 0) < 0)
 	{
@@ -200,7 +255,7 @@ amp_bucket_hash::read(
 		return amp_err_compose_create(
 			finishHashing(true),
 			err);
-		
+
 	return err;
 }
 
@@ -226,7 +281,7 @@ amp_bucket_hash::read_until_eol(
 	return err;
 }
 
-amp_err_t* 
+amp_err_t*
 amp_bucket_hash::peek(
 			amp_span* data,
 			bool no_poll,
@@ -234,6 +289,32 @@ amp_bucket_hash::peek(
 {
 	return
 		amp_err_trace((*wrapped)->peek(data, no_poll, scratch_pool));
+}
+
+amp_err_t* 
+amp_bucket_hash::reset(
+	amp_pool_t* scratch_pool)
+{
+	AMP_ERR((*wrapped)->reset(scratch_pool));
+
+	amp_err_clear(finishHashing(false));
+	setupHashing();
+
+	return AMP_NO_ERROR;
+}
+
+amp_err_t*
+amp_bucket_hash::read_remaining_bytes(
+	amp_off_t* remaining,
+	amp_pool_t* scratch_pool)
+{
+	return amp_err_trace((*wrapped)->read_remaining_bytes(remaining, scratch_pool));
+}
+
+amp_off_t
+amp_bucket_hash::get_position()
+{
+	return hashed_bytes;
 }
 
 amp_err_t*
@@ -291,7 +372,7 @@ amp_hash_result_to_cstring(
 		int b = result->bytes[i];
 
 		rs[2 * i] = "0123456789abcdef"[b >> 4];
-		rs[2 * i +1] = "0123456789abcdef"[b & 0xF];
+		rs[2 * i + 1] = "0123456789abcdef"[b & 0xF];
 	}
 	rs[result->hash_bytes * 2] = 0;
 	return rs;

@@ -63,11 +63,17 @@
     <ClInclude Include="..\include\amp_errno.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\amp_error.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\amp_src_git.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\amp_src_git.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="libamp_common.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="buckets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -102,6 +108,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="buckets\bucket_type_compression.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src_git.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="buckets\bucket_type_block.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

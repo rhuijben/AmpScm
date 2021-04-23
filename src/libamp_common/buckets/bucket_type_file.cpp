@@ -244,3 +244,9 @@ amp_bucket_file::read_remaining_bytes(
 
 	return amp_bucket::read_remaining_bytes(remaining, scratch_pool);
 }
+
+amp_off_t
+amp_bucket_file::get_position()
+{
+	return (*file)->get_current_position();
+}
