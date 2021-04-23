@@ -469,7 +469,7 @@ namespace amp
 		amp_bucket_t* wrapped;
 		amp_hash_algorithm_t algorithm;
 		amp_hash_result_t* new_result;
-		const amp_hash_result_t* expected_result;
+		amp_hash_result_t* expected_result;
 		void* p1, * p2, * p3; // CNG or OpenSSL state
 		size_t p3sz;
 		bool done;
@@ -517,19 +517,27 @@ namespace amp
 
 		virtual amp_off_t
 			get_position() override;
+
+		virtual amp_err_t*
+			duplicate(
+				amp_bucket_t** result,
+				bool for_reset,
+				amp_pool_t* scratch_pool);
 	};
 
-	class amp_bucket_limit : public amp_bucket
+	class amp_bucket_limit final : public amp_bucket
 	{
 	private:
 		amp_bucket_t* wrapped;
 		amp_off_t position;
+		amp_off_t end_offset;
+		amp_off_t remaining;
+
 	public:
-		amp_bucket_limit(amp_bucket_t* wrap_bucket,
-						amp_off_t start_offset,
-						amp_off_t max_read,
-						bool read_until_eof,
-						amp_allocator_t* allocator);
+		amp_bucket_limit(
+			amp_bucket_t* wrap_bucket,
+			amp_off_t limit,
+			amp_allocator_t* allocator);
 
 		virtual void destroy(amp_pool_t* scratch_pool) override;
 
@@ -561,6 +569,11 @@ namespace amp
 
 		virtual amp_off_t
 			get_position() override;
+
+		virtual amp_err_t* duplicate(
+			amp_bucket_t** result,
+			bool for_reset,
+			amp_pool_t* scratch_pool) override;
 	};
 
 	class amp_bucket_block final : public amp_bucket

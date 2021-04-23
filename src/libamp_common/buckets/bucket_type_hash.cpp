@@ -7,7 +7,6 @@
 #include <zlib.h>
 
 #include <amp_buckets.hpp>
-#include <amp_files.hpp>
 
 using namespace amp;
 
@@ -62,7 +61,7 @@ amp_bucket_hash::amp_bucket_hash(
 	algorithm = fill_result ? fill_result->hash_algorithm : expected_result->hash_algorithm;
 
 	new_result = fill_result;
-	expected_result = expect_result;
+	expected_result = expect_result ? (amp_hash_result_t*)amp_allocator_pmemdup(expected_result, sizeof(*expected_result), allocator) : nullptr;
 	if (new_result)
 		memset(new_result->bytes, 0, new_result->hash_bytes);
 
@@ -77,6 +76,8 @@ void
 amp_bucket_hash::destroy(amp_pool_t* scratch_pool)
 {
 	finishHashing(false);
+	if (expected_result)
+		(*allocator)->free(expected_result);
 	(*wrapped)->destroy(scratch_pool);
 	amp_bucket::destroy(scratch_pool);
 }
@@ -291,7 +292,7 @@ amp_bucket_hash::peek(
 		amp_err_trace((*wrapped)->peek(data, no_poll, scratch_pool));
 }
 
-amp_err_t* 
+amp_err_t*
 amp_bucket_hash::reset(
 	amp_pool_t* scratch_pool)
 {
@@ -315,6 +316,28 @@ amp_off_t
 amp_bucket_hash::get_position()
 {
 	return hashed_bytes;
+}
+
+amp_err_t*
+amp_bucket_hash::duplicate(
+	amp_bucket_t** result,
+	bool for_reset,
+	amp_pool_t* scratch_pool)
+{
+	amp_bucket_t* wr;
+	AMP_ERR((*wrapped)->duplicate(&wr, for_reset, scratch_pool));
+
+	if (expected_result)
+	{
+		*result = AMP_ALLOCATOR_NEW(amp_bucket_hash, allocator, wr, nullptr, expected_result, allocator);
+		return AMP_NO_ERROR;
+	}
+	else
+	{
+		// No need to hash if nobody can access the result
+		*result = wr;
+		return AMP_NO_ERROR;
+	}
 }
 
 amp_err_t*
