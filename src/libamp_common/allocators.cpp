@@ -151,3 +151,15 @@ amp_allocator::destroy()
 
 	(m_free_func)(this);
 }
+
+void *
+amp_allocator_pmemdup(
+	const void* src,
+	size_t size,
+	amp_allocator_t* allocator)
+{
+	void* v = amp_allocator_alloc(size, allocator);
+
+	memcpy(v, src, size);
+	return v;
+}

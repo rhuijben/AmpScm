@@ -41,9 +41,9 @@ AMP_DECLARE(void) amp_pool_clear(
 AMP_DECLARE(void) amp_pool_destroy(
 	amp_pool_t* pool);
 
-AMP_DECLARE(amp_pool_t*) amp_pool_create_ex(
-	amp_pool_t* in_pool,
-	amp_allocator_t* allocator);
+//AMP_DECLARE(amp_pool_t*) amp_pool_create_ex(
+//	amp_pool_t* in_pool,
+//	amp_allocator_t* allocator);
 
 AMP_DECLARE(void) amp_pool_cleanup_register(
 	amp_pool_t* pool,
@@ -95,5 +95,11 @@ AMP_DECLARE(char*) amp_pvsprintf(
 AMP_DECLARE(char*) amp_pstrcat(
 	amp_pool_t* pool,
 	...);
+
+
+AMP_DECLARE(void*) amp_allocator_pmemdup(
+	const void* src,
+	size_t bytes,
+	amp_allocator_t* pool);
 
 AMP_C__END
