@@ -119,7 +119,7 @@ amp_bucket_simple_copy::amp_bucket_simple_copy(amp_span span, amp_allocator_t* a
 	: amp_bucket_simple(&amp_simple_bucket_type, span, allocator)
 {
 	char* new_buffer = amp_allocator_alloc_n<char>(span.size(), allocator);
-	memcpy(new_buffer, span.data(), span.size());
+	::memcpy(new_buffer, span.data(), span.size());
 
 	buffer = amp_span(new_buffer, span.size());
 }

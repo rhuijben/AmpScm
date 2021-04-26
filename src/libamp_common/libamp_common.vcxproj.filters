@@ -110,7 +110,7 @@
     <ClCompile Include="buckets\bucket_type_compression.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src_git.cpp">
+    <ClCompile Include="src_git_pack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="buckets\bucket_type_block.cpp">

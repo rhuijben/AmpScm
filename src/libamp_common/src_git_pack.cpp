@@ -1,6 +1,8 @@
 #include <amp_buckets.hpp>
 #include <amp_src_git.hpp>
 
+#include <string>
+
 #ifdef _MSC_VER
 #include <intrin.h>
 #define __builtin_popcount __popcnt
@@ -8,11 +10,83 @@
 
 using namespace amp;
 
-static amp::amp_bucket::amp_bucket_type amp_hash_git_packframe_type("amp.git.packframe");
-static amp::amp_bucket::amp_bucket_type amp_hash_git_packdelta_type("amp.git.packdelta");
+static const amp::amp_bucket::amp_bucket_type git_packheader_type("amp.git.packheader");
+static const amp::amp_bucket::amp_bucket_type git_packframe_type("amp.git.packframe");
+static const amp::amp_bucket::amp_bucket_type git_packdelta_type("amp.git.packdelta");
+static const amp::amp_bucket::amp_bucket_type git_chunkfile_type("amp.git.chunkfile");
+
+amp_bucket_git_pack_header::amp_bucket_git_pack_header(amp_bucket_t* from, amp_allocator_t* allocator)
+	: amp_bucket(&git_packheader_type, allocator)
+{
+	wrapped = from;
+	position = 0;
+	pack_version = 0;
+	pack_object_count = 0;
+}
+
+void
+amp_bucket_git_pack_header::destroy(amp_pool_t* scratch_pool)
+{
+	(*wrapped)->destroy(scratch_pool);
+
+	amp_bucket::destroy(scratch_pool);
+}
+
+amp_err_t*
+amp_bucket_git_pack_header::read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool)
+{
+	AMP_UNUSED(requested);
+	*data = amp_span();
+	if (position < 12)
+	{
+		unsigned u1, u2;
+
+		AMP_ERR(read_pack_info(&u1, &u2, scratch_pool));
+	}
+
+	return amp_err_create(AMP_EOF, nullptr, nullptr);
+}
+
+amp_err_t*
+amp_bucket_git_pack_header::read_pack_info(
+			unsigned* version,
+			unsigned* object_count,
+			amp_pool_t* scratch_pool)
+{
+	if (position < 12)
+	{
+		amp_span data;
+
+		while (position < sizeof(buffer))
+		{
+			AMP_ERR((*wrapped)->read(&data, sizeof(buffer) - position, scratch_pool));
+
+			memcpy(buffer + position, data.data(), data.size_bytes());
+			position += data.size_bytes();
+		}
+
+		data = amp_span(buffer, sizeof(buffer));
+
+		if (0 != memcmp("PACK", &data[0], 4))
+			return amp_err_create(AMP_EGENERAL, nullptr, "File is not a packfile");
+
+		pack_version = span_to_unsigned32_net(data.subspan(4));
+		pack_object_count = span_to_unsigned32_net(data.subspan(8));
+	}
+
+	if (version)
+		*version = pack_version;
+	if (object_count)
+		*object_count = pack_object_count;
+
+	return AMP_NO_ERROR;
+}
 
 amp_bucket_git_pack_frame::amp_bucket_git_pack_frame(amp_bucket_t* from, amp_git_oid_type_t git_oid_type, amp_allocator_t* allocator)
-	: amp_bucket(&amp_hash_git_packframe_type, allocator)
+	: amp_bucket(&git_packframe_type, allocator)
 {
 	wrapped = from;
 	reader = nullptr;
@@ -390,7 +464,7 @@ amp_bucket_git_delta::amp_bucket_git_delta(
 	amp_bucket_t* delta_src,
 	amp_bucket_t* delta_base,
 	amp_allocator_t* allocator)
-	: amp_bucket(&amp_hash_git_packdelta_type, allocator)
+	: amp_bucket(&git_packdelta_type, allocator)
 {
 	AMP_ASSERT(delta_src && delta_base);
 	src = delta_src;
@@ -707,10 +781,154 @@ amp_bucket_git_delta::get_position()
 	return position;
 }
 
+amp_bucket_git_chunk_file::amp_bucket_git_chunk_file(amp_bucket_t* from, const char* expected_signature, ptrdiff_t extra_header_bytes, amp_allocator_t* allocator)
+	: amp_bucket(&git_chunkfile_type, allocator)
+{
+	AMP_ASSERT(from && strlen(expected_signature) == 4 && extra_header_bytes >= 0);
+	wrapped = from;
+	header_bytes = extra_header_bytes;
+	memcpy(hdr, expected_signature, sizeof(hdr));
+	chunk_items = nullptr;
+	chunk_count = 0;
+	position = 0;
+
+	buffer = extra_header_bytes ? span<char>(amp_allocator_alloc_n<char>(header_bytes, allocator), header_bytes) : span<char>();
+}
+
+void
+amp_bucket_git_chunk_file::destroy(amp_pool_t* scratch_pool)
+{
+	(*wrapped)->destroy(scratch_pool);
+	if (buffer.data())
+		(*allocator)->free(buffer.data());
+	if (chunk_items)
+		(*allocator)->free(chunk_items);
+
+	amp_bucket::destroy(scratch_pool);
+}
+
+amp_err_t*
+amp_bucket_git_chunk_file::read(
+		amp_span* data,
+		ptrdiff_t requested,
+		amp_pool_t* scratch_pool)
+{
+	AMP_UNUSED(requested);
+	*data = amp_span();
+	AMP_ERR(read_info(nullptr, nullptr, nullptr, scratch_pool));
+
+	return amp_err_create(AMP_EOF, nullptr, nullptr);
+}
+
+amp_err_t*
+amp_bucket_git_chunk_file::read_info(amp_git_oid_type_t* oid_type, int* version, int* chunks, amp_pool_t* scratch_pool)
+{
+	while (position < (7 + header_bytes))// || position < (7 + header_bytes + 12 * chunk_count))
+	{
+		amp_span data;
+		AMP_ERR((*wrapped)->read(&data, 7 + header_bytes - position, scratch_pool));
+
+		if (position < 4 && memcmp(data.data(), hdr + position, MIN(4 - position, data.size_bytes() - position)))
+			return amp_err_createf(AMP_EGENERAL, nullptr, "File does not have expected chunk type '%4s'", hdr);
+
+		if (position < 5 && (data.size_bytes() + position) >= 5)
+			hdr[0] = data[4 - position]; // oid type
+		if (position < 6 && (data.size_bytes() + position) >= 6)
+			hdr[1] = data[5 - position]; // version
+		if (position < 7 && (data.size_bytes() + position) >= 7)
+			chunk_count = (unsigned char)data[6 - position]; // chunks
+
+		if ((data.size_bytes() + position) >= 7)
+			memcpy(buffer.data() + MAX(0, position - 7), data.data() + MIN(0, 7 - position), data.size_bytes() + MIN(0, position - 7));
+
+		position += data.size_bytes();
+
+		chunk_items = amp_allocator_alloc_n<chunk_t>(chunk_count + 1, allocator);
+		AMP_ASSERT(sizeof(chunk_items[0]) > 12);
+	}
+	const ptrdiff_t chunkdata_sz = 12 * (chunk_count + 1);
+	while (position < (7 + header_bytes + chunkdata_sz))
+	{
+		ptrdiff_t p = position - 7 - header_bytes;
+		char* pData = (char*)chunk_items; // Use chunk items as raw buffer, until read
+
+		amp_span data;
+		AMP_ERR((*wrapped)->read(&data, chunkdata_sz - p, scratch_pool));
+
+		memcpy(pData + p, data.data(), data.size_bytes());
+		position += data.size_bytes();
+
+		if (position >= (7 + header_bytes + chunkdata_sz))
+		{
+			AMP_ASSERT(position == (7 + header_bytes + chunkdata_sz));
+
+			for (int i = chunk_count; i >= 0; i--)
+			{
+				chunk_items[i].offset = span_to_unsigned64_net(amp_span(pData + 12 * i + 4, sizeof(amp_off_t)));
+				memcpy(chunk_items[i].id, pData + (12 * i), sizeof(chunk_items[0].id));
+			}
+		}
+	}
+
+	if (oid_type)
+		*oid_type = (amp_git_oid_type_t)hdr[0];
+	if (version)
+		*version = (unsigned char)hdr[1];
+	if (chunks)
+		*chunks = chunk_count;
+
+	return AMP_NO_ERROR;
+}
+
+amp_err_t*
+amp_bucket_git_chunk_file::read_chunk_bucket(amp_bucket_t** bucket, const char* chunk_name, amp_pool_t* scratch_pool)
+{
+	AMP_ERR(read_info(nullptr, nullptr, nullptr, scratch_pool));
+
+	int idx = -1;
+	if (strlen(chunk_name) == 4)
+	{
+		for (int i = 0; i < chunk_count; i++)
+		{
+			if (!memcmp(chunk_items[i].id, chunk_name, 4))
+			{
+				idx = i;
+				break;
+			}
+		}
+	}
+
+	if (idx < 0)
+		return amp_err_createf(AMP_EGENERAL, nullptr, "Chunk '%s' not found in file", chunk_name);
+
+	amp_bucket_t* p;
+	AMP_ERR((*wrapped)->duplicate(&p, true, scratch_pool));
+
+	amp_err_t* err = (*p)->reset(scratch_pool);
+	amp_off_t to_skip = chunk_items[idx].offset;
+	while (!err && to_skip > 0)
+	{
+		amp_off_t skipped;
+		err = (*p)->read_skip(&skipped, to_skip, scratch_pool);
+
+		if (!err)
+			to_skip -= skipped;
+	}
+
+	if (err)
+	{
+		amp_bucket_destroy(p, scratch_pool);
+		return amp_err_trace(err);
+	}
+
+	*bucket = AMP_ALLOCATOR_NEW(amp_bucket_limit, allocator, p, chunk_items[idx + 1].offset - chunk_items[idx].offset, allocator);
+	return AMP_NO_ERROR;
+}
+
 const char*
 amp_src_git_type_name(amp_git_object_type_t type)
 {
-	const char* types[8] = {
+	static const char* types[8] = {
 		"<no-type>", // None
 		"commit",
 		"tree",
@@ -732,16 +950,70 @@ amp_src_git_create_header(
 	amp_off_t size,
 	amp_pool_t* result_pool)
 {
-	const char* types[8] = {
-		nullptr, // None
-		"commit",
-		"tree",
-		"blob",
-		"tag",
-		nullptr, // invalid
-		nullptr, // delta
-		nullptr, // delta
-	};
-
 	return amp_psprintf(result_pool, "%s %I64d", amp_src_git_type_name(type), size);
+}
+
+unsigned amp::span_to_unsigned32_net(amp_span span)
+{
+	unsigned char* pd = (unsigned char*)span.data();
+	AMP_ASSERT(span.size_bytes() >= 32 / 8);
+
+	return (unsigned)pd[0] << 24
+		| (unsigned)pd[1] << 16
+		| (unsigned)pd[2] << 8
+		| (unsigned)pd[3];
+}
+
+unsigned long long amp::span_to_unsigned64_net(amp_span span)
+{
+	unsigned char* pd = (unsigned char*)span.data();
+	AMP_ASSERT(span.size_bytes() >= 64 / 8);
+
+	return (unsigned long long)pd[0] << 56
+		| (unsigned long long)pd[1] << 48
+		| (unsigned long long)pd[2] << 40
+		| (unsigned long long)pd[3] << 32
+		| (unsigned long long)pd[4] << 24
+		| (unsigned long long)pd[5] << 16
+		| (unsigned long long)pd[6] << 8
+		| (unsigned long long)pd[7];
+}
+
+unsigned amp::span_to_unsigned32_le(amp_span span)
+{
+	unsigned char* pd = (unsigned char*)span.data();
+	AMP_ASSERT(span.size_bytes() >= 32 / 8);
+
+	return (unsigned)pd[0]
+		| (unsigned)pd[1] << 8
+		| (unsigned)pd[2] << 16
+		| (unsigned)pd[3] << 24;
+}
+
+unsigned long long amp::span_to_unsigned64_le(amp_span span)
+{
+	unsigned char* pd = (unsigned char*)span.data();
+	AMP_ASSERT(span.size_bytes() >= 64 / 8);
+
+	return (unsigned long long)pd[0]
+		| (unsigned long long)pd[1] << 8
+		| (unsigned long long)pd[2] << 16
+		| (unsigned long long)pd[3] << 24
+		| (unsigned long long)pd[4] << 32
+		| (unsigned long long)pd[5] << 40
+		| (unsigned long long)pd[6] << 48
+		| (unsigned long long)pd[7] << 56;
+}
+
+
+unsigned amp::span_to_unsigned32_host(amp_span span)
+{
+	AMP_ASSERT(span.size_bytes() >= 4);
+	return *(unsigned*)span.data();
+}
+
+unsigned long long amp::span_to_unsigned64_host(amp_span span)
+{
+	AMP_ASSERT(span.size_bytes() >= 8);
+	return *(unsigned long long*)span.data();
 }

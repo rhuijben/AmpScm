@@ -5,6 +5,31 @@
 namespace amp
 {
 
+	class amp_bucket_git_pack_header : public amp_bucket
+	{
+	private:
+		amp_bucket_t* wrapped;
+		ptrdiff_t position;
+		unsigned pack_version;
+		unsigned pack_object_count;
+		char buffer[12];
+
+	public:
+		amp_bucket_git_pack_header(amp_bucket_t* from, amp_allocator_t* allocator);
+		virtual void destroy(amp_pool_t* scratch_pool) override;
+
+	public:
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_pack_info(
+			unsigned* version,
+			unsigned* object_count,
+			amp_pool_t* scratch_pool);
+	};
+
 
 	class amp_bucket_git_pack_frame : public amp_bucket
 	{
@@ -93,7 +118,7 @@ namespace amp
 		virtual void destroy(amp_pool_t* scratch_pool) override;
 
 	private:
-		amp_err_t* advance(amp_pool_t *scratc_pool);
+		amp_err_t* advance(amp_pool_t* scratc_pool);
 
 	public:
 		virtual amp_err_t* read(
@@ -111,5 +136,37 @@ namespace amp
 			amp_pool_t* scratch_pool) override;
 
 		virtual amp_off_t get_position() override;
+	};
+
+	class amp_bucket_git_chunk_file : public amp_bucket
+	{
+	protected:
+		amp_bucket_t* wrapped;
+		span<char> buffer;
+		ptrdiff_t header_bytes;
+		char hdr[4];
+		struct chunk_t
+		{
+			char id[4];
+			amp_off_t offset;
+		};
+		chunk_t* chunk_items;
+		ptrdiff_t position;
+		int chunk_count;
+
+	public:
+		amp_bucket_git_chunk_file(amp_bucket_t* from, const char* expected_signature, ptrdiff_t extra_header_bytes, amp_allocator_t* allocator);
+		virtual void destroy(amp_pool_t* scratch_pool) override;
+
+	public:
+		virtual amp_err_t* read(
+			amp_span* data,
+			ptrdiff_t requested,
+			amp_pool_t* scratch_pool) override;
+
+		virtual amp_err_t* read_info(amp_git_oid_type_t* type, int* version, int* chunks, amp_pool_t* scratch_pool);
+
+	public:
+		virtual amp_err_t* read_chunk_bucket(amp_bucket_t** bucket, const char* chunk_name, amp_pool_t* scratch_pool);
 	};
 }

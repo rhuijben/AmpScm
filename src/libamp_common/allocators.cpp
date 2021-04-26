@@ -53,10 +53,16 @@ amp_allocator::alloc(size_t size)
 
 	size += sizeof(allocation_t);
 
+#ifdef AMP_DEBUG
+	if (size == 0xDEADDEAD)
+		size++;
+#endif
+
 	allocation_t* t = (allocation_t*)(*m_alloc_func)(size);
 
 	t->prev = last;
 	t->next = nullptr;
+	t->size = size;
 	if (last)
 		last->next = t;
 	else
@@ -81,6 +87,10 @@ amp_allocator::free(void* data)
 	else
 		last = t->prev;
 
+#ifdef AMP_DEBUG
+	AMP_ASSERT(t->size != 0xDEADDEAD);
+	t->size = 0xDEADDEAD;
+#endif
 	(*m_free_func)(t);
 }
 

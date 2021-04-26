@@ -160,4 +160,12 @@ namespace amp
 	};
 
 	typedef span<const char> amp_span;
+
+
+	unsigned span_to_unsigned32_net(amp_span span);
+	unsigned long long span_to_unsigned64_net(amp_span span);
+	unsigned span_to_unsigned32_le(amp_span span);
+	unsigned long long span_to_unsigned64_le(amp_span span);
+	unsigned span_to_unsigned32_host(amp_span span);
+	unsigned long long span_to_unsigned64_host(amp_span span);
 }
