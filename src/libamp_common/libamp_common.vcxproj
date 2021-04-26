@@ -217,7 +217,7 @@
     <ClCompile Include="error.cpp" />
     <ClCompile Include="files.cpp" />
     <ClCompile Include="pools.cpp" />
-    <ClCompile Include="src_git.cpp" />
+    <ClCompile Include="src_git_pack.cpp" />
     <ClCompile Include="Types.cpp" />
   </ItemGroup>
   <ItemGroup>
