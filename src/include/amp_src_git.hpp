@@ -151,7 +151,7 @@ namespace amp
 			amp_off_t offset;
 		};
 		chunk_t* chunk_items;
-		ptrdiff_t position;
+		amp_off_t position;
 		int chunk_count;
 
 	public:
@@ -164,7 +164,7 @@ namespace amp
 			ptrdiff_t requested,
 			amp_pool_t* scratch_pool) override;
 
-		virtual amp_err_t* read_info(amp_git_oid_type_t* type, int* version, int* chunks, amp_pool_t* scratch_pool);
+		virtual amp_err_t* read_info(amp_git_oid_type_t* type, int* version, int* chunks, amp_span *header_trailer, amp_pool_t* scratch_pool);
 
 	public:
 		virtual amp_err_t* read_chunk_bucket(amp_bucket_t** bucket, const char* chunk_name, amp_pool_t* scratch_pool);

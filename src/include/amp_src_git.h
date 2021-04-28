@@ -6,8 +6,9 @@ AMP_C__START
 
 enum amp_git_oid_type_t
 {
-	amp_git_oid_sha1,
-	amp_git_oid_sha256
+	amp_git_oid_none = 0,
+	amp_git_oid_sha1 = 1,
+	amp_git_oid_sha256 = 2
 };
 
 enum amp_git_object_type_t
@@ -17,12 +18,12 @@ enum amp_git_object_type_t
 	// These types are valid objects
 	amp_git_object_commit = 1,
 	amp_git_object_tree = 2,
-	amp_git_object_blob=3,
-	amp_git_object_tag=4,
+	amp_git_object_blob = 3,
+	amp_git_object_tag = 4,
 
 	// These types are in pack files, but not real objects
-	amp_git_delta_ofs=6,
-	amp_git_delta_ref=7
+	amp_git_delta_ofs = 6,
+	amp_git_delta_ref = 7
 };
 
 typedef struct amp_git_oid_t

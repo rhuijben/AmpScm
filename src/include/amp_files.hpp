@@ -88,23 +88,48 @@ namespace amp
 		amp_err_t* explicit_destroy();
 
 	public:
-		amp_err_t* read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer) noexcept;
-		amp_err_t* get_current_size(amp_off_t* size) noexcept;
-		amp_err_t* write_full(amp_off_t offset, amp_span data) noexcept;
-		amp_err_t* truncate(amp_off_t offset) noexcept;
-		amp_err_t* flush(bool force_to_disk) noexcept;
+		amp_err_t* read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer) const noexcept;
+		amp_err_t* get_current_size(amp_off_t* size) const noexcept;
+		amp_err_t* write_full(amp_off_t offset, amp_span data) const noexcept;
+		amp_err_t* truncate(amp_off_t offset) const noexcept;
+		amp_err_t* flush(bool force_to_disk) const noexcept;
+
+
+	public:
+		amp_err_t* calculate_seek(amp_off_t& file_pos, amp_off_t offset) const noexcept
+		{
+			AMP_ASSERT(offset >= 0);
+
+			if (offset < 0)
+				return amp_err_create(AMP_BADARG, nullptr, nullptr);
+			else if (offset == 0 || offset <= file_pos)
+			{
+				file_pos = offset;
+				return AMP_NO_ERROR;
+			}
+
+			amp_off_t sz;
+			AMP_ERR(get_current_size(&sz));
+
+			if (offset <= sz)
+				file_pos = offset;
+			else
+				return amp_err_create(AMP_EOF, nullptr, "Offset behind file");
+
+			return AMP_NO_ERROR;
+		}
 	};
 
 	class amp_file : public amp_file_t, amp_pool_managed
 	{
 	private:
-		amp_off_t position;
+		amp_off_t buf_position;
 	public:
 		amp_file(amp_file_handle_t* handle, amp_pool_t* pool)
 			: amp_pool_managed(pool)
 		{
 			file_handle = (*handle)->add_ref();
-			position = 0;
+			buf_position = 0;
 
 			destroy_with_pool();
 		}
@@ -128,9 +153,9 @@ namespace amp
 		{
 			ptrdiff_t b_read;
 
-			AMP_ERR((*file_handle)->read(&b_read, position, buffer));
+			AMP_ERR((*file_handle)->read(&b_read, buf_position, buffer));
 
-			position += b_read;
+			buf_position += b_read;
 			*bytes_read = b_read;
 			return AMP_NO_ERROR;
 		}
@@ -142,43 +167,25 @@ namespace amp
 
 		constexpr amp_off_t get_current_position() const noexcept
 		{
-			return position;
+			return buf_position;
 		}
 
 		amp_err_t* write_full(amp_span buffer) noexcept
 		{
-			AMP_ERR((*file_handle)->write_full(position, buffer));
+			AMP_ERR((*file_handle)->write_full(buf_position, buffer));
 
-			position += buffer.size_bytes();
+			buf_position += buffer.size_bytes();
 			return AMP_NO_ERROR;
 		}
 
 		amp_err_t* truncate() noexcept
 		{
-			return amp_err_trace((*file_handle)->truncate(position));
+			return amp_err_trace((*file_handle)->truncate(buf_position));
 		}
 
 		amp_err_t* seek(amp_off_t offset) noexcept
-		{			
-			AMP_ASSERT(offset >= 0);
-
-			if (offset < 0)
-				return amp_err_create(AMP_BADARG, nullptr, nullptr);
-			else if (offset == 0 || offset <= position)
-			{
-				position = offset;
-				return AMP_NO_ERROR;
-			}
-
-			amp_off_t sz;
-			AMP_ERR(get_current_size(&sz));
-
-			if (offset <= sz)
-				position = offset;
-			else
-				return amp_err_create(AMP_EOF, nullptr, "Offset behind file");
-
-			return AMP_NO_ERROR;
+		{
+			return amp_err_trace((*file_handle)->calculate_seek(buf_position, offset));
 		}
 
 		amp_err_t* close() noexcept
@@ -200,6 +207,11 @@ namespace amp
 		amp_file_t* duplicate(amp_pool_t* pool)
 		{
 			return AMP_POOL_NEW(amp_file, pool, file_handle, pool);
+		}
+
+		amp_file_handle_t* get_handle() const noexcept
+		{
+			return file_handle;
 		}
 	};
 

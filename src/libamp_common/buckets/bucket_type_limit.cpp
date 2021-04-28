@@ -23,7 +23,7 @@ amp_bucket_limit::amp_bucket_limit(
 	wrapped = wrap_bucket;
 
 	end_offset = remaining = limit;
-	position = true;
+	buf_position = true;
 }
 
 void 
@@ -56,7 +56,7 @@ amp_bucket_limit::read(
 
 	AMP_ERR((*wrapped)->read(data, requested, scratch_pool));
 
-	position += data->size_bytes();
+	buf_position += data->size_bytes();
 	remaining -= data->size_bytes();
 
 	return AMP_NO_ERROR;
@@ -85,7 +85,7 @@ amp_bucket_limit::read_until_eol(
 
 	AMP_ERR((*wrapped)->read_until_eol(data, found, acceptable, requested, scratch_pool));
 
-	position += data->size_bytes();
+	buf_position += data->size_bytes();
 	remaining -= data->size_bytes();
 
 	return AMP_NO_ERROR;
@@ -116,7 +116,7 @@ amp_bucket_limit::reset(
 
 	AMP_ERR((*wrapped)->reset(scratch_pool));
 
-	position = 0;
+	buf_position = 0;
 	remaining = end_offset;
 	return AMP_NO_ERROR;
 }
@@ -133,7 +133,7 @@ amp_bucket_limit::read_remaining_bytes(
 amp_off_t
 amp_bucket_limit::get_position()
 {
-	return position;
+	return buf_position;
 }
 
 amp_err_t* 
@@ -151,7 +151,7 @@ amp_bucket_limit::duplicate(
 
 	amp_bucket_limit* l = AMP_ALLOCATOR_NEW(amp_bucket_limit, allocator, wr, end_offset, allocator);
 
-	l->position = position;
+	l->buf_position = buf_position;
 	l->remaining = remaining;
 	*result = l;
 

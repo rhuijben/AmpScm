@@ -46,15 +46,10 @@ AMP_C__START /* extern "C" { */
 typedef __int64 amp_status_t;
 typedef char amp_boolean_t;
 
-/* For amp_pools.h */
-struct amp_pool_t;
-struct amp_allocator_t;
-struct amp_file_t;
-#ifndef __cplusplus
 typedef struct amp_pool_t amp_pool_t;
 typedef struct amp_allocator_t amp_allocator_t;
 typedef struct amp_file_t amp_file_t;
-#endif
+typedef struct amp_file_handle_t amp_file_handle_t;
 
 /* For amp_errors.h */
 typedef struct amp_err_t amp_err_t;

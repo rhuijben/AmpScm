@@ -1,6 +1,5 @@
 #include "pch.h"
 
-
 #include "amp_pools.hpp"
 #include "amp_buckets.hpp"
 #include "amp_files.hpp"
@@ -38,7 +37,6 @@ class GitTests : public testing::Test
 {
 public:
 	amp_pool_t* pool;
-	const char* temp_path;
 
 	virtual void SetUp() override
 	{
@@ -48,18 +46,6 @@ public:
 	virtual void TearDown() override
 	{
 		amp_pool_destroy(pool);
-	}
-
-	const char* get_temp_path()
-	{
-		char* temp_path = amp_pcalloc_n<char>(200, pool);
-
-		if (GetTempPathA(199, temp_path) != 0)
-		{
-			return temp_path;
-		}
-		else
-			return nullptr;
 	}
 };
 
@@ -1294,20 +1280,58 @@ TEST_F(GitTests, ReadThroughCommitGraph)
 	amp_git_oid_type_t oid_type;
 	int version;
 	int chunks;
+	amp_span extra_data;
 
-	TEST_ERR(cr->read_info(&oid_type, &version, &chunks, pool));
+	TEST_ERR(cr->read_info(&oid_type, &version, &chunks, &extra_data, pool));
+
+	ASSERT_EQ(oid_type, amp_git_oid_sha1);
+	ASSERT_EQ(version, 1);
+	ASSERT_EQ(chunks, 4);
+	ASSERT_EQ(extra_data.size_bytes(), 1);
+	ASSERT_EQ(extra_data[0], 0); // B -> if != 0 we have a Base Graph list.
+
 	amp_bucket_t* fanout_reader;
 	amp_bucket_t* lookup_reader;
 	amp_bucket_t* commit_data;
+	amp_bucket_t* edge_data;
 
 	TEST_ERR(cr->read_chunk_bucket(&fanout_reader, "OIDF", pool));
 	TEST_ERR(cr->read_chunk_bucket(&lookup_reader, "OIDL", pool));
 	TEST_ERR(cr->read_chunk_bucket(&commit_data, "CDAT", pool));
+	TEST_ERR(cr->read_chunk_bucket(&edge_data, "EDGE", pool));
+
+	amp_off_t size;
+	TEST_ERR((*fanout_reader)->read_remaining_bytes(&size, pool));
+	ASSERT_EQ(size, 1024);
+	TEST_ERR((*lookup_reader)->read_remaining_bytes(&size, pool));
+	ASSERT_EQ(size, 420);
+	TEST_ERR((*commit_data)->read_remaining_bytes(&size, pool));
+	ASSERT_EQ(size, 756);
+	TEST_ERR((*edge_data)->read_remaining_bytes(&size, pool));
+	ASSERT_EQ(size, 8);
+
+	amp_span data;
+	TEST_ERR((*edge_data)->read(&data, AMP_READ_ALL_AVAIL, pool));
+	ASSERT_EQ(8, data.size_bytes());
+
+
+	amp_err_t *err = (*edge_data)->read(&data, AMP_READ_ALL_AVAIL, pool);
+	ASSERT_TRUE(AMP_ERR_IS_EOF(err));
+	amp_err_clear(err);
 
 	amp_bucket_destroy(fanout_reader, pool);
 	amp_bucket_destroy(lookup_reader, pool);
 	amp_bucket_destroy(commit_data, pool);
+	amp_bucket_destroy(edge_data, pool);
 
+
+	err = (*cr)->read(&data, AMP_READ_ALL_AVAIL, pool);
+	ASSERT_TRUE(AMP_ERR_IS_EOF(err));
+	amp_err_clear(err);
+
+	// But r still has some bytes left: the hash over this file
+	TEST_ERR((*r)->read(&data, AMP_READ_ALL_AVAIL, pool));
+	ASSERT_EQ(20, data.size_bytes());
 
 	amp_bucket_destroy(cr, pool);
 }

@@ -208,16 +208,20 @@ namespace amp
 	class amp_bucket_file final : public amp_bucket
 	{
 	private:
-		amp_file_t* file;
+		amp_file_handle_t* file;
+		amp_off_t file_position;
 		amp_off_t file_remaining;
 		ptrdiff_t available;
-		ptrdiff_t position;
+		ptrdiff_t buf_position;
 		span<char> buffer;
 
 	private:
 		amp_err_t* refill(ptrdiff_t requested);
 	public:
 		amp_bucket_file(amp_file_t* file, amp_allocator_t* bucket_allocator);
+
+	private:
+		amp_bucket_file(amp_file_handle_t* filehandle, amp_allocator_t* bucket_allocator);
 
 	public:
 		virtual amp_err_t* read(
@@ -249,6 +253,11 @@ namespace amp
 				amp_pool_t* scratch_pool) override;
 
 		virtual amp_off_t get_position() override;
+
+		virtual amp_err_t* duplicate(
+			amp_bucket_t** result,
+			bool for_reset,
+			amp_pool_t* scratch_pool) override;
 
 	public:
 		virtual void destroy(amp_pool_t* pool) override;
@@ -389,7 +398,7 @@ namespace amp
 		amp_compression_algorithm_t algorithm;
 		amp_span read_buffer;
 		ptrdiff_t read_position;
-		amp_off_t position;
+		amp_off_t buf_position;
 
 		amp::span<char> write_buffer;
 		ptrdiff_t write_position;
@@ -529,7 +538,7 @@ namespace amp
 	{
 	private:
 		amp_bucket_t* wrapped;
-		amp_off_t position;
+		amp_off_t buf_position;
 		amp_off_t end_offset;
 		amp_off_t remaining;
 

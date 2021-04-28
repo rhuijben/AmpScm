@@ -60,7 +60,7 @@ amp_bucket_compression::amp_bucket_compression(const amp_bucket_type_t* bucket_t
 	write_position = 0;
 	write_read_position = 0;
 	p0 = nullptr;
-	position = 0;
+	buf_position = 0;
 }
 
 void
@@ -436,7 +436,7 @@ amp_bucket_compression::read(
 
 	*data_in = write_buffer.min_subspan(write_read_position, MIN(requested, write_position - write_read_position));
 	write_read_position += data_in->size_bytes();
-	position += data_in->size_bytes();
+	buf_position += data_in->size_bytes();
 
 	if (data_in->size_bytes())
 		return AMP_NO_ERROR;
@@ -468,5 +468,5 @@ amp_bucket_compression::peek(
 amp_off_t
 amp_bucket_compression::get_position()
 {
-	return position;
+	return buf_position;
 }

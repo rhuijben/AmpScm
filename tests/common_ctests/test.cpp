@@ -1,7 +1,5 @@
 #include "pch.h"
 
-#include <windows.h>
-
 #include "amp_pools.hpp"
 #include "amp_buckets.hpp"
 #include "amp_files.hpp"
@@ -26,7 +24,6 @@ class BasicTest : public testing::Test
 {
 public:
 	amp_pool_t* pool;
-	const char* temp_path;
 
 	virtual void SetUp() override
 	{
@@ -36,18 +33,6 @@ public:
 	virtual void TearDown() override
 	{
 		amp_pool_destroy(pool);
-	}
-
-	const char* get_temp_path()
-	{
-		char* temp_path = amp_pcalloc_n<char>(200, pool);
-
-		if (GetTempPathA(199, temp_path) != 0)
-		{
-			return temp_path;
-		}
-		else
-			return nullptr;
 	}
 };
 
@@ -79,7 +64,7 @@ TEST_F(BasicTest, PoolSetup)
 
 TEST_F(BasicTest, SimpleFileIO)
 {
-	char* tf = amp_pstrcat(pool, get_temp_path(), "SimpleFile.txt", AMP_VA_NULL);
+	char* tf = amp_pstrcat(pool, testing::TempDir().c_str(), "SimpleFile.txt", AMP_VA_NULL);
 
 	amp_file_t* file;
 
@@ -109,7 +94,7 @@ TEST_F(BasicTest, SimpleFileIO)
 TEST_F(BasicTest, SimpleBucketRead)
 {
 	const char* nlTest = "New line\nCarriage return\rWindows style\r\nBadWay\n\rDoubleOut\n\nDoubleOther\r\rCarriage return before Windows\r\r\nAnd\r\r\n\n";
-	char* tf = amp_pstrcat(pool, get_temp_path(), "SimpleFile.txt", AMP_VA_NULL);
+	char* tf = amp_pstrcat(pool, testing::TempDir().c_str(), "SimpleFile.txt", AMP_VA_NULL);
 	amp_file_t* file;
 
 	TEST_ERR(amp_file_open(&file, tf, amp_fopen_create | amp_fopen_write | amp_fopen_truncate | amp_fopen_read, pool, pool));
