@@ -815,52 +815,61 @@ amp_bucket_git_chunk_file::read(
 {
 	AMP_UNUSED(requested);
 	*data = amp_span();
-	AMP_ERR(read_info(nullptr, nullptr, nullptr, scratch_pool));
+	AMP_ERR(read_info(nullptr, nullptr, nullptr, nullptr, scratch_pool));
+
+	while (position < chunk_items[chunk_count].offset)
+	{
+		amp_off_t skipped;
+		AMP_ERR((*wrapped)->read_skip(&skipped, chunk_items[chunk_count].offset - position, scratch_pool));
+		position += skipped;
+	}
 
 	return amp_err_create(AMP_EOF, nullptr, nullptr);
 }
 
 amp_err_t*
-amp_bucket_git_chunk_file::read_info(amp_git_oid_type_t* oid_type, int* version, int* chunks, amp_pool_t* scratch_pool)
+amp_bucket_git_chunk_file::read_info(amp_git_oid_type_t* oid_type, int* version, int* chunks, amp_span* header_trailer, amp_pool_t* scratch_pool)
 {
-	while (position < (7 + header_bytes))// || position < (7 + header_bytes + 12 * chunk_count))
+	while (position < (7 + (amp_off_t)header_bytes))
 	{
 		amp_span data;
-		AMP_ERR((*wrapped)->read(&data, 7 + header_bytes - position, scratch_pool));
+		const ptrdiff_t pos = (ptrdiff_t)position;
 
-		if (position < 4 && memcmp(data.data(), hdr + position, MIN(4 - position, data.size_bytes() - position)))
+		AMP_ERR((*wrapped)->read(&data, 7 + header_bytes - pos, scratch_pool));
+
+		if (pos < 4 && memcmp(data.data(), hdr + pos, MIN(4 - pos, data.size_bytes() - pos)))
 			return amp_err_createf(AMP_EGENERAL, nullptr, "File does not have expected chunk type '%4s'", hdr);
 
-		if (position < 5 && (data.size_bytes() + position) >= 5)
-			hdr[0] = data[4 - position]; // oid type
-		if (position < 6 && (data.size_bytes() + position) >= 6)
-			hdr[1] = data[5 - position]; // version
-		if (position < 7 && (data.size_bytes() + position) >= 7)
-			chunk_count = (unsigned char)data[6 - position]; // chunks
+		if (pos < 5 && (data.size_bytes() + pos) >= 5)
+			hdr[0] = data[4 - pos]; // oid type
+		if (pos < 6 && (data.size_bytes() + pos) >= 6)
+			hdr[1] = data[5 - pos]; // version
+		if (pos < 7 && (data.size_bytes() + pos) >= 7)
+			chunk_count = (unsigned char)data[6 - pos]; // chunks
 
-		if ((data.size_bytes() + position) >= 7)
-			memcpy(buffer.data() + MAX(0, position - 7), data.data() + MIN(0, 7 - position), data.size_bytes() + MIN(0, position - 7));
+		if ((data.size_bytes() + pos) >= 7)
+			memcpy(buffer.data() + MAX(0, pos - 7), data.data() + MAX(0, 7 - pos), data.size_bytes() + MIN(0, pos - 7));
 
 		position += data.size_bytes();
 
 		chunk_items = amp_allocator_alloc_n<chunk_t>(chunk_count + 1, allocator);
 		AMP_ASSERT(sizeof(chunk_items[0]) > 12);
 	}
-	const ptrdiff_t chunkdata_sz = 12 * (chunk_count + 1);
-	while (position < (7 + header_bytes + chunkdata_sz))
+	const amp_off_t chunkdata_sz = 12 * ((amp_off_t)chunk_count + 1);
+	while (position < (7 + (amp_off_t)header_bytes + chunkdata_sz))
 	{
-		ptrdiff_t p = position - 7 - header_bytes;
+		ptrdiff_t p = (ptrdiff_t)position - 7 - header_bytes;
 		char* pData = (char*)chunk_items; // Use chunk items as raw buffer, until read
 
 		amp_span data;
-		AMP_ERR((*wrapped)->read(&data, chunkdata_sz - p, scratch_pool));
+		AMP_ERR((*wrapped)->read(&data, (ptrdiff_t)(chunkdata_sz - p), scratch_pool));
 
 		memcpy(pData + p, data.data(), data.size_bytes());
 		position += data.size_bytes();
 
-		if (position >= (7 + header_bytes + chunkdata_sz))
+		if (position >= (7 + (amp_off_t)header_bytes + chunkdata_sz))
 		{
-			AMP_ASSERT(position == (7 + header_bytes + chunkdata_sz));
+			AMP_ASSERT(position == (7 + (amp_off_t)header_bytes + chunkdata_sz));
 
 			for (int i = chunk_count; i >= 0; i--)
 			{
@@ -876,6 +885,8 @@ amp_bucket_git_chunk_file::read_info(amp_git_oid_type_t* oid_type, int* version,
 		*version = (unsigned char)hdr[1];
 	if (chunks)
 		*chunks = chunk_count;
+	if (header_trailer)
+		*header_trailer = buffer;
 
 	return AMP_NO_ERROR;
 }
@@ -883,7 +894,7 @@ amp_bucket_git_chunk_file::read_info(amp_git_oid_type_t* oid_type, int* version,
 amp_err_t*
 amp_bucket_git_chunk_file::read_chunk_bucket(amp_bucket_t** bucket, const char* chunk_name, amp_pool_t* scratch_pool)
 {
-	AMP_ERR(read_info(nullptr, nullptr, nullptr, scratch_pool));
+	AMP_ERR(read_info(nullptr, nullptr, nullptr, nullptr, scratch_pool));
 
 	int idx = -1;
 	if (strlen(chunk_name) == 4)

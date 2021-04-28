@@ -188,7 +188,7 @@ amp_err_t *amp_file_handle::explicit_destroy()
 }
 
 amp_err_t*
-amp_file_handle::read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer) noexcept
+amp_file_handle::read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer) const noexcept
 {
 #ifdef _WIN32
 	OVERLAPPED overlapped = {};
@@ -220,7 +220,7 @@ amp_file_handle::read(ptrdiff_t* bytes_read, amp_off_t offset, span<char> buffer
 }
 
 amp_err_t *
-amp_file_handle::get_current_size(amp_off_t *size) noexcept
+amp_file_handle::get_current_size(amp_off_t *size) const noexcept
 {
 #ifdef _WIN32
 	LARGE_INTEGER r;
@@ -243,7 +243,7 @@ amp_file_handle::get_current_size(amp_off_t *size) noexcept
 }
 
 amp_err_t*
-amp_file_handle::write_full(amp_off_t offset, amp_span buffer) noexcept
+amp_file_handle::write_full(amp_off_t offset, amp_span buffer) const noexcept
 {
 #ifdef _WIN32
 	OVERLAPPED overlapped = {};
@@ -274,7 +274,7 @@ amp_file_handle::write_full(amp_off_t offset, amp_span buffer) noexcept
 }
 
 amp_err_t* 
-amp_file_handle::truncate(amp_off_t offset) noexcept
+amp_file_handle::truncate(amp_off_t offset) const noexcept
 {
 #ifdef _WIN32
 	LARGE_INTEGER pos;
@@ -296,7 +296,7 @@ amp_file_handle::truncate(amp_off_t offset) noexcept
 }
 
 amp_err_t* 
-amp_file_handle::flush(bool force_to_disk) noexcept
+amp_file_handle::flush(bool force_to_disk) const noexcept
 {
 #ifdef _WIN32
 	if (force_to_disk)
