@@ -9,3 +9,5 @@ The design of this library tries to get the same level of library error handling
 that don't require the full memory mapping of git objects as the other libraries do.
 
 The current api already allows using reading through packed git objects of theoretically many GBs using very limited memory.
+
+The project aims to produce code that is compatible with at least Windows, Linux, OS/x. (x86, x86_64, ARM and ARM64 compatible). Designed to be used inside other products and libraries. In particular to be wrapped by .Net code.
