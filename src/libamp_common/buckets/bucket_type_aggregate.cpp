@@ -1,5 +1,6 @@
-#include <amp_buckets.hpp>
-#include <amp_files.hpp>
+#include "amp_buckets.hpp"
+#include "amp_files.hpp"
+#include "../amp_linkedlist.hpp"
 
 using namespace amp;
 
@@ -16,47 +17,24 @@ void
 amp_bucket_aggregate::append(amp_bucket_t* bucket)
 {
 	bucket_list_t* item = amp_allocator_alloc<bucket_list_t>(allocator);
+	item->bucket = bucket;
 
 	if (!cur && !last)
 		cur = item;
 
-	item->next = nullptr;
-	item->prev = last;
-	item->bucket = bucket;
-
-	if (last)
-		last->next = item;
-	else
-		first = item;
-	last = item;
+	amp_linkedlist_append(first, last, item);
 }
 
 void
 amp_bucket_aggregate::prepend(amp_bucket_t* bucket)
 {
 	bucket_list_t* item = amp_allocator_alloc<bucket_list_t>(allocator);
-
-	if (!cur)
-	{
-		append(bucket);
-		return;
-	}
-
-	item->prev = cur->prev;
-	item->next = cur;
 	item->bucket = bucket;
-
-	if (item->prev)
-		item->prev->next = item;
-	else
-		first = item;
-
-	cur->prev = item;
-	cur = item;
-
 
 	if (!cur && !last)
 		cur = item;
+
+	amp_linkedlist_prepend(first, last, item);
 }
 
 void
@@ -67,18 +45,14 @@ amp_bucket_aggregate::cleanup(amp_pool_t *scratch_pool)
 
 	while (first && first != cur)
 	{
-		auto t = first;
-		first = t->next;
+		auto item = first;
 
-		(*t->bucket)->destroy(scratch_pool);
-		t->bucket = nullptr;
+		(*item->bucket)->destroy(scratch_pool);
+		item->bucket = nullptr;
 
-		if (t->next)
-			t->next->prev = nullptr;
-		else
-			last = nullptr;
+		amp_linkedlist_remove(first, last, item);
 
-		(*allocator)->free(t);
+		(*allocator)->free(item);
 	}
 }
 

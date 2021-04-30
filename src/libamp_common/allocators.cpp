@@ -1,6 +1,8 @@
 #include <new>
 #include <malloc.h>
-#include <amp_pools.hpp>
+#include "amp_pools.hpp"
+#include "amp_linkedlist.hpp"
+
 
 using namespace amp;
 
@@ -59,15 +61,9 @@ amp_allocator::alloc(size_t size)
 #endif
 
 	allocation_t* t = (allocation_t*)(*m_alloc_func)(size);
-
-	t->prev = last;
-	t->next = nullptr;
 	t->size = size;
-	if (last)
-		last->next = t;
-	else
-		first = t;	
-	last = t;
+
+	amp_linkedlist_append(first, last, t);
 
 	return &t[1];
 }
@@ -75,31 +71,23 @@ amp_allocator::alloc(size_t size)
 void
 amp_allocator::free(void* data)
 {
-	allocation_t* t = reinterpret_cast<allocation_t*>(data) -1;
-
-	if (t->prev)
-		t->prev->next = t->next;
-	else
-		first = t->next;
-
-	if (t->next)
-		t->next->prev = t->prev;
-	else
-		last = t->prev;
-
+	allocation_t* t = reinterpret_cast<allocation_t*>(data) - 1;
 #ifdef AMP_DEBUG
 	AMP_ASSERT(t->size != 0xDEADDEAD);
 	t->size = 0xDEADDEAD;
 #endif
+
+	amp_linkedlist_remove(first, last, t);
+
 	(*m_free_func)(t);
 }
 
-void* 
+void*
 amp_allocator::realloc(void* data, size_t new_size)
 {
-	allocation_t* t = reinterpret_cast<allocation_t*>(data) -1;
+	allocation_t* t = reinterpret_cast<allocation_t*>(data) - 1;
 
-	AMP_ASSERT(new_size > 0 && new_size < (size_t)(-1024*1024));
+	AMP_ASSERT(new_size > 0 && new_size < (SIZE_MAX - sizeof(allocation_t)));
 
 	size_t size = new_size + sizeof(allocation_t);
 
@@ -111,17 +99,6 @@ amp_allocator::realloc(void* data, size_t new_size)
 			return nullptr;
 
 		t = reinterpret_cast<allocation_t*>(nw);
-
-
-		if (t->prev)
-			t->prev->next = t;
-		else
-			first = t;
-
-		if (t->next)
-			t->next->prev = t;
-		else
-			last = t;
 	}
 	else
 	{
@@ -134,19 +111,19 @@ amp_allocator::realloc(void* data, size_t new_size)
 		t = reinterpret_cast<allocation_t*>(nw);
 
 		(*m_free_func)(data);
-
-		t->size = new_size;
-
-		if (t->prev)
-			t->prev->next = t;
-		else
-			first = t;
-
-		if (t->next)
-			t->next->prev = t;
-		else
-			last = t;
 	}
+
+	t->size = new_size;
+
+	if (t->prev)
+		t->prev->next = t;
+	else
+		first = t;
+
+	if (t->next)
+		t->next->prev = t;
+	else
+		last = t;
 
 	return &t[1];
 }
@@ -154,7 +131,7 @@ amp_allocator::realloc(void* data, size_t new_size)
 void
 amp_allocator::destroy()
 {
-	AMP_ASSERT(!first && !last);
+	AMP_ASSERT(!first && !last && "All memory already released");
 
 	while (first)
 		this->free(&first[1]);
@@ -162,7 +139,7 @@ amp_allocator::destroy()
 	(m_free_func)(this);
 }
 
-void *
+void*
 amp_allocator_pmemdup(
 	const void* src,
 	size_t size,

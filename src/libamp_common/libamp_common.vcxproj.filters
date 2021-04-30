@@ -72,6 +72,9 @@
     <ClInclude Include="..\include\amp_src_git.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="amp_linkedlist.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="buckets.cpp">

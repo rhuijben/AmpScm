@@ -201,6 +201,7 @@
     <ClInclude Include="..\include\amp_src_git.hpp" />
     <ClInclude Include="..\include\amp_types.h" />
     <ClInclude Include="..\include\amp_types.hpp" />
+    <ClInclude Include="amp_linkedlist.hpp" />
     <ClInclude Include="framework.h" />
   </ItemGroup>
   <ItemGroup>
