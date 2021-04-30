@@ -1,5 +1,6 @@
-#include <amp_buckets.hpp>
-#include <amp_files.hpp>
+#include "amp_buckets.hpp"
+#include "amp_files.hpp"
+
 using namespace amp;
 
 static amp::amp_bucket::amp_bucket_type amp_simple_bucket_type("amp.simple");

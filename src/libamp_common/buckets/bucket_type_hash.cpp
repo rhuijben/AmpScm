@@ -6,7 +6,7 @@
 #endif
 #include <zlib.h>
 
-#include <amp_buckets.hpp>
+#include "amp_buckets.hpp"
 
 using namespace amp;
 

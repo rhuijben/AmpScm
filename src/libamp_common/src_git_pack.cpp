@@ -1,12 +1,13 @@
-#include <amp_buckets.hpp>
-#include <amp_src_git.hpp>
-
 #include <string>
 
 #ifdef _MSC_VER
 #include <intrin.h>
 #define __builtin_popcount __popcnt
 #endif
+
+#include "amp_buckets.hpp"
+#include "amp_src_git.hpp"
+
 
 using namespace amp;
 

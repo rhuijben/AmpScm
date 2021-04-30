@@ -1,5 +1,5 @@
-#include <amp_buckets.hpp>
-#include <amp_files.hpp>
+#include "amp_buckets.hpp"
+#include "amp_files.hpp"
 #include <zlib.h>
 
 #ifdef _MSC_VER
