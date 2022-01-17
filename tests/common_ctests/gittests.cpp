@@ -1058,7 +1058,7 @@ TEST_F(GitTests, ReadThroughPack)
 
 		const char* hash_cstring = amp_hash_result_to_cstring(sha, true, pool);
 
-		fprintf(stderr, ", hash=%s, hash_size=%d/%d\n", amp_hash_result_to_cstring(sha, true, pool), (int)sha->original_size, (int)sha->original_size - strlen(hdr) - 1);
+		fprintf(stderr, ", hash=%s, hash_size=%d/%d\n", amp_hash_result_to_cstring(sha, true, pool), (int)sha->original_size, (int)sha->original_size - (int)strlen(hdr) - 1);
 
 		ASSERT_STREQ(hash_cstring, expected_commits[i]); // Verifies type and actual commit body via sha over both
 
