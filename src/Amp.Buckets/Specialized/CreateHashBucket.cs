@@ -42,6 +42,11 @@ namespace Amp.Buckets.Specialized
             return r;
         }
 
+        public override ValueTask<int> ReadSkipAsync(int requested)
+        {
+            return SkipByReading(requested);
+        }
+
         public override bool CanReset => base.CanReset && _hasher.CanReuseTransform;
         public async override ValueTask ResetAsync()
         {

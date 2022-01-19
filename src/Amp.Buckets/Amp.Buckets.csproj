@@ -4,6 +4,7 @@
 		<TargetFrameworks>net6.0;net5.0;net47</TargetFrameworks>
 		<LangVersion>9.0</LangVersion>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">

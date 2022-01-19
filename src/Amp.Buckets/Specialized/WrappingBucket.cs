@@ -1,0 +1,43 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Amp.Buckets.Specialized
+{
+    [DebuggerDisplay("{Name}: Inner={Inner}")]
+    public abstract class WrappingBucket : Bucket
+    {
+        protected Bucket Inner { get; }
+        readonly bool _noDispose;
+
+        public WrappingBucket(Bucket inner)
+        {
+            Inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        }
+
+        protected WrappingBucket(Bucket inner, bool noDispose)
+            : this(inner)
+        {
+            _noDispose = noDispose;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (disposing && !_noDispose)
+                Inner.Dispose();
+        }
+
+        protected async override ValueTask DisposeAsyncCore()
+        {
+            if (!_noDispose)
+                await Inner.DisposeAsync();
+
+            await base.DisposeAsyncCore();
+        }
+    }
+}

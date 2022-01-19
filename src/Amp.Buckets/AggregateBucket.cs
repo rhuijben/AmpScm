@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets
 {
+    [DebuggerDisplay("{Name}: BucketCount={BucketCount}, Current={CurrentBucket}, Position={Position}")]
     public class AggregateBucket : Bucket, IBucketAggregation
     {
         Bucket?[] _buckets;
@@ -25,6 +27,9 @@ namespace Amp.Buckets
 
         public Bucket Append(Bucket bucket)
         {
+            if (bucket is null)
+                throw new ArgumentNullException(nameof(bucket));
+
             int nShrink = _keepOpen ? 0 : _n;
 
             var newBuckets = new Bucket[_buckets.Length - nShrink + 1];
@@ -38,9 +43,13 @@ namespace Amp.Buckets
 
         public Bucket Prepend(Bucket bucket)
         {
+            if (bucket is null)
+                throw new ArgumentNullException(nameof(bucket));
+
             if (!_keepOpen && _n > 0)
                 _buckets[--_n] = bucket;
-            else
+            else if (_n > 0)
+                throw new InvalidOperationException();
             {
                 var newBuckets = new Bucket[_buckets.Length + 1];
                 Array.Copy(_buckets, _n, newBuckets, 1, _buckets.Length);
@@ -73,8 +82,18 @@ namespace Amp.Buckets
             {
                 var v = _buckets[_n]!.ReadAsync(requested);
 
-                if (!v.IsCompleted || v.Result.Length > 0)
-                    return await v;
+                if (v.IsCompleted && v.Result.Length > 0)
+                    return v.Result;
+
+                var r = await v;
+
+                if (!r.IsEof)
+                {
+                    if (r.Length == 0)
+                        throw new InvalidOperationException("Got 0 byte read");
+
+                    return r;
+                }
 
                 if (!_keepOpen)
                 {
@@ -90,6 +109,11 @@ namespace Amp.Buckets
                 _n = 0;
             }
             return BucketBytes.Eof;
+        }
+
+        public override ValueTask<int> ReadSkipAsync(int requested)
+        {
+            return base.ReadSkipAsync(requested);
         }
 
         public override async ValueTask<long?> ReadRemainingBytesAsync()
@@ -127,16 +151,18 @@ namespace Amp.Buckets
         }
 
         protected override async ValueTask DisposeAsyncCore()
-        {
-            for(int i = 0; i < _buckets.Length; i++)
+        {            
+            while(_n < _buckets.Length)
             {
-                if (_buckets[i] != null)
+                if (_buckets[_n] != null)
                 {
-                    await _buckets[i]!.DisposeAsync();
+                    await _buckets[_n]!.DisposeAsync();
                 }
-                _buckets[i] = null;
+                _buckets[_n++] = null;
             }
+
             _buckets = Array.Empty<Bucket>();
+            _n = 0;
         }
 
         protected override void Dispose(bool disposing)
@@ -148,9 +174,36 @@ namespace Amp.Buckets
                     _buckets[i]?.Dispose();
                     _buckets[i] = null;
                 }
+
                 _buckets = Array.Empty<Bucket>();
+                _n = 0;
             }
             base.Dispose(disposing);
         }
+
+        public override long? Position
+        {
+            get => _keepOpen ? _buckets.Take(_n + 1).Aggregate((long?)0L, (c, b) => c + b?.Position) : null;
+        }
+
+        public async override ValueTask<Bucket> DuplicateAsync(bool reset)
+        {
+            if (!_keepOpen)
+                throw new NotSupportedException();
+            else if (reset && !CanReset)
+                throw new InvalidOperationException();
+
+            var newBuckets = new List<Bucket>();
+
+            foreach(var v in _buckets)
+                newBuckets.Add(await v!.DuplicateAsync(reset));
+
+            return new AggregateBucket(true, newBuckets.ToArray());
+        }
+
+        #region DEBUG INFO
+        int BucketCount => _buckets.Length - _n;
+        Bucket? CurrentBucket => _buckets[_n];
+        #endregion
     }
 }

@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amp.Buckets", "Amp.Buckets\Amp.Buckets.csproj", "{7B4C2CA5-108E-42B3-9649-84E6EA2A5530}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amp.Bucket.Tests", "Amp.Bucket.Tests\Amp.Bucket.Tests.csproj", "{AF22A665-AC8E-423B-9D99-CC56FBC45F12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amp.BucketTests", "Amp.Bucket.Tests\Amp.BucketTests.csproj", "{AF22A665-AC8E-423B-9D99-CC56FBC45F12}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
