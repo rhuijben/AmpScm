@@ -22,7 +22,7 @@ namespace Amp.Buckets.Specialized
             Processed = compressor(Src);
         }
 
-        public override async ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
+        public override async ValueTask<BucketBytes> PeekAsync()
         {
             await Refill();
 
@@ -203,7 +203,7 @@ namespace Amp.Buckets.Specialized
             {
             }
 
-            public override ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
+            public override ValueTask<BucketBytes> PeekAsync()
             {
                 throw new NotImplementedException();
             }

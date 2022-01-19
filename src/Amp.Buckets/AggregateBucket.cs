@@ -134,12 +134,12 @@ namespace Amp.Buckets
             return remaining;
         }
 
-        public override ValueTask<BucketBytes> PeekAsync(bool noPoll)
+        public override ValueTask<BucketBytes> PeekAsync()
         {
             int n = _n;
             while (n < _buckets.Length)
             {
-                var v = _buckets[n]!.PeekAsync(noPoll);
+                var v = _buckets[n]!.PeekAsync();
 
                 if (!v.IsCompleted || !v.Result.IsEof)
                     return v;

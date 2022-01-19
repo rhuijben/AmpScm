@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace Amp.Buckets.Specialized
 {
     [DebuggerDisplay("{Name}: Inner={Inner}")]
-    public abstract class WrappingBucket : Bucket
+    public abstract class WrappingBucket : Bucket, IBucketNoClose
     {
         protected Bucket Inner { get; }
-        readonly bool _noDispose;
+        bool _noDispose;
 
         public WrappingBucket(Bucket inner)
         {
@@ -38,6 +38,12 @@ namespace Amp.Buckets.Specialized
                 await Inner.DisposeAsync();
 
             await base.DisposeAsyncCore();
+        }
+
+        public virtual Bucket NoClose()
+        {
+            _noDispose = true;
+            return this;
         }
     }
 }

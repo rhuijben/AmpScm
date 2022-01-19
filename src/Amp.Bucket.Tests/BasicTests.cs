@@ -1,5 +1,6 @@
 using Amp.Buckets;
 using Amp.Buckets.Specialized;
+using Amp.BucketTests.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NUnit;
 using System;
@@ -132,7 +133,7 @@ namespace Amp.BucketTests
         {
             using var b = git_blob_ABCDEFGHIJKLMNOPQRSTUVWXYZ.AsBucket();
 
-            using var r = b.Decompress(BucketCompressionAlgorithm.ZLib);
+            var r = b.Decompress(BucketCompressionAlgorithm.ZLib);
 
 
             byte[] chars34 = new byte[34];
@@ -141,6 +142,18 @@ namespace Amp.BucketTests
             Assert.AreEqual("blob 26\0ABCDEFGHIJKLMNOPQRSTUVWXYZ", Encoding.ASCII.GetString(chars34));
 
             var v = await r.ReadAsync();
+
+            Assert.IsTrue(v.IsEof);
+
+            v = await b.ReadAsync();
+            Assert.IsTrue(v.IsEof);
+
+            await b.ResetAsync();
+            r = b.PerByte().Decompress(BucketCompressionAlgorithm.ZLib);
+            r.ReadFull(chars34);
+            Assert.AreEqual("blob 26\0ABCDEFGHIJKLMNOPQRSTUVWXYZ", Encoding.ASCII.GetString(chars34));
+
+            v = await r.ReadAsync();
 
             Assert.IsTrue(v.IsEof);
 
@@ -182,10 +195,26 @@ namespace Amp.BucketTests
                 var v = await r.ReadAsync();
 
                 v = await b.ReadAsync();
-                if (v.IsEof)
-                    Assert.Inconclusive("Compress Stream is to eager to read");
                 Assert.IsFalse(v.IsEof);
                 Assert.AreEqual(3, v.Length);
+            }
+
+            b = git_blob_ABCDEFGHIJKLMNOPQRSTUVWXYZ.AsBucket().Append(new byte[] { 255, 100, 101 }.AsBucket()).ToArray().AsBucket().PerByte();
+
+            {
+                var r = b.Decompress(BucketCompressionAlgorithm.ZLib);
+
+
+                byte[] chars34 = new byte[34];
+                r.ReadFull(chars34);
+
+                Assert.AreEqual("blob 26\0ABCDEFGHIJKLMNOPQRSTUVWXYZ", Encoding.ASCII.GetString(chars34));
+
+                var v = await r.ReadAsync();
+
+                v = await b.ReadAsync();
+                Assert.IsFalse(v.IsEof);
+                Assert.AreEqual(1, v.Length);
             }
         }
 

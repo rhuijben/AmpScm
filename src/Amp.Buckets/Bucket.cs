@@ -22,7 +22,7 @@ namespace Amp.Buckets
 
         public abstract ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue);
 
-        public abstract ValueTask<BucketBytes> PeekAsync(bool noPoll = false);
+        public abstract ValueTask<BucketBytes> PeekAsync();
 
         public virtual ValueTask<int> ReadSkipAsync(int requested)
         {
@@ -56,7 +56,7 @@ namespace Amp.Buckets
             if (reset && !CanReset)
                 throw new InvalidOperationException();
 
-            throw new NotSupportedException();
+            throw new NotSupportedException($"DuplicateAsync not implemented on {GetType().Name}");
         }
 
         public virtual bool CanReset => false;
@@ -71,7 +71,7 @@ namespace Amp.Buckets
 
         sealed class EmptyBucket : Bucket
         {
-            public override ValueTask<BucketBytes> PeekAsync(bool noPoll)
+            public override ValueTask<BucketBytes> PeekAsync()
             {
                 return EmptyTask;
             }

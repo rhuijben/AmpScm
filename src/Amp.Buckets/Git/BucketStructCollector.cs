@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -56,7 +57,9 @@ namespace Amp.Buckets.Git
             return value;
         }
     }
-    internal struct BucketStructCollector<TRead> where TRead : struct
+
+    [DebuggerDisplay("Result={Result}")]
+    internal class BucketStructCollector<TRead> where TRead : struct
     {
         object? _state;
         int _pos;
@@ -92,7 +95,7 @@ namespace Amp.Buckets.Git
 
         unsafe TRead LoadStruct(byte[] bytes)
         {
-            TRead r;
+            object r;
             fixed (byte* pData = &bytes[0])
             {
                 r = Marshal.PtrToStructure<TRead>((IntPtr)pData);
@@ -122,9 +125,11 @@ namespace Amp.Buckets.Git
                     f.SetValue(r, dd);
                 }
             }
-            return r;
+            return (TRead)r;
         }
 
-        public TRead? Value => _state as TRead?;
+        public TRead? Result => _state as TRead?;
+
+        public bool HasResult => _state is TRead;
     }
 }

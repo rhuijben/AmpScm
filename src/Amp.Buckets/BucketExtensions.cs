@@ -11,13 +11,13 @@ namespace Amp.Buckets
 {
     public static class BucketExtensions
     {
-        public static Bucket Append(this Bucket self, Bucket appendee)
+        public static Bucket Append(this Bucket self, Bucket newLast)
         {
             if (self is IBucketAggregation col)
-                return col.Append(appendee);
+                return col.Append(newLast);
             else
             {
-                return new AggregateBucket(self, appendee);
+                return new AggregateBucket(self, newLast);
             }
         }
 
@@ -31,41 +31,54 @@ namespace Amp.Buckets
             }
         }
 
-        public static Bucket WithPosition(this Bucket self)
+        public static Bucket WithPosition(this Bucket self, bool alwaysWrap = false)
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
 
-            if (self.Position != null)
+            if (!alwaysWrap && self.Position != null)
                 return self;
 
             return new PositionBucket(self);
         }
 
-        public static Bucket Take(this Bucket self, long limit)
+        public static Bucket Take(this Bucket self, long limit, bool alwaysWrap = false)
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
             else if (limit < 0)
                 throw new ArgumentOutOfRangeException(nameof(limit));
 
-            if (self is TakeBucket lb)
-                return lb.Take(limit);
+            if (!alwaysWrap && self is IBucketTake take)
+                return take.Take(limit);
             else
                 return new TakeBucket(self, limit);
         }
 
-        public static Bucket Skip(this Bucket self, long firstPosition)
+        public static Bucket Skip(this Bucket self, long firstPosition, bool alwaysWrap = false)
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
             else if (firstPosition < 0)
                 throw new ArgumentOutOfRangeException(nameof(firstPosition));
 
-            if (self is SkipBucket sb)
+            if (!alwaysWrap && self is IBucketSkip sb)
                 return sb.Skip(firstPosition);
             else
                 return new SkipBucket(self, firstPosition);
+        }
+
+        public static Bucket NoClose(this Bucket bucket, bool alwaysWrap = false)
+        {
+            if (!alwaysWrap && bucket is IBucketNoClose nc)
+                return nc.NoClose();
+            else
+                return new NoCloseBucket(bucket);
+        }
+
+        public static Bucket Wrap(this Bucket self)
+        {
+            return new ProxyBucket(self);
         }
 
         public static Bucket VerifyBehavior<TBucket>(this TBucket toVerify)
@@ -115,14 +128,10 @@ namespace Amp.Buckets
 
         public static Bucket Decompress(this Bucket self, BucketCompressionAlgorithm algorithm)
         {
-            switch(algorithm)
+            switch (algorithm)
             {
                 case BucketCompressionAlgorithm.ZLib:
-#if NET6_0_OR_GREATER
-                    return new CompressionBucket(self, (inner) => new ZLibStream(inner, CompressionMode.Decompress));
-#else
-                    return new CompressionBucket(self.Skip(2), (inner) => new DeflateStream(inner, CompressionMode.Decompress));
-#endif
+                    return new ZLibBucket(self);
                 case BucketCompressionAlgorithm.Deflate:
                     return new CompressionBucket(self, (inner) => new DeflateStream(inner, CompressionMode.Decompress));
 #if NETCOREAPP

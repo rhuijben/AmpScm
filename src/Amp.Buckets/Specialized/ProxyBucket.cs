@@ -30,9 +30,9 @@ namespace Amp.Buckets.Specialized
 
         public override string Name => base.Name + "/" + Inner.Name;
 
-        public override ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
+        public override ValueTask<BucketBytes> PeekAsync()
         {
-            return Inner.PeekAsync(noPoll);
+            return Inner.PeekAsync();
         }
 
         public override ValueTask<long?> ReadRemainingBytesAsync()

@@ -7,7 +7,12 @@ using System.Threading.Tasks;
 
 namespace Amp.Buckets.Specialized
 {
-    public sealed class TakeBucket : PositionBucket
+    interface IBucketTake
+    {
+        Bucket Take(long limit);
+    }
+
+    public sealed class TakeBucket : PositionBucket, IBucketTake
     {
         public long Limit { get; private set; }
 
@@ -31,9 +36,9 @@ namespace Amp.Buckets.Specialized
             return this;
         }
 
-        public override async ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
+        public override async ValueTask<BucketBytes> PeekAsync()
         {
-            var peek = await base.PeekAsync(noPoll);
+            var peek = await base.PeekAsync();
 
             if (peek.Length <= 0)
                 return peek;

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Amp.Buckets
 {
-    public class MemoryBucket : Bucket
+    public class MemoryBucket : Bucket, IBucketNoClose
     {
         BucketBytes _data;
         int _offset;
@@ -27,7 +27,7 @@ namespace Amp.Buckets
             _data = data;
         }
 
-        public override ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
+        public override ValueTask<BucketBytes> PeekAsync()
         {
             return _data.Slice(_offset);
         }
@@ -50,6 +50,15 @@ namespace Amp.Buckets
             return new ValueTask<long?>(_data.Length - _offset);
         }
 
+        public override ValueTask<Bucket> DuplicateAsync(bool reset)
+        {
+            var mb = new MemoryBucket(_data.Memory);
+            if (!reset)
+                mb._offset = _offset;
+
+            return new ValueTask<Bucket>(mb);
+        }
+
         public override long? Position => _offset;
 
         public override bool CanReset => true;
@@ -59,6 +68,11 @@ namespace Amp.Buckets
             _offset = 0;
 
             return new ValueTask();
+        }
+
+        Bucket IBucketNoClose.NoClose()
+        {
+            return this;
         }
     }
 }

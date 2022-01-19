@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -94,6 +95,7 @@ namespace Amp.Buckets
 
         public void CopyTo(Memory<byte> destination) => Span.CopyTo(destination.Span);
 
+        public byte this[int index] => _data.Span[index];
 
         public MemoryHandle Pin()
         {
@@ -111,6 +113,9 @@ namespace Amp.Buckets
         /// <param name="destination">The span to copy items into.</param>
         public bool TryCopyTo(Memory<byte> destination) => Span.TryCopyTo(destination.Span);
 
+        ReadOnlyMemory<byte> IValueOrEof<ReadOnlyMemory<byte>>.Value => _data;
+
+
         string DebuggerDisplay
         {
             get
@@ -122,7 +127,35 @@ namespace Amp.Buckets
             }
         }
 
-        ReadOnlyMemory<byte> IValueOrEof<ReadOnlyMemory<byte>>.Value => _data;
+        #region ZLib optimization. Our ZLib doesn't use Span<> and Memory<> yet, but let's reuse byte[] directly instead of copying
+        static Func<ReadOnlyMemory<byte>, (object, int, int)> MemoryExpander { get; } = FindExpander();
+
+        static Func<ReadOnlyMemory<byte>, (object, int, int)> FindExpander()
+         {
+             ParameterExpression p = Expression.Parameter(typeof(ReadOnlyMemory<byte>), "x");
+
+             var c = Expression.New(typeof((object, int, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
+                        Expression.Field(p, "_object"),
+                        Expression.Field(p, "_index"),
+                        Expression.Field(p, "_length"));
+             return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int, int)>>(c, p).Compile();
+         }
+
+        internal (byte[], int, int) ExpandToArray()
+        {
+            if (_data.Length == 0)
+                return (Array.Empty<byte>(), 0, 0);
+
+            var (ob, index, length) = MemoryExpander(_data);
+
+            if (ob is byte[] arr)
+                return (arr, index, length);
+
+            byte[] data = ToArray();
+
+            return (data, 0, data.Length);
+        }
+        #endregion
     }
 
 }
