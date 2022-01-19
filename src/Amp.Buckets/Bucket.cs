@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets
 {
-    public abstract class Bucket : IAsyncDisposable, IDisposable
+    [DebuggerDisplay("{Name}: Position={Position}")]
+    public abstract partial class Bucket : IAsyncDisposable, IDisposable
     {
         public static readonly Bucket Empty = new EmptyBucket();
         internal static readonly ValueTask<BucketBytes> EofTask = new ValueTask<BucketBytes>(BucketBytes.Eof);
@@ -15,6 +17,8 @@ namespace Amp.Buckets
         {
 
         }
+
+        public virtual string Name => GetType().Name;
 
         public abstract ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue);
 

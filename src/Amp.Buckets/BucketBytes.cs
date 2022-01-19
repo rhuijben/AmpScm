@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Amp.Buckets
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public struct BucketBytes : IEquatable<BucketBytes>
+    public struct BucketBytes : IEquatable<BucketBytes>, IValueOrEof<ReadOnlyMemory<byte>>
     {
         ReadOnlyMemory<byte> _data;
         bool _eof;
@@ -22,7 +22,7 @@ namespace Amp.Buckets
 
         public BucketBytes(byte[] array, int start, int length)
         {
-            if (array == null)
+            if (array is null)
                 throw new ArgumentNullException(nameof(array));
 
             _data = new ReadOnlyMemory<byte>(array, start, length);
@@ -40,11 +40,18 @@ namespace Amp.Buckets
             return _data.Equals(other._data) && _eof == other._eof;
         }
 
+        public override int GetHashCode()
+        {
+            return _data.GetHashCode();
+        }
+
         public int Length => _data.Length;
         public bool IsEof => _eof;
         public bool IsEmpty => _data.IsEmpty;
 
         public ReadOnlySpan<byte> Span => _data.Span;
+
+        public ReadOnlyMemory<byte> Memory => _data;
 
         public BucketBytes Slice(int start)
         {
@@ -114,6 +121,8 @@ namespace Amp.Buckets
                     return $"Length={Length}, Data='{System.Text.Encoding.ASCII.GetString(_data.Span)}'";
             }
         }
+
+        ReadOnlyMemory<byte> IValueOrEof<ReadOnlyMemory<byte>>.Value => _data;
     }
 
 }

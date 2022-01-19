@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets.Specialized
 {
-    public class ProxyBucket : Bucket
+    
+    public abstract class ProxyBucket<TBucket> : WrappingBucket
+        where TBucket : Bucket
     {
-        protected Bucket Inner { get; }
-        bool _noDispose;
-
         public ProxyBucket(Bucket inner)
+            : base(inner)
         {
-            Inner = inner ?? throw new ArgumentNullException(nameof(inner));
         }
 
         internal ProxyBucket(Bucket inner, bool noDispose)
-            : this(inner)
+            : base(inner, noDispose)
         {
-            _noDispose = noDispose;
         }
 
         public override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
@@ -28,6 +27,8 @@ namespace Amp.Buckets.Specialized
         }
 
         public override bool CanReset => Inner.CanReset;
+
+        public override string Name => base.Name + "/" + Inner.Name;
 
         public override ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
         {
@@ -43,7 +44,7 @@ namespace Amp.Buckets.Specialized
 
         public override ValueTask<int> ReadSkipAsync(int requested)
         {
-            return SkipByReading(requested);
+            return Inner.ReadSkipAsync(requested);
         }
 
         public override ValueTask ResetAsync()
@@ -51,25 +52,27 @@ namespace Amp.Buckets.Specialized
             return Inner.ResetAsync();
         }
 
-        public override ValueTask<Bucket> DuplicateAsync(bool reset)
+        public override async ValueTask<Bucket> DuplicateAsync(bool reset)
         {
-            return Inner.DuplicateAsync(reset); // Yes the duplicate *is* owned, otherwise it wouldn't have an owner
+            var r = await Inner.DuplicateAsync(reset);
+            return WrapDuplicate(r, reset) ?? r;
         }
 
-        protected override void Dispose(bool disposing)
+        protected virtual TBucket? WrapDuplicate(Bucket duplicatedInner, bool reset)
         {
-            base.Dispose(disposing);
+            return null;
+        }        
+    }
 
-            if (disposing && !_noDispose)
-                Inner.Dispose();
+    public class ProxyBucket : ProxyBucket<ProxyBucket>
+    {
+        public ProxyBucket(Bucket inner) : base(inner)
+        {
+
         }
 
-        protected async override ValueTask DisposeAsyncCore()
+        internal ProxyBucket(Bucket inner, bool noDispose) : base(inner, noDispose)
         {
-            if (!_noDispose)
-                await Inner.DisposeAsync();
-
-            await base.DisposeAsyncCore();
         }
     }
 }
