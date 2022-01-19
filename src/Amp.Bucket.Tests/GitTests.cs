@@ -17,11 +17,35 @@ namespace Amp.BucketTests
         {
             var b = pack_fac19906ba9a2181e9b1cde3dcb317f0b52acb31_pack.AsBucket();
 
-            var gh = new GitPackHeaderBucket(b);
+            var gh = new GitPackHeaderBucket(b.NoClose());
 
             var r = await gh.ReadAsync();
-
             Assert.IsTrue(r.IsEof);
+
+            Assert.AreEqual("PACK", gh.GitType);
+            Assert.AreEqual(2, gh.Version);
+            Assert.AreEqual(70, gh.ObjectCount);
+
+            for(int i = 0; i < gh.ObjectCount; i++)
+            {
+                long? offset = b.Position;
+                using var pf = new GitPackFrameBucket(b.NoClose(), GitObjectIdType.Sha1);
+
+                await pf.ReadInfoAsync();
+
+                Console.Write($"Object {i}: type={pf.Type}, offset={offset}");
+
+                var len = await pf.ReadRemainingBytesAsync();
+                Console.Write($", length={len}");
+
+                Assert.AreEqual(0L, pf.Position);
+
+                var data = await pf.ReadToEnd();
+
+                //Assert.AreEqual((long)data.Length, pf.Position);
+
+                Console.WriteLine($", read={data.Length}");
+            }
         }
 
         byte[] pack_fac19906ba9a2181e9b1cde3dcb317f0b52acb31_pack = {

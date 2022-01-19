@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace Amp.Buckets.Specialized
 {
-    public sealed class SkipBucket : PositionBucket
+    interface IBucketSkip
+    {
+        Bucket Skip(long firstPosition);
+    }
+
+    public sealed class SkipBucket : PositionBucket, IBucketSkip
     {
         public long FirstPosition { get; private set; }
 
@@ -34,17 +39,17 @@ namespace Amp.Buckets.Specialized
 
         public override long? Position => Math.Max(0L, base.Position!.Value - FirstPosition);
 
-        public override ValueTask<BucketBytes> PeekAsync(bool noPoll = false)
+        public override ValueTask<BucketBytes> PeekAsync()
         {
             if (base.Position >= FirstPosition)
-                return Inner.PeekAsync(noPoll);
+                return Inner.PeekAsync();
             else
-                return SkipPeekAsync(noPoll);
+                return SkipPeekAsync();
         }
 
-        private async ValueTask<BucketBytes> SkipPeekAsync(bool noPoll)
+        private async ValueTask<BucketBytes> SkipPeekAsync()
         {
-            var b = await Inner.PeekAsync(noPoll);
+            var b = await Inner.PeekAsync();
 
             if (b.Length > 0)
             {
@@ -71,29 +76,12 @@ namespace Amp.Buckets.Specialized
         {
             long skip = FirstPosition - base.Position!.Value;
 
-            while (skip + requested > int.MaxValue)
-            {
-                var r = await base.ReadSkipAsync(requested);
-                if (r == 0)
-                    return BucketBytes.Eof;
+            skip -= await ReadSkipAsync(skip);
 
-                skip = FirstPosition - base.Position!.Value;
+            if (skip > 0)
+                return BucketBytes.Eof;
 
-            }
-
-            requested += (int)skip;
-
-            var b = await base.ReadAsync(requested);
-
-            if (b.Length > 0)
-            {
-                if (skip < b.Length)
-                    return b.Slice((int)skip);
-                else
-                    return BucketBytes.Empty;
-            }
-            else
-                return BucketBytes.Empty;
+            return await base.ReadAsync(requested);
         }
     }
 }

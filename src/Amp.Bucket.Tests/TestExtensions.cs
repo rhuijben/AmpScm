@@ -30,5 +30,17 @@ namespace Amp.BucketTests
                     throw new InvalidOperationException();
             }
         }
+
+        public static async ValueTask<byte[]> ReadToEnd(this Bucket self)
+        {
+            List<byte> bytes = new List<byte>();
+            BucketBytes bb;
+            while(!(bb = await self.ReadAsync()).IsEof)
+            {
+                bytes.AddRange(bb.ToArray());
+            }
+
+            return bytes.ToArray();
+        }
     }
 }

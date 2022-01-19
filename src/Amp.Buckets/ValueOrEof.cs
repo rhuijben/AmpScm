@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace Amp.Buckets
         public bool IsEof { get; }
     }
 
+    [DebuggerDisplay("Value={Value}, Eof={IsEof}")]
     public struct ValueOrEof<T> : IValueOrEof<T> where T : struct
     {
         T _value;
