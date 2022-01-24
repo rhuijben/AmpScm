@@ -9,294 +9,334 @@ namespace Amp.Buckets.Git
 {
     public class GitDeltaBucket : GitBucket
     {
-		protected Bucket Base { get; }
-		long length;
-		long position;
-		readonly byte[] buffer = new byte[8];
-		int copy_offset;
-		int copy_size;
-		delta_state state;
-		int p0;
+        protected Bucket BaseBucket { get; }
+        long length;
+        long position;
+        readonly byte[] buffer = new byte[8];
+        int copy_offset;
+        int copy_size;
+        delta_state state;
+        int p0;
 
-		enum delta_state
-		{
-			start,
-			init,
-			src_copy,
-			base_copy,
-			eof
-		}
-
-		public GitDeltaBucket(Bucket source, Bucket against) : base(source)
+        enum delta_state
         {
-			Base = against ?? throw new ArgumentNullException(nameof(against));
+            start,
+            init,
+            src_copy,
+            base_copy,
+            eof
+        }
+
+        public GitDeltaBucket(Bucket source, Bucket baseBucket)
+            : base(source)
+        {
+            BaseBucket = baseBucket ?? throw new ArgumentNullException(nameof(baseBucket));
         }
 
         public override long? Position => position;
 
-		static uint NumberOfSetBits(uint i)
-		{
-			i = i - ((i >> 1) & 0x55555555);
-			i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-			return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
-		}
+        static uint NumberOfSetBits(uint i)
+        {
+            i = i - ((i >> 1) & 0x55555555);
+            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+            return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+        }
 
-		async ValueTask<bool> AdvanceAsync()
-		{
-			while (state == delta_state.start)
-			{
-				while (p0 >= 0)
-				{
-					// This initial loop re-uses length to collect the base size, as we don't have that
-					// value at this point anyway
-					var data = await Inner.ReadAsync(1);
+        static int NeedBytes(byte data)
+        {
+            if (0 == (data & 0x80))
+                return 1;
+            else
+                return (int)NumberOfSetBits(data);
+        }
 
-					if (data.IsEof)
-						return false;
+        async ValueTask<bool> AdvanceAsync()
+        {
+            while (state == delta_state.start)
+            {
+                while (p0 >= 0)
+                {
+                    // This initial loop re-uses length to collect the base size, as we don't have that
+                    // value at this point anyway
+                    var data = await Inner.ReadAsync(1);
 
-					byte uc = data[0];
+                    if (data.IsEof)
+                        return false;
 
-					int shift = (p0 * 7);
-					length |= (long)(uc & 0x7F) << shift;
-					p0++;
+                    byte uc = data[0];
 
-					if (0 == (data[0] & 0x80))
-					{
-						long? base_size = await Base.ReadRemainingBytesAsync();
+                    int shift = (p0 * 7);
+                    length |= (long)(uc & 0x7F) << shift;
+                    p0++;
 
-						if (base_size != length)
-							throw new InvalidOperationException($"Expected delta base size {length} doesn't match source size ({base_size})");
+                    if (0 == (data[0] & 0x80))
+                    {
+                        long? base_size = await BaseBucket.ReadRemainingBytesAsync();
 
-						length = 0;
-						p0 = -1;
-					}
-				}
-				while (p0 < 0)
-				{
-					var data = await Inner.ReadAsync(1);
+                        if (base_size != length)
+                            throw new InvalidOperationException($"Expected delta base size {length} doesn't match source size ({base_size})");
 
-					if (data.IsEof)
-						return false;
+                        length = 0;
+                        p0 = -1;
+                    }
+                }
+                while (p0 < 0)
+                {
+                    var data = await Inner.ReadAsync(1);
 
-					byte uc = data[0];
+                    if (data.IsEof)
+                        return false;
 
-					int shift = ((-1 - p0) * 7);
-					length |= (long)(uc & 0x7F) << shift;
-					p0--;
+                    byte uc = data[0];
 
-					if (0 == (data[0] & 0x80))
-					{
-						p0 = 0;
-						state = delta_state.init;
-					}
-				}
-			}
+                    int shift = ((-1 - p0) * 7);
+                    length |= (long)(uc & 0x7F) << shift;
+                    p0--;
 
-			while (state == delta_state.init)
-			{
-				BucketBytes data;
-				if (p0 != 0)
-				{
-					int want = (int)NumberOfSetBits(buffer[0]) - (int)p0;
+                    if (0 == (data[0] & 0x80))
+                    {
+                        p0 = 0;
+                        state = delta_state.init;
+                    }
+                }
+            }
 
-					var read = await Inner.ReadAsync(want);
-					if (read.IsEof)
-						return false;
+            while (state == delta_state.init)
+            {
+                BucketBytes data;
+                if (p0 != 0)
+                {
+                    var want = NeedBytes(buffer[0]);
 
-					for (int i = 0; i < read.Length; i++)
-						buffer[p0 + i] = read[i];
+                    var read = await Inner.ReadAsync(want - p0);
+                    if (read.IsEof)
+                        return false;
 
-					p0 += read.Length;
+                    for (int i = 0; i < read.Length; i++)
+                        buffer[p0++] = read[i];
 
-					if (p0 < want)
-						continue;
+                    if (p0 < want)
+                        continue;
 
-					data = new BucketBytes(buffer, 0, p0);
-					p0 = 0;
-				}
-				else
-				{
-					int want;
-					bool peeked = false;
+                    data = new BucketBytes(buffer, 0, p0);
+                    p0 = 0;
+                }
+                else
+                {
+                    int want;
+                    bool peeked = false;
 
-					data = await Inner.PeekAsync();
+                    data = await Inner.PeekAsync();
 
-					if (!data.IsEmpty)
-					{
-						peeked = true;
-						if (0 != (data[0] & 0x80))
-							want = (int)NumberOfSetBits(data[0]); // use 0x80 bit for reading cmd itself
-						else
-							want = 1;
-					}
-					else
-						want = 1;
+                    if (!data.IsEmpty)
+                    {
+                        peeked = true;
+                        want = NeedBytes(data[0]);
+                    }
+                    else
+                        want = 1;
 
-					data = await Inner.ReadAsync(want);
+                    data = await Inner.ReadAsync(want);
 
-					if (!peeked && 0 != (data[0] & 0x80))
-						want = (int)NumberOfSetBits(data[0]); // Maybe not peeked. Set data correctly from read data
+                    if (data.IsEof)
+                        return false;
 
-					if (data.Length < want)
-					{
-						for (int i = 0; i < data.Length; i++)
-							buffer[i] = data[i];
+                    if (!peeked)
+                        want = NeedBytes(data[0]);
 
-						p0 = data.Length;
-						continue;
-					}
-				}
+                    if (data.Length < want)
+                    {
+                        for (int i = 0; i < data.Length; i++)
+                            buffer[i] = data[i];
 
-				byte uc = data[0];
-				if (0 == (uc & 0x80))
-				{
-					state = delta_state.src_copy;
-					copy_size = (uc & 0x7F);
-				}
-				else
-				{
-					copy_offset = 0;
-					copy_size = 0;
+                        p0 = data.Length;
+                        continue;
+                    }
+                }
 
-					byte[] pU = data.ToArray();
-					int i = 1;
+                byte uc = data[0];
+                if (0 == (uc & 0x80))
+                {
+                    state = delta_state.src_copy;
+                    copy_size = (uc & 0x7F);
 
-					if (0 != (uc & 0x01))
-						copy_offset |= pU[i++] << 0;
-					if (0 != (uc & 0x02))
-						copy_offset |= pU[i++] << 8;
-					if (0 != (uc & 0x04))
-						copy_offset |= pU[i++] << 16;
-					if (0 != (uc & 0x08))
-						copy_offset |= pU[i++] << 24;
+                    if (copy_size == 0)
+                        throw new InvalidOperationException("0 operation is reserved");
 
-					if (0 != (uc & 0x10))
-						copy_size |= pU[i++] << 0;
-					if (0 != (uc & 0x20))
-						copy_size |= pU[i++] << 8;
-					if (0 != (uc & 0x40))
-						copy_size |= pU[i++] << 16;
+                    //Console.WriteLine("--");
+                    //Console.WriteLine($"SourceCopy:{copy_size} starting at {Inner.Position}");
+                }
+                else
+                {
+                    copy_offset = 0;
+                    copy_size = 0;
 
-					if (copy_size == 0)
-						copy_size = 0x10000;
+                    int i = 1;
 
-					state = delta_state.base_copy;
-				}
-			}
+                    if (0 != (uc & 0x01))
+                        copy_offset |= data[i++] << 0;
+                    if (0 != (uc & 0x02))
+                        copy_offset |= data[i++] << 8;
+                    if (0 != (uc & 0x04))
+                        copy_offset |= data[i++] << 16;
+                    if (0 != (uc & 0x08))
+                        copy_offset |= data[i++] << 24;
 
-			while ((state == delta_state.base_copy) && (copy_offset >= 0))
-			{
-				long cp = Base.Position!.Value;
+                    if (0 != (uc & 0x10))
+                        copy_size |= data[i++] << 0;
+                    if (0 != (uc & 0x20))
+                        copy_size |= data[i++] << 8;
+                    if (0 != (uc & 0x40))
+                        copy_size |= data[i++] << 16;
 
-				if (copy_offset < cp)
-				{
-					await Base.ResetAsync();
-					cp = 0;
-				}
+                    if (copy_size == 0)
+                        copy_size = 0x10000;
 
-				while (cp < copy_offset)
-				{
-					long skipped = await Base.ReadSkipAsync(copy_offset - cp);
-					if (skipped == 0)
-						throw new InvalidOperationException("Unexpected seek failure to base stream position {copy_offset}");
+                    state = delta_state.base_copy;
+                }
+            }
 
-					cp += skipped;
-				}
-				copy_offset = -1;
-			}
-			return true;
-		}
+            while ((state == delta_state.base_copy) && (copy_offset >= 0))
+            {
+                long cp = BaseBucket.Position!.Value;
 
-		public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
-		{
-			if (!await AdvanceAsync())
-				return BucketBytes.Eof;
+                if (copy_offset < cp)
+                {
+                    await BaseBucket.ResetAsync();
+                    cp = 0;
+                }
 
-			Debug.Assert(state == delta_state.base_copy || state == delta_state.src_copy || state == delta_state.eof);
+                while (cp < copy_offset)
+                {
+                    long skipped = await BaseBucket.ReadSkipAsync(copy_offset - cp);
+                    if (skipped == 0)
+                        throw new InvalidOperationException($"Unexpected seek failure to base stream position {copy_offset} from {cp}");
 
-			if (state == delta_state.base_copy)
-			{
-				var data = await Base.ReadAsync(Math.Min(requested, copy_size));
+                    cp += skipped;
+                }
+                copy_offset = -1;
+            }
+            return true;
+        }
 
-				if (data.IsEof)
-					throw new InvalidOperationException("Unexpected EOF on base stream");
+        public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
+        {
+            if (requested <= 0)
+                throw new ArgumentOutOfRangeException(nameof(requested));
 
-				position += data.Length;
-				copy_size -= data.Length;
+            if (!await AdvanceAsync())
+                return BucketBytes.Eof;
 
-				if (copy_size == 0)
-				{
-					if (position == length)
-						state = delta_state.eof;
-					else
-						state = delta_state.init;
-					p0 = 0;
-				}
-				return data;
-			}
-			else if (state == delta_state.src_copy)
-			{
-				var data = await Inner.ReadAsync(Math.Min(requested, copy_size));
+            Debug.Assert(state == delta_state.base_copy || state == delta_state.src_copy || state == delta_state.eof);
 
-				if (data.IsEof)
-					throw new InvalidOperationException("Unexpected EOF on src stream");
+            if (state == delta_state.base_copy)
+            {
+                var data = await BaseBucket.ReadAsync(Math.Min(requested, copy_size));
 
-				position += data.Length;
-				copy_size -= data.Length;
+                if (data.IsEof)
+                    throw new InvalidOperationException($"Unexpected EOF on Base {BaseBucket.Name} Bucket");
 
-				if (copy_size == 0)
-				{
-					if (position == length)
-						state = delta_state.eof;
-					else
-						state = delta_state.init;
-					p0 = 0;
-				}
-				return data;
-			}
-			else if (state == delta_state.eof)
-			{
-				return BucketBytes.Eof;
-			}
+                position += data.Length;
+                copy_size -= data.Length;
 
-			throw new InvalidOperationException();
-		}
+                if (copy_size == 0)
+                {
+                    if (position == length)
+                        state = delta_state.eof;
+                    else
+                        state = delta_state.init;
+                }
+                return data;
+            }
+            else if (state == delta_state.src_copy)
+            {
+                var data = await Inner.ReadAsync(Math.Min(requested, copy_size));
+
+                if (data.IsEof)
+                {
+                    var p = Inner.Position;
+                    var r = Inner.ReadRemainingBytesAsync();
+
+                    throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
+                }
+
+                position += data.Length;
+                copy_size -= data.Length;
+
+                //Console.WriteLine($"Read {data.Length}");
+
+                if (copy_size == 0)
+                {
+                    if (position == length)
+                        state = delta_state.eof;
+                    else
+                        state = delta_state.init;
+                }
+                return data;
+            }
+            else if (state == delta_state.eof)
+            {
+                return BucketBytes.Eof;
+            }
+
+            throw new InvalidOperationException();
+        }
 
         public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
-			while (state < delta_state.init)
+            while (state < delta_state.init)
             {
-				if (!await AdvanceAsync())
-					return null;
+                if (!await AdvanceAsync())
+                    return null;
             }
 
-			return (length - Position);
+            return (length - Position);
         }
 
-		public override async ValueTask<BucketBytes> PeekAsync()
-		{
-			if (state == delta_state.base_copy && copy_offset < 0)
-			{
-				var data = await Base.PeekAsync();
+        public override async ValueTask<BucketBytes> PeekAsync()
+        {
+            if (state == delta_state.base_copy && copy_offset < 0)
+            {
+                var data = await BaseBucket.PeekAsync();
 
-				if (copy_size < data.Length)
-					data = data.Slice(copy_size);
+                if (copy_size < data.Length)
+                    data = data.Slice(copy_size);
 
-				return data;
-			}
-			else if (state == delta_state.src_copy && copy_offset < 0)
-			{
-				var data = await Base.PeekAsync();
+                return data;
+            }
+            else if (state == delta_state.src_copy && copy_offset < 0)
+            {
+                var data = await BaseBucket.PeekAsync();
 
-				if (copy_size < data.Length)
-					data = data.Slice(copy_size);
+                if (copy_size < data.Length)
+                    data = data.Slice(copy_size);
 
-				return data;
-			}
-			else if (state == delta_state.eof)
-				return BucketBytes.Eof;
-			else
-				return BucketBytes.Empty;
-		}
-	}
+                return data;
+            }
+            else if (state == delta_state.eof)
+                return BucketBytes.Eof;
+            else
+                return BucketBytes.Empty;
+        }
+
+        public override bool CanReset => Inner.CanReset && BaseBucket.CanReset;
+
+        public override string Name => "GitDelta[" + Inner.Name + "]>" + BaseBucket.Name;
+
+        public async override ValueTask ResetAsync()
+        {
+            if (!CanReset)
+                throw new InvalidOperationException($"Reset not supported on {Name} bucket");
+
+            await Inner.ResetAsync(); // Default error text or source reset
+            await BaseBucket.ResetAsync();
+
+            state = delta_state.start;
+            length = 0;
+            position = 0;
+            copy_offset = 0;
+            copy_size = 0;
+            p0 = 0;
+        }
+    }
 }

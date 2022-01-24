@@ -72,6 +72,11 @@ namespace Amp.Buckets.Specialized
                 return SkipReadAsync(requested);
         }
 
+        public override ValueTask ResetAsync()
+        {
+            return base.ResetAsync();
+        }
+
         private async ValueTask<BucketBytes> SkipReadAsync(int requested)
         {
             long skip = FirstPosition - base.Position!.Value;
@@ -82,6 +87,23 @@ namespace Amp.Buckets.Specialized
                 return BucketBytes.Eof;
 
             return await base.ReadAsync(requested);
+        }
+
+        internal static Bucket SeekOnReset(Bucket bucket)
+        {
+            if (bucket is null)
+                throw new ArgumentNullException(nameof(bucket));
+
+            var p = bucket.Position;
+
+            if (p.HasValue)
+            {
+                var sb = new SkipBucket(bucket, p.Value);
+                sb.SetPosition(p.Value);
+                return sb;
+            }
+            else
+                throw new InvalidOperationException();
         }
     }
 }

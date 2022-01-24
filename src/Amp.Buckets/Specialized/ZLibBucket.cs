@@ -48,7 +48,7 @@ namespace Amp.Buckets.Specialized
             _level = level;
         }
 
-        public override string Name => "ZLib/" + Inner.Name;
+        public override string Name => "ZLib>" + Inner.Name;
 
         async ValueTask<bool> Refill(bool forPeek)
         {
@@ -85,10 +85,6 @@ namespace Amp.Buckets.Specialized
                         read_buffer = bb;
                         did_peek = true;
                     }
-                }
-                else
-                {
-                    GC.KeepAlive(read_buffer);
                 }
 
                 var (rb, rb_offs, rb_len) = read_buffer.ExpandToArray();
@@ -129,15 +125,18 @@ namespace Amp.Buckets.Specialized
                     // We only peeked the data, and performed no actual read. Let's perform the requested read now
                     read_buffer = BucketBytes.Empty; // Need to re-peek next time
 
-                    var ar = Inner.ReadAsync(to_read);
-                    if (!ar.IsCompleted || ar.Result.Length != to_read)
+                    if (to_read > 0)
                     {
-                        ar.AsTask().Wait(); // Should never happen when peek succeeds.
+                        var ar = Inner.ReadAsync(to_read);
+                        if (!ar.IsCompleted || ar.Result.Length != to_read)
+                        {
+                            ar.AsTask().Wait(); // Should never happen when peek succeeds.
 
-                        if (ar.Result.Length != to_read)
-                            throw new InvalidOperationException("Read did not complete as promissed by peek");
-                        else
-                            System.Diagnostics.Trace.WriteLine($"Peek of {Inner.GetType()} promised data that read couldn't deliver without waiting");
+                            if (ar.Result.Length != to_read)
+                                throw new InvalidOperationException($"Read on {Inner.Name} did not complete as promissed by peek");
+                            else
+                                System.Diagnostics.Trace.WriteLine($"Peek of {Inner.Name} promised data that read couldn't deliver without waiting");
+                        }
                     }
                 }
             }
@@ -150,14 +149,17 @@ namespace Amp.Buckets.Specialized
         {
             if (_eof)
                 return BucketBytes.Empty;
-
-            await Refill(true);
+            else if (write_buffer.IsEmpty)
+                await Refill(true);
 
             return write_buffer;
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
+            if (requested <= 0)
+                throw new ArgumentOutOfRangeException(nameof(requested));
+
             if (write_buffer.IsEmpty)
             {
                 if (_eof || await Refill(false))

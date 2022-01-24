@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Amp.Buckets.Specialized
 {
-    [DebuggerDisplay("{Name}: Inner={Inner}")]
     public abstract class WrappingBucket : Bucket, IBucketNoClose
     {
         protected Bucket Inner { get; }
@@ -23,6 +22,8 @@ namespace Amp.Buckets.Specialized
         {
             _noDispose = noDispose;
         }
+
+        public override string Name => base.Name + ">" + Inner.Name;
 
         protected override void Dispose(bool disposing)
         {

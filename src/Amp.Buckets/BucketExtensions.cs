@@ -76,6 +76,11 @@ namespace Amp.Buckets
                 return new NoCloseBucket(bucket);
         }
 
+        public static Bucket SeekOnReset(this Bucket bucket)
+        {
+            return SkipBucket.SeekOnReset(bucket);
+        }
+
         public static Bucket Wrap(this Bucket self)
         {
             return new ProxyBucket(self);

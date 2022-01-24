@@ -1,9 +1,12 @@
 ﻿using Amp.Buckets;
 using Amp.Buckets.Git;
+using Amp.Buckets.Specialized;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,7 +29,7 @@ namespace Amp.BucketTests
             Assert.AreEqual(2, gh.Version);
             Assert.AreEqual(70, gh.ObjectCount);
 
-            for(int i = 0; i < gh.ObjectCount; i++)
+            for (int i = 0; i < gh.ObjectCount; i++)
             {
                 long? offset = b.Position;
                 using var pf = new GitPackFrameBucket(b.NoClose(), GitObjectIdType.Sha1);
@@ -34,6 +37,8 @@ namespace Amp.BucketTests
                 await pf.ReadInfoAsync();
 
                 Console.Write($"Object {i}: type={pf.Type}, offset={offset}");
+                if (pf.DeltaCount > 0)
+                    Console.Write($", deltas={pf.DeltaCount}");
 
                 var len = await pf.ReadRemainingBytesAsync();
                 Console.Write($", length={len}");
@@ -42,9 +47,10 @@ namespace Amp.BucketTests
 
                 var data = await pf.ReadToEnd();
 
-                //Assert.AreEqual((long)data.Length, pf.Position);
+                Assert.AreEqual((long)data.Length, pf.Position);
+                Assert.AreEqual((long)data.Length, len.Value);
 
-                Console.WriteLine($", read={data.Length}");
+                Console.WriteLine();
             }
         }
 
@@ -557,5 +563,166 @@ namespace Amp.BucketTests
             0x81, 0xe9, 0xb1, 0xcd, 0xe3, 0xdc, 0xb3, 0x17, 0xf0, 0xb5, 0x2a, 0xcb,
             0x31
             };
+
+
+        public static IEnumerable<object[]> LocalPacks
+        {
+            get
+            {
+                var dir = Path.GetDirectoryName(typeof(GitTests).Assembly.Location);
+                string? gitDir = null;
+
+                while (gitDir == null && dir != null)
+                {
+                    if (Directory.Exists(Path.Combine(dir, ".git")))
+                        gitDir = Path.Combine(dir, ".git");
+                    else
+                    {
+                        var parentDir = Path.GetDirectoryName(dir);
+
+                        if (parentDir == dir)
+                            yield break;
+
+                        dir = parentDir;
+                    }
+                }
+
+                if (gitDir == null)
+                    yield break;
+
+                foreach (var file in Directory.GetFiles(Path.Combine(gitDir, "objects/pack"), "*.pack"))
+                {
+                    yield return new[] { file };
+                }
+
+            }
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(LocalPacks))]
+        public async Task WalkLocalPacks(string packFile)
+        {
+            using var b = FileBucket.OpenRead(packFile);
+
+            var gh = new GitPackHeaderBucket(b.NoClose(true));
+
+            var r = await gh.ReadAsync();
+            Assert.IsTrue(r.IsEof);
+
+            Assert.AreEqual("PACK", gh.GitType);
+            Assert.AreEqual(2, gh.Version);
+            //Assert.AreEqual(70, gh.ObjectCount);
+
+            for (int i = 0; i < gh.ObjectCount; i++)
+            {
+                long? offset = b.Position;
+                using var pf = new GitPackFrameBucket(b.NoClose(), GitObjectIdType.Sha1);
+
+                await pf.ReadInfoAsync();
+
+
+
+
+                var len = await pf.ReadRemainingBytesAsync();
+
+                Assert.AreEqual(0L, pf.Position);
+
+                byte[]? checksum = null;
+
+                var hdr = GitHeader(pf.Type, len.Value);
+
+                var hdrLen = await hdr.ReadRemainingBytesAsync();
+
+                var csum = new CreateHashBucket((hdr.Append(pf)), SHA1.Create(), s => checksum = s);
+
+                var data = await csum.ReadToEnd();
+
+
+                Console.Write(FormatHash(checksum!));
+
+                Console.Write($" {pf.Type.ToString().ToLowerInvariant()} {len} {b.Position-offset} {offset}");
+                if (pf.DeltaCount > 0)
+                    Console.Write($" {pf.DeltaCount}");
+
+                //Assert.AreEqual(len.Value + hdrLen, data.Length, "Can read provided length bytes");
+                //Assert.AreEqual(len.Value, pf.Position, "Expected end position");
+
+
+                Console.WriteLine($", final_offset={b.Position}");
+
+                //await pf.ResetAsync();
+                //
+                //Assert.AreEqual(0L, pf.Position, "Expected reset position");
+                //
+                //var len2 = await pf.ReadRemainingBytesAsync();
+                //Assert.AreEqual(len, len2);
+                //
+                //data = await pf.ReadToEnd();
+                //
+                //Assert.AreEqual(len, data.Length, "Can read same data again");
+                //Assert.AreEqual(len, pf.Position, "Expected end position again");
+            }
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(LocalPacks))]
+        public async Task WalkFileOffsets(string packFile)
+        {
+            var r = new Random();
+            var allData = File.ReadAllBytes(packFile);
+
+            using (FileBucket fb = FileBucket.OpenRead(packFile))
+            {
+                for (int i = 0; i < 32768; i++)
+                {
+                    await fb.ResetAsync();
+
+                    await fb.ReadSkipAsync(1024 + i);
+                    int expectCount = 1 + r.Next(512);
+                    var d = await fb.ReadAsync(expectCount);
+
+                    var expectedBytes = new byte[d.Length];
+
+                    Array.Copy(allData, 1024 + i, expectedBytes, 0, d.Length);
+
+                    Assert.AreEqual(d.Length, expectedBytes.Length);
+                    Assert.IsTrue(expectedBytes.SequenceEqual(d.ToArray()), $"Bytes identical for {i}/{expectCount}");
+                }
+            }
+        }
+
+        static Bucket GitHeader(GitObjectType type, long length)
+        {
+            string txt;
+            switch (type)
+            {
+                case GitObjectType.Blob:
+                    txt = $"blob {length}\0";
+                    break;
+                case GitObjectType.Tree:
+                    txt = $"tree {length}\0";
+                    break;
+                case GitObjectType.Commit:
+                    txt = $"commit {length}\0";
+                    break;
+                case GitObjectType.Tag:
+                    txt = $"tag {length}\0";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type));
+            }
+
+            return Encoding.ASCII.GetBytes(txt).AsBucket();
+        }
+
+        private string FormatHash(byte[] hashResult)
+        {
+            var sb = new StringBuilder();
+            foreach (var b in hashResult)
+                sb.Append(b.ToString("x2"));
+
+            return sb.ToString();
+        }
+
     }
 }
