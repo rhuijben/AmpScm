@@ -28,8 +28,6 @@ namespace Amp.Buckets.Specialized
 
         public override bool CanReset => Inner.CanReset;
 
-        public override string Name => base.Name + "/" + Inner.Name;
-
         public override ValueTask<BucketBytes> PeekAsync()
         {
             return Inner.PeekAsync();
@@ -66,10 +64,14 @@ namespace Amp.Buckets.Specialized
 
     public class ProxyBucket : ProxyBucket<ProxyBucket>
     {
+        string? _name;
         public ProxyBucket(Bucket inner) : base(inner)
         {
 
         }
+
+        public override string Name => _name ?? (_name = (GetType() == typeof(ProxyBucket) ? "Proxy" : base.Name) + ">" + Inner.Name);
+
 
         internal ProxyBucket(Bucket inner, bool noDispose) : base(inner, noDispose)
         {

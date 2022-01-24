@@ -37,8 +37,6 @@ namespace Amp.Buckets.Specialized
             _position = 0;
         }
 
-        public override long? Position => _position;
-
         protected override PositionBucket? WrapDuplicate(Bucket duplicatedInner, bool reset)
         {
             var p = NewPositionBucket(duplicatedInner);
@@ -52,5 +50,12 @@ namespace Amp.Buckets.Specialized
         {
             return new PositionBucket(duplicatedInner);
         }
+
+        protected void SetPosition(long position)
+        {
+            _position = position;
+        }
+
+        public override long? Position => _position;
     }
 }

@@ -18,7 +18,18 @@ namespace Amp.Buckets
 
         }
 
-        public virtual string Name => GetType().Name;
+        public virtual string Name
+        {
+            get
+            {
+                string name = GetType().Name;
+
+                if (name.Length > 6 && name.EndsWith("Bucket"))
+                    return name.Substring(0, name.Length - 6);
+                else
+                    return name;
+            }
+        }
 
         public abstract ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue);
 
@@ -54,9 +65,9 @@ namespace Amp.Buckets
         public virtual ValueTask<Bucket> DuplicateAsync(bool reset)
         {
             if (reset && !CanReset)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Reset not supported on {Name} bucket");
 
-            throw new NotSupportedException($"DuplicateAsync not implemented on {GetType().Name}");
+            throw new NotSupportedException($"DuplicateAsync not implemented on {Name} bucket");
         }
 
         public virtual bool CanReset => false;
@@ -64,9 +75,9 @@ namespace Amp.Buckets
         public virtual ValueTask ResetAsync()
         {
             if (!CanReset)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Reset not supported on {Name} bucket");
 
-            return new ValueTask();
+            return default;
         }
 
         sealed class EmptyBucket : Bucket

@@ -11,4 +11,10 @@ namespace Amp.Buckets
         Bucket Append(Bucket bucket);
         Bucket Prepend(Bucket bucket);
     }
+
+    public interface IBucketNoClose
+    {
+        Bucket NoClose();
+    }
+
 }

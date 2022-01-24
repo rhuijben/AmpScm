@@ -4,18 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets
+namespace Amp.Buckets.Specialized
 {
-    public interface IBucketNoClose
-    {
-        Bucket NoClose();
-    }
-
     public sealed class NoCloseBucket : Specialized.ProxyBucket<NoCloseBucket>
     {
         public NoCloseBucket(Bucket inner) : base(inner, true)
         {
         }
+
+        public override string Name => "NoClose>" + Inner.Name;
 
         protected override NoCloseBucket? WrapDuplicate(Bucket duplicatedInner, bool reset)
         {
