@@ -44,6 +44,9 @@ namespace Amp.Buckets.Git
 
         public GitObjectType Type { get; private set; }
         public int? DeltaCount { get; private set; }
+        public long? BodySize { get; private set;}
+
+        public override string Name => (reader != null) ? $"GitPackFrame[{reader.Name}]>{Inner.Name}" : base.Name;
 
 
         public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType) : base(inner.WithPosition())
@@ -58,11 +61,11 @@ namespace Amp.Buckets.Git
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            if (reader != null && state == frame_state.body)
-                return await reader!.ReadAsync(requested);
-
-            if (!await ReadInfoAsync())
-                return BucketBytes.Eof;
+            if (reader == null || state != frame_state.body)
+            {
+                if (!await ReadInfoAsync())
+                    return BucketBytes.Eof;
+            }
 
             return await reader!.ReadAsync(requested);
         }
@@ -212,6 +215,7 @@ namespace Amp.Buckets.Git
                                 position = 0;
                                 delta_position = frame_position - delta_position;
                                 reader = new ZLibBucket(Inner.SeekOnReset().NoClose());
+                                BodySize = body_size;
                             }
                         }
                     }
@@ -221,7 +225,7 @@ namespace Amp.Buckets.Git
                         state = frame_state.body;
                         reader = new ZLibBucket(Inner.SeekOnReset().NoClose());
                         DeltaCount = 0;
-                        break;
+                        BodySize = body_size;
                     }
                 }
 

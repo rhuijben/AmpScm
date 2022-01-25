@@ -115,5 +115,20 @@ namespace Amp.Buckets
         {
             return new ValueTask();
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public static Bucket operator+(Bucket first, Bucket second)
+        {
+            if (first == null)
+                return second;
+            else if (second == null)
+                return first;
+            else
+                return first.Append(second);
+        }
     }
 }

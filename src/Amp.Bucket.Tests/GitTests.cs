@@ -612,7 +612,7 @@ namespace Amp.BucketTests
             Assert.AreEqual("PACK", gh.GitType);
             Assert.AreEqual(2, gh.Version);
             //Assert.AreEqual(70, gh.ObjectCount);
-
+            Console.WriteLine("sha1 type body-length entry-length offset [delta-count]");
             for (int i = 0; i < gh.ObjectCount; i++)
             {
                 long? offset = b.Position;
@@ -640,15 +640,15 @@ namespace Amp.BucketTests
 
                 Console.Write(FormatHash(checksum!));
 
-                Console.Write($" {pf.Type.ToString().ToLowerInvariant()} {len} {b.Position-offset} {offset}");
+                Console.Write($" {pf.Type.ToString().ToLowerInvariant(),-6} {pf.BodySize} {b.Position-offset} {offset}");
                 if (pf.DeltaCount > 0)
-                    Console.Write($" {pf.DeltaCount}");
+                    Console.Write($" {pf.DeltaCount} delta (body={len})");
 
-                //Assert.AreEqual(len.Value + hdrLen, data.Length, "Can read provided length bytes");
-                //Assert.AreEqual(len.Value, pf.Position, "Expected end position");
+                Assert.AreEqual(len.Value + hdrLen, data.Length, "Can read provided length bytes");
+                Assert.AreEqual(len.Value, pf.Position, "Expected end position");
 
 
-                Console.WriteLine($", final_offset={b.Position}");
+                Console.WriteLine();
 
                 //await pf.ResetAsync();
                 //

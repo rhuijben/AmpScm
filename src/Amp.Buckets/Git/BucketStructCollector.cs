@@ -22,7 +22,7 @@ namespace Amp.Buckets.Git
             if (BitConverter.IsLittleEndian)
             {
                 // TODO: Optimize
-                return BitConverter.ToUInt32(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
+                return BitConverter.ToUInt32(BitConverter.GetBytes(value).ReverseInPlace(), 0);
             }
             return value;
         }
@@ -37,7 +37,7 @@ namespace Amp.Buckets.Git
             if (BitConverter.IsLittleEndian)
             {
                 // TODO: Optimize
-                return BitConverter.ToUInt64(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
+                return BitConverter.ToUInt64(BitConverter.GetBytes(value).ReverseInPlace(), 0);
             }
             return value;
         }
@@ -52,7 +52,7 @@ namespace Amp.Buckets.Git
             if (BitConverter.IsLittleEndian)
             {
                 // TODO: Optimize
-                return BitConverter.ToUInt16(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
+                return BitConverter.ToUInt16(BitConverter.GetBytes(value).ReverseInPlace(), 0);
             }
             return value;
         }

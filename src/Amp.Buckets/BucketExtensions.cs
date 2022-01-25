@@ -167,6 +167,19 @@ namespace Amp.Buckets
             return ToArrayAsync(self).ConfigureAwait(true).GetAwaiter().GetResult();
         }
 
+        internal static byte[] ReverseInPlace(this byte[] array)
+        {
+            for (int first = array.GetLowerBound(0), last = array.GetUpperBound(0);
+                first < last;
+                first++, last--)
+            {
+                var tmp = array[first];
+                array[first] = array[last];
+                array[last] = tmp;
+            }
+            return array;
+        }
+
 #if NETFRAMEWORK
         internal static string GetString(this System.Text.Encoding encoding, ReadOnlySpan<byte> bytes)
         {
