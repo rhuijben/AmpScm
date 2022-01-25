@@ -56,7 +56,7 @@ namespace Amp.Buckets.Specialized
             do
             {
                 retry_refill = false;
-                bool did_peek = false;
+                int to_read = 0;
 
                 if (!_readEof && read_buffer.IsEmpty)
                 {
@@ -78,12 +78,52 @@ namespace Amp.Buckets.Specialized
                         else
                         {
                             read_buffer = bb;
+                            to_read = -1;
+
+                            // We read one byte, and that might be the first byte of a new huge peek buffer
+                            // Let's check if this first byte is just that...
+
+                            byte bOne = bb[0];
+                            var peek = await Inner.PeekAsync();
+
+                            if (peek.IsEmpty)
+                            {
+                                // Too bad, we are probably at eof.
+                                read_buffer = new byte[] { bOne };
+                            }
+                            else
+                            {
+                                var (tb, offs, len) = peek.ExpandToArray(false);
+
+                                if (tb is not null && offs > 0 && tb[offs - 1] == bOne)
+                                {
+                                    // Nice guess. The peek buffer contains the read byte
+                                    read_buffer = new BucketBytes(tb, offs - 1, len + 1);
+                                }
+                                else if (tb is not null)
+                                {
+                                    // Bad case, the read byte is not in the buffer.
+                                    // Let's create something else
+
+                                    byte[] buf = new byte[Math.Min(64, 1 + peek.Length)];
+                                    buf[0] = bOne;
+                                    for (int i = 1; i < buf.Length; i++)
+                                        buf[i] = peek[i - 1];
+
+                                    read_buffer = buf;
+                                }
+                                else
+                                {
+                                    // Auch, we got a span backed by something else than an array
+                                    read_buffer = new byte[] { bOne };
+                                }
+                            }
                         }
                     }
                     else
                     {
                         read_buffer = bb;
-                        did_peek = true;
+                        to_read = 0;
                     }
                 }
 
@@ -100,8 +140,6 @@ namespace Amp.Buckets.Specialized
                 int r = _z.inflate(_readEof ? zlibConst.Z_FINISH : zlibConst.Z_SYNC_FLUSH); // Write as much inflated data as possible
 
                 write_buffer = new BucketBytes(write_data, 0, _z.next_out_index);
-                int to_read = _z.next_in_index - rb_offs;
-                read_buffer = read_buffer.Slice(_z.next_in_index - rb_offs);
 
                 if (r == zlibConst.Z_STREAM_END)
                 {
@@ -120,25 +158,26 @@ namespace Amp.Buckets.Specialized
                 if (write_buffer.IsEmpty)
                     retry_refill = true;
 
-                if (did_peek)
+                to_read += _z.next_in_index - rb_offs;
+
+                if (to_read > 0)
                 {
-                    // We only peeked the data, and performed no actual read. Let's perform the requested read now
+                    // We peeked more data than what we read
                     read_buffer = BucketBytes.Empty; // Need to re-peek next time
 
-                    if (to_read > 0)
+                    var ar = Inner.ReadAsync(to_read);
+                    if (!ar.IsCompleted || ar.Result.Length != to_read)
                     {
-                        var ar = Inner.ReadAsync(to_read);
-                        if (!ar.IsCompleted || ar.Result.Length != to_read)
-                        {
-                            ar.AsTask().Wait(); // Should never happen when peek succeeds.
+                        ar.AsTask().Wait(); // Should never happen when peek succeeds.
 
-                            if (ar.Result.Length != to_read)
-                                throw new InvalidOperationException($"Read on {Inner.Name} did not complete as promissed by peek");
-                            else
-                                System.Diagnostics.Trace.WriteLine($"Peek of {Inner.Name} promised data that read couldn't deliver without waiting");
-                        }
+                        if (ar.Result.Length != to_read)
+                            throw new InvalidOperationException($"Read on {Inner.Name} did not complete as promissed by peek");
+                        else
+                            System.Diagnostics.Trace.WriteLine($"Peek of {Inner.Name} promised data that read couldn't deliver without waiting");
                     }
                 }
+                else
+                    read_buffer = read_buffer.Slice(_z.next_in_index - rb_offs);
             }
             while (retry_refill && !_eof);
 
@@ -147,9 +186,7 @@ namespace Amp.Buckets.Specialized
 
         public async override ValueTask<BucketBytes> PeekAsync()
         {
-            if (_eof)
-                return BucketBytes.Empty;
-            else if (write_buffer.IsEmpty)
+            if (!_eof && write_buffer.IsEmpty)
                 await Refill(true);
 
             return write_buffer;
@@ -174,6 +211,7 @@ namespace Amp.Buckets.Specialized
             _position += requested;
 
             System.Diagnostics.Debug.Assert(bb.Length > 0);
+
             return bb;
         }
 

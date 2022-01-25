@@ -61,7 +61,7 @@ namespace Amp.Buckets.Git
                     var data = await Inner.ReadAsync(1);
 
                     if (data.IsEof)
-                        return false;
+                        throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
 
                     byte uc = data[0];
 
@@ -74,7 +74,7 @@ namespace Amp.Buckets.Git
                         long? base_size = await BaseBucket.ReadRemainingBytesAsync();
 
                         if (base_size != length)
-                            throw new InvalidOperationException($"Expected delta base size {length} doesn't match source size ({base_size})");
+                            throw new InvalidOperationException($"Expected delta base size {length} doesn't match source size ({base_size}) on {BaseBucket.Name} Bucket");
 
                         length = 0;
                         p0 = -1;
@@ -85,7 +85,7 @@ namespace Amp.Buckets.Git
                     var data = await Inner.ReadAsync(1);
 
                     if (data.IsEof)
-                        return false;
+                        throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
 
                     byte uc = data[0];
 
@@ -139,7 +139,7 @@ namespace Amp.Buckets.Git
                     data = await Inner.ReadAsync(want);
 
                     if (data.IsEof)
-                        return false;
+                        throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name}");
 
                     if (!peeked)
                         want = NeedBytes(data[0]);
@@ -162,9 +162,6 @@ namespace Amp.Buckets.Git
 
                     if (copy_size == 0)
                         throw new InvalidOperationException("0 operation is reserved");
-
-                    //Console.WriteLine("--");
-                    //Console.WriteLine($"SourceCopy:{copy_size} starting at {Inner.Position}");
                 }
                 else
                 {
@@ -210,7 +207,7 @@ namespace Amp.Buckets.Git
                 {
                     long skipped = await BaseBucket.ReadSkipAsync(copy_offset - cp);
                     if (skipped == 0)
-                        throw new InvalidOperationException($"Unexpected seek failure to base stream position {copy_offset} from {cp}");
+                        throw new InvalidOperationException($"Unexpected seek failure on {BaseBucket.Name} Bucket position {copy_offset} from {cp}");
 
                     cp += skipped;
                 }
@@ -253,17 +250,10 @@ namespace Amp.Buckets.Git
                 var data = await Inner.ReadAsync(Math.Min(requested, copy_size));
 
                 if (data.IsEof)
-                {
-                    var p = Inner.Position;
-                    var r = Inner.ReadRemainingBytesAsync();
-
                     throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
-                }
 
                 position += data.Length;
                 copy_size -= data.Length;
-
-                //Console.WriteLine($"Read {data.Length}");
 
                 if (copy_size == 0)
                 {
@@ -276,6 +266,11 @@ namespace Amp.Buckets.Git
             }
             else if (state == delta_state.eof)
             {
+                var data = await Inner.ReadAsync(); // Ensure finish bytes of ZLib bucket are read
+
+                if (!data.IsEof)
+                    throw new InvalidOperationException($"Expected EOF on Source {Inner.Name} Bucket");
+
                 return BucketBytes.Eof;
             }
 

@@ -141,14 +141,16 @@ namespace Amp.Buckets
              return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int, int)>>(c, p).Compile();
          }
 
-        internal (byte[], int, int) ExpandToArray()
+        internal (byte[]?, int, int) ExpandToArray(bool fallback=true)
         {
             if (_data.Length == 0)
                 return (Array.Empty<byte>(), 0, 0);
 
             var (ob, index, length) = MemoryExpander(_data);
 
-            if (ob is byte[] arr)
+            byte[]? arr = ob as byte[];
+
+            if (arr != null || !fallback)
                 return (arr, index, length);
 
             byte[] data = ToArray();
