@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets
@@ -69,7 +68,7 @@ namespace Amp.Buckets
             if (_n >= _buckets.Length)
                 _n = _buckets.Length - 1;
 
-            while(_n >= 0)
+            while (_n >= 0)
             {
                 await _buckets[_n]!.ResetAsync();
                 _n--;
@@ -82,7 +81,7 @@ namespace Amp.Buckets
         {
             while (_n < _buckets.Length)
             {
-                var r= await _buckets[_n]!.ReadAsync(requested);
+                var r = await _buckets[_n]!.ReadAsync(requested);
 
                 if (!r.IsEof)
                 {
@@ -120,7 +119,7 @@ namespace Amp.Buckets
             int n = _n;
             long remaining = 0;
 
-            while(n < _buckets.Length)
+            while (n < _buckets.Length)
             {
                 var r = await _buckets[n]!.ReadRemainingBytesAsync();
 
@@ -150,8 +149,8 @@ namespace Amp.Buckets
         }
 
         protected override async ValueTask DisposeAsyncCore()
-        {            
-            while(_n < _buckets.Length)
+        {
+            while (_n < _buckets.Length)
             {
                 if (_buckets[_n] != null)
                 {
@@ -194,7 +193,7 @@ namespace Amp.Buckets
 
             var newBuckets = new List<Bucket>();
 
-            foreach(var v in _buckets)
+            foreach (var v in _buckets)
                 newBuckets.Add(await v!.DuplicateAsync(reset));
 
             var ab = new AggregateBucket(true, newBuckets.ToArray());

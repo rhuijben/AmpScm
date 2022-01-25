@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets
@@ -50,7 +48,7 @@ namespace Amp.Buckets
                     break;
 
                 requested -= v.Length;
-                skipped += v.Length;                
+                skipped += v.Length;
             }
             return skipped;
         }
@@ -121,7 +119,7 @@ namespace Amp.Buckets
             return Name;
         }
 
-        public static Bucket operator+(Bucket first, Bucket second)
+        public static Bucket operator +(Bucket first, Bucket second)
         {
             if (first == null)
                 return second;

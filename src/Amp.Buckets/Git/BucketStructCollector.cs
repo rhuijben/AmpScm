@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets.Git
@@ -85,7 +83,7 @@ namespace Amp.Buckets.Git
                 else if (rd.IsEof)
                     return new ValueOrEof<TRead>(true);
             }
-            while(_pos < bytes.Length);
+            while (_pos < bytes.Length);
 
             var v = LoadStruct(bytes);
             _state = v;
@@ -101,7 +99,7 @@ namespace Amp.Buckets.Git
                 r = Marshal.PtrToStructure<TRead>((IntPtr)pData);
             }
 
-            foreach(var f in typeof(TRead).GetFields())
+            foreach (var f in typeof(TRead).GetFields())
             {
                 if (f.GetCustomAttributes<NetworkOrderAttribute>()?.Any() ?? false)
                 {
