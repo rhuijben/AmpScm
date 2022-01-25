@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
-using ComponentAce.Compression.Libs.zlib;
+using Elskom.Generic.Libs;
 
 namespace Amp.Buckets.Specialized
 {
     public enum ZLibLevel
     {
-        Store = zlibConst.Z_NO_COMPRESSION,
-        BestSpeed = zlibConst.Z_BEST_SPEED,
-        Maximum = zlibConst.Z_BEST_COMPRESSION
+        Store = ZlibConst.ZNOCOMPRESSION,
+        BestSpeed = ZlibConst.ZBESTSPEED,
+        Maximum = ZlibConst.ZBESTCOMPRESSION
     }
-
     public sealed class ZLibBucket : WrappingBucket
     {
         readonly ZStream _z;
@@ -30,8 +29,8 @@ namespace Amp.Buckets.Specialized
         private ZLibBucket(Bucket inner, int windowBits)
             : base(inner)
         {
-            _z = new ZStream();
-            _z.inflateInit(windowBits);
+            _z = new ();
+            _z.InflateInit(windowBits);
             write_data = new byte[8192];
             _windowBits = windowBits;
         }
@@ -40,7 +39,7 @@ namespace Amp.Buckets.Specialized
             : base(inner)
         {
             _z = new ZStream();
-            _z.deflateInit((int)level);
+            _z.DeflateInit((int)level);
             write_data = new byte[8192];
             _level = level;
         }
@@ -126,19 +125,19 @@ namespace Amp.Buckets.Specialized
 
                 var (rb, rb_offs, rb_len) = read_buffer.ExpandToArray();
 
-                _z.next_in = rb;
-                _z.next_in_index = rb_offs;
-                _z.avail_in = rb_len;
+                _z.NextIn = rb;
+                _z.NextInIndex = rb_offs;
+                _z.AvailIn = rb_len;
 
-                _z.next_out = write_data;
-                _z.next_out_index = 0;
-                _z.avail_out = write_data.Length;
+                _z.NextOut = write_data;
+                _z.NextOutIndex = 0;
+                _z.AvailOut = write_data.Length;
 
-                int r = _z.inflate(_readEof ? zlibConst.Z_FINISH : zlibConst.Z_SYNC_FLUSH); // Write as much inflated data as possible
+                int r = _z.Inflate(_readEof ? ZlibConst.ZFINISH : ZlibConst.ZSYNCFLUSH); // Write as much inflated data as possible
 
-                write_buffer = new BucketBytes(write_data, 0, _z.next_out_index);
+                write_buffer = new BucketBytes(write_data, 0, _z.NextOutIndex);
 
-                if (r == zlibConst.Z_STREAM_END)
+                if (r == ZlibConst.ZSTREAMEND)
                 {
                     _readEof = true;
                     _eof = true;
@@ -147,15 +146,15 @@ namespace Amp.Buckets.Specialized
                 //{
                 //    _eof = true;
                 //}
-                else if (r != zlibConst.Z_OK)
+                else if (r != ZlibConst.ZOK)
                 {
-                    throw new System.IO.IOException($"ZLib inflate failed {r}: {_z.msg}");
+                    throw new System.IO.IOException($"ZLib inflate failed {r}: {_z.Msg}");
                 }
 
                 if (write_buffer.IsEmpty)
                     retry_refill = true;
 
-                to_read += _z.next_in_index - rb_offs;
+                to_read += _z.NextInIndex - rb_offs;
 
                 if (to_read > 0)
                 {
@@ -174,7 +173,7 @@ namespace Amp.Buckets.Specialized
                     }
                 }
                 else
-                    read_buffer = read_buffer.Slice(_z.next_in_index - rb_offs);
+                    read_buffer = read_buffer.Slice(_z.NextInIndex - rb_offs);
             }
             while (retry_refill && !_eof);
 
@@ -224,9 +223,9 @@ namespace Amp.Buckets.Specialized
             await Inner.ResetAsync();
 
             if (_windowBits is int wb)
-                _z.inflateInit(wb);
-            else if (_level is ZLibLevel zl)
-                _z.deflateInit((int)zl);
+                _z.InflateInit(wb);
+            else if (_level.HasValue)
+                _z.DeflateInit((int)_level);
 
             _eof = _readEof = false;
             write_buffer = BucketBytes.Empty;
@@ -261,10 +260,10 @@ namespace Amp.Buckets.Specialized
 
             var b = await Inner.DuplicateAsync(reset);
 
-            if (_windowBits is int wb)
-                return new ZLibBucket(b);
-            else if (_level is ZLibLevel zl)
-                return new ZLibBucket(b, zl);
+            if (_windowBits.HasValue)
+                return new ZLibBucket(b, _windowBits.Value);
+            else if (_level.HasValue)
+                return new ZLibBucket(b, _level.Value);
             else
                 throw new InvalidOperationException();
         }
