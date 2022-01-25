@@ -1,6 +1,7 @@
 ﻿using Amp.Buckets;
 using Amp.Buckets.Git;
 using Amp.Buckets.Specialized;
+using Amp.BucketTests.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -602,9 +603,14 @@ namespace Amp.BucketTests
         [DynamicData(nameof(LocalPacks))]
         public async Task WalkLocalPacks(string packFile)
         {
-            using var b = FileBucket.OpenRead(packFile);
+            byte[]? fileChecksum = null;
+            using var srcFile = FileBucket.OpenRead(packFile);
 
-            var gh = new GitPackHeaderBucket(b.NoClose(true));
+            long l = (await srcFile.ReadRemainingBytesAsync()).Value;
+
+            using var b = srcFile.Take(l - 20).SHA1(x => fileChecksum = x);
+
+            var gh = new GitPackHeaderBucket(b.NoClose());
 
             var r = await gh.ReadAsync();
             Assert.IsTrue(r.IsEof);
@@ -613,15 +619,16 @@ namespace Amp.BucketTests
             Assert.AreEqual(2, gh.Version);
             //Assert.AreEqual(70, gh.ObjectCount);
             Console.WriteLine("sha1 type body-length entry-length offset [delta-count]");
+
+            var hashes = new SortedList<byte[], (long, int)>(new MyComparer<byte[]>((x, y) => x!.Zip(y!, (v1, v2) => v1 - v2).FirstOrDefault(x => x != 0)));
             for (int i = 0; i < gh.ObjectCount; i++)
             {
                 long? offset = b.Position;
-                using var pf = new GitPackFrameBucket(b.NoClose(), GitObjectIdType.Sha1);
+                int crc = 0;
+                using var crcr = b.NoClose().Crc32(c=> crc = c);
+                using var pf = new GitPackFrameBucket(crcr, GitObjectIdType.Sha1);
 
                 await pf.ReadInfoAsync();
-
-
-
 
                 var len = await pf.ReadRemainingBytesAsync();
 
@@ -630,17 +637,16 @@ namespace Amp.BucketTests
                 byte[]? checksum = null;
 
                 var hdr = GitHeader(pf.Type, len.Value);
-
                 var hdrLen = await hdr.ReadRemainingBytesAsync();
 
-                var csum = new CreateHashBucket((hdr.Append(pf)), SHA1.Create(), s => checksum = s);
+                var csum = hdr.Append(pf).SHA1(s => checksum = s);
 
                 var data = await csum.ReadToEnd();
 
 
                 Console.Write(FormatHash(checksum!));
 
-                Console.Write($" {pf.Type.ToString().ToLowerInvariant(),-6} {pf.BodySize} {b.Position-offset} {offset}");
+                Console.Write($" {pf.Type.ToString().ToLowerInvariant(),-6} {pf.BodySize} {b.Position - offset} {offset}");
                 if (pf.DeltaCount > 0)
                     Console.Write($" {pf.DeltaCount} delta (body={len})");
 
@@ -650,18 +656,50 @@ namespace Amp.BucketTests
 
                 Console.WriteLine();
 
-                //await pf.ResetAsync();
-                //
-                //Assert.AreEqual(0L, pf.Position, "Expected reset position");
-                //
-                //var len2 = await pf.ReadRemainingBytesAsync();
-                //Assert.AreEqual(len, len2);
-                //
-                //data = await pf.ReadToEnd();
-                //
-                //Assert.AreEqual(len, data.Length, "Can read same data again");
-                //Assert.AreEqual(len, pf.Position, "Expected end position again");
+                hashes.Add(checksum!, (offset!.Value, crc));
             }
+
+            var eofCheck = await b.ReadAsync();
+
+            Assert.IsTrue(eofCheck.IsEof);
+            Assert.IsNotNull(fileChecksum);
+
+            int[] fanOut = new int[256];
+
+            foreach (var v in hashes)
+            {
+                fanOut[v.Key[0]]++;
+            }
+
+            for(int i = 0, last = 0; i < fanOut.Length; i++)
+            {
+                last = (fanOut[i] += last);
+            }
+
+            // Let's assume v2 pack index files
+            Bucket index = new byte[] { 255, (byte)'t', (byte)'O', (byte)'c' }.AsBucket();
+            index += BitConverter.GetBytes((int)2).Reverse().ToArray().AsBucket();
+
+            // Fanout table
+            index += fanOut.SelectMany(x => BitConverter.GetBytes(x).ReverseIfLittleEndian()).ToArray().AsBucket();
+            // Hashes
+            index += new AggregateBucket(hashes.Keys.SelectMany(x => x).ToArray().AsBucket());
+
+            Console.WriteLine($"CRCs start at {await index.ReadRemainingBytesAsync()}");
+            // CRC32 values of packed data
+            index += new AggregateBucket(hashes.Values.Select(x => BitConverter.GetBytes(x.Item2).ReverseIfLittleEndian().ToArray().AsBucket()).ToArray());
+            // File offsets
+            index += new AggregateBucket(hashes.Values.Select(x => BitConverter.GetBytes((uint)x.Item1).ReverseIfLittleEndian().ToArray().AsBucket()).ToArray());
+
+            index += fileChecksum.AsBucket();
+
+            using var indexFile = FileBucket.OpenRead(Path.ChangeExtension(packFile, ".idx"));
+            long lIdx = (await indexFile.ReadRemainingBytesAsync()).Value;
+
+            byte[]? idxChecksum = null;
+            using var idxData = indexFile.Take(lIdx - 20).SHA1(x => idxChecksum = x);
+
+            await Assert.That.BucketsEqual(idxData, index);
         }
 
         [TestMethod]
@@ -724,5 +762,20 @@ namespace Amp.BucketTests
             return sb.ToString();
         }
 
+    }
+
+    sealed class MyComparer<T> : IComparer<T>
+    {
+        public MyComparer(Func<T?, T?, int> comparer)
+        {
+            Comparer = comparer;
+        }
+
+        public Func<T?, T?, int> Comparer { get; }
+
+        public int Compare(T? x, T? y)
+        {
+            return Comparer(x, y);
+        }
     }
 }
