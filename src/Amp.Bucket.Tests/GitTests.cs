@@ -1,15 +1,13 @@
-﻿using Amp.Buckets;
-using Amp.Buckets.Git;
-using Amp.Buckets.Specialized;
-using Amp.BucketTests.Buckets;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Amp.Buckets;
+using Amp.Buckets.Git;
+using Amp.Buckets.Specialized;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Amp.BucketTests
 {
@@ -625,7 +623,7 @@ namespace Amp.BucketTests
             {
                 long? offset = b.Position;
                 int crc = 0;
-                using var crcr = b.NoClose().Crc32(c=> crc = c);
+                using var crcr = b.NoClose().Crc32(c => crc = c);
                 using var pf = new GitPackFrameBucket(crcr, GitObjectIdType.Sha1);
 
                 await pf.ReadInfoAsync();
@@ -671,7 +669,7 @@ namespace Amp.BucketTests
                 fanOut[v.Key[0]]++;
             }
 
-            for(int i = 0, last = 0; i < fanOut.Length; i++)
+            for (int i = 0, last = 0; i < fanOut.Length; i++)
             {
                 last = (fanOut[i] += last);
             }

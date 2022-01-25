@@ -1,9 +1,6 @@
-﻿using ComponentAce.Compression.Libs.zlib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using ComponentAce.Compression.Libs.zlib;
 
 namespace Amp.Buckets.Specialized
 {

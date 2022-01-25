@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets
@@ -131,17 +129,17 @@ namespace Amp.Buckets
         static Func<ReadOnlyMemory<byte>, (object, int, int)> MemoryExpander { get; } = FindExpander();
 
         static Func<ReadOnlyMemory<byte>, (object, int, int)> FindExpander()
-         {
-             ParameterExpression p = Expression.Parameter(typeof(ReadOnlyMemory<byte>), "x");
+        {
+            ParameterExpression p = Expression.Parameter(typeof(ReadOnlyMemory<byte>), "x");
 
-             var c = Expression.New(typeof((object, int, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
-                        Expression.Field(p, "_object"),
-                        Expression.Field(p, "_index"),
-                        Expression.Field(p, "_length"));
-             return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int, int)>>(c, p).Compile();
-         }
+            var c = Expression.New(typeof((object, int, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
+                       Expression.Field(p, "_object"),
+                       Expression.Field(p, "_index"),
+                       Expression.Field(p, "_length"));
+            return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int, int)>>(c, p).Compile();
+        }
 
-        internal (byte[]?, int, int) ExpandToArray(bool fallback=true)
+        internal (byte[]?, int, int) ExpandToArray(bool fallback = true)
         {
             if (_data.Length == 0)
                 return (Array.Empty<byte>(), 0, 0);

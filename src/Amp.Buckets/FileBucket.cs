@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Amp.Buckets
@@ -24,7 +21,7 @@ namespace Amp.Buckets
             _holder = holder ?? throw new ArgumentNullException(nameof(holder));
             _holder.AddRef();
             _buffer = new byte[bufferSize];
-            _chunkSizeMinus1 = chunkSize-1;
+            _chunkSizeMinus1 = chunkSize - 1;
             _bufStart = -bufferSize;
         }
 
@@ -56,7 +53,7 @@ namespace Amp.Buckets
 
         public override ValueTask<Bucket> DuplicateAsync(bool reset)
         {
-            FileBucket fbNew = new FileBucket(_holder, _buffer.Length, _chunkSizeMinus1+1);
+            FileBucket fbNew = new FileBucket(_holder, _buffer.Length, _chunkSizeMinus1 + 1);
 
             if (reset)
                 fbNew._filePos = 0;
@@ -126,7 +123,7 @@ namespace Amp.Buckets
 
                 long newPos = Math.Min(_filePos + requested, _holder.Length);
 
-                int skipped = (int)(newPos- _filePos);
+                int skipped = (int)(newPos - _filePos);
                 _filePos = newPos;
                 return new ValueTask<int>(skipped);
             }
