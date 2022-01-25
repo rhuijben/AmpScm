@@ -5,6 +5,8 @@
 		<LangVersion>9.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>Amp.Buckets.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
@@ -15,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="zlib.net-mutliplatform" Version="1.0.6" />
+		<PackageReference Include="zlib.managed" Version="1.1.4" />
 	</ItemGroup>
 
 	<ItemGroup>
