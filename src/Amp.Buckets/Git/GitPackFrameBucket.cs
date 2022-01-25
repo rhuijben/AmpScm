@@ -44,12 +44,13 @@ namespace Amp.Buckets.Git
 
         public GitObjectType Type { get; private set; }
         public int? DeltaCount { get; private set; }
-        public long? BodySize { get; private set;}
+        public long? BodySize { get; private set; }
 
         public override string Name => (reader != null) ? $"GitPackFrame[{reader.Name}]>{Inner.Name}" : base.Name;
 
 
-        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType) : base(inner.WithPosition())
+        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType)
+            : base(inner.WithPosition())
         {
             _oid = new GitObjectId(oidType, Array.Empty<byte>());
         }

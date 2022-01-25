@@ -13,6 +13,7 @@ namespace Amp.Buckets
         Bucket?[] _buckets;
         int _n;
         bool _keepOpen;
+        long _position;
 
         public AggregateBucket(params Bucket[] items)
         {
@@ -74,23 +75,21 @@ namespace Amp.Buckets
                 _n--;
             }
             _n = 0;
+            _position = 0;
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = -1)
         {
             while (_n < _buckets.Length)
             {
-                var v = _buckets[_n]!.ReadAsync(requested);
-
-                if (v.IsCompleted && v.Result.Length > 0)
-                    return v.Result;
-
-                var r = await v;
+                var r= await _buckets[_n]!.ReadAsync(requested);
 
                 if (!r.IsEof)
                 {
                     if (r.Length == 0)
                         throw new InvalidOperationException("Got 0 byte read");
+
+                    _position += r.Length;
 
                     return r;
                 }
@@ -123,7 +122,7 @@ namespace Amp.Buckets
 
             while(n < _buckets.Length)
             {
-                var r = await _buckets[_n]!.ReadRemainingBytesAsync();
+                var r = await _buckets[n]!.ReadRemainingBytesAsync();
 
                 if (!r.HasValue)
                     return null;
@@ -183,7 +182,7 @@ namespace Amp.Buckets
 
         public override long? Position
         {
-            get => _keepOpen ? _buckets.Take(_n + 1).Aggregate((long?)0L, (c, b) => c + b?.Position) : null;
+            get => _position;
         }
 
         public async override ValueTask<Bucket> DuplicateAsync(bool reset)
@@ -198,7 +197,10 @@ namespace Amp.Buckets
             foreach(var v in _buckets)
                 newBuckets.Add(await v!.DuplicateAsync(reset));
 
-            return new AggregateBucket(true, newBuckets.ToArray());
+            var ab = new AggregateBucket(true, newBuckets.ToArray());
+            if (!reset)
+                ab._position = _position;
+            return ab;
         }
 
         #region DEBUG INFO

@@ -169,6 +169,7 @@ namespace Amp.Buckets
 
         internal static byte[] ReverseInPlace(this byte[] array)
         {
+            // Use Array.Reverse() ?
             for (int first = array.GetLowerBound(0), last = array.GetUpperBound(0);
                 first < last;
                 first++, last--)
@@ -178,6 +179,11 @@ namespace Amp.Buckets
                 array[last] = tmp;
             }
             return array;
+        }
+
+        internal static byte[] ReverseInPlaceIfLittleEndian(this byte[] array)
+        {
+            return BitConverter.IsLittleEndian ? ReverseInPlace(array) : array;
         }
 
 #if NETFRAMEWORK

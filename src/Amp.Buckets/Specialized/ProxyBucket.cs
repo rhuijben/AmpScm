@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Amp.Buckets.Specialized
 {
-    
-    public abstract class ProxyBucket<TBucket> : WrappingBucket
+
+    public abstract class ProxyBucket<TBucket> : WrappingBucket, IBucketNoClose
         where TBucket : Bucket
     {
         public ProxyBucket(Bucket inner)
@@ -59,7 +59,13 @@ namespace Amp.Buckets.Specialized
         protected virtual TBucket? WrapDuplicate(Bucket duplicatedInner, bool reset)
         {
             return null;
-        }        
+        }
+
+        public new virtual Bucket NoClose()
+        {
+            base.NoClose();
+            return this;
+        }
     }
 
     public class ProxyBucket : ProxyBucket<ProxyBucket>

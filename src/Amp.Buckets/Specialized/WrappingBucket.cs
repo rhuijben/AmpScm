@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Amp.Buckets.Specialized
 {
-    public abstract class WrappingBucket : Bucket, IBucketNoClose
+    public abstract class WrappingBucket : Bucket
     {
         protected Bucket Inner { get; }
-        bool _noDispose;
+        internal bool DontDisposeInner { get; set; }
 
         public WrappingBucket(Bucket inner)
         {
@@ -20,7 +20,7 @@ namespace Amp.Buckets.Specialized
         protected WrappingBucket(Bucket inner, bool noDispose)
             : this(inner)
         {
-            _noDispose = noDispose;
+            DontDisposeInner = noDispose;
         }
 
         public override string Name => base.Name + ">" + Inner.Name;
@@ -29,22 +29,21 @@ namespace Amp.Buckets.Specialized
         {
             base.Dispose(disposing);
 
-            if (disposing && !_noDispose)
+            if (disposing && !DontDisposeInner)
                 Inner.Dispose();
         }
 
         protected async override ValueTask DisposeAsyncCore()
         {
-            if (!_noDispose)
+            if (!DontDisposeInner)
                 await Inner.DisposeAsync();
 
             await base.DisposeAsyncCore();
         }
 
-        public virtual Bucket NoClose()
+        protected void NoClose()
         {
-            _noDispose = true;
-            return this;
+            DontDisposeInner = true;
         }
     }
 }
