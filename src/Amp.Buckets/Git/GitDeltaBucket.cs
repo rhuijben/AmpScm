@@ -10,7 +10,7 @@ namespace Amp.Buckets.Git
         long length;
         long position;
         readonly byte[] buffer = new byte[8];
-        int copy_offset;
+        uint copy_offset;
         int copy_size;
         delta_state state;
         int p0;
@@ -20,6 +20,7 @@ namespace Amp.Buckets.Git
             start,
             init,
             src_copy,
+            base_seek,
             base_copy,
             eof
         }
@@ -168,13 +169,13 @@ namespace Amp.Buckets.Git
                     int i = 1;
 
                     if (0 != (uc & 0x01))
-                        copy_offset |= data[i++] << 0;
+                        copy_offset |= (uint)data[i++] << 0;
                     if (0 != (uc & 0x02))
-                        copy_offset |= data[i++] << 8;
+                        copy_offset |= (uint)data[i++] << 8;
                     if (0 != (uc & 0x04))
-                        copy_offset |= data[i++] << 16;
+                        copy_offset |= (uint)data[i++] << 16;
                     if (0 != (uc & 0x08))
-                        copy_offset |= data[i++] << 24;
+                        copy_offset |= (uint)data[i++] << 24;
 
                     if (0 != (uc & 0x10))
                         copy_size |= data[i++] << 0;
@@ -186,29 +187,11 @@ namespace Amp.Buckets.Git
                     if (copy_size == 0)
                         copy_size = 0x10000;
 
-                    state = delta_state.base_copy;
+                    if (copy_offset == BaseBucket.Position!.Value)
+                        state = delta_state.base_copy;
+                    else
+                        state = delta_state.base_seek;
                 }
-            }
-
-            while ((state == delta_state.base_copy) && (copy_offset >= 0))
-            {
-                long cp = BaseBucket.Position!.Value;
-
-                if (copy_offset < cp)
-                {
-                    await BaseBucket.ResetAsync();
-                    cp = 0;
-                }
-
-                while (cp < copy_offset)
-                {
-                    long skipped = await BaseBucket.ReadSkipAsync(copy_offset - cp);
-                    if (skipped == 0)
-                        throw new InvalidOperationException($"Unexpected seek failure on {BaseBucket.Name} Bucket position {copy_offset} from {cp}");
-
-                    cp += skipped;
-                }
-                copy_offset = -1;
             }
             return true;
         }
@@ -218,10 +201,13 @@ namespace Amp.Buckets.Git
             if (requested <= 0)
                 throw new ArgumentOutOfRangeException(nameof(requested));
 
-            if (!await AdvanceAsync())
+            if (state <= delta_state.init && !await AdvanceAsync())
                 return BucketBytes.Eof;
 
-            Debug.Assert(state == delta_state.base_copy || state == delta_state.src_copy || state == delta_state.eof);
+            Debug.Assert(state >= delta_state.src_copy && state <= delta_state.eof);
+
+            if (state == delta_state.base_seek)
+                await SeekBase();
 
             if (state == delta_state.base_copy)
             {
@@ -274,6 +260,87 @@ namespace Amp.Buckets.Git
             throw new InvalidOperationException();
         }
 
+        public async override ValueTask<int> ReadSkipAsync(int requested)
+        {
+            int skipped = 0;
+            while (requested > 0)
+            {
+                if (state <= delta_state.init && !await AdvanceAsync())
+                    return skipped;
+
+                Debug.Assert(state >= delta_state.src_copy && state <= delta_state.eof);
+
+                int r;
+                switch (state)
+                {
+                    case delta_state.base_seek:
+                        // Avoid the seek and just do the calculations instead
+                        r = Math.Min(requested, copy_size);
+                        copy_size -= r;
+                        copy_offset += (uint)r;
+                        position += r;
+                        break;
+                    case delta_state.base_copy:
+                        // Go back to a to-seek state
+                        r = Math.Min(requested, copy_size);
+                        copy_size -= r;
+                        copy_offset = (uint)(BaseBucket.Position!.Value + r);
+                        position += r;
+                        state = delta_state.base_seek;
+                        break;
+                    case delta_state.src_copy:
+                        // Just skip the source data
+                        r = await Inner.ReadSkipAsync(Math.Min(requested, copy_size));
+                        copy_size -= r;
+                        position += r;
+                        break;
+                    case delta_state.eof:
+                        return 0;
+                    default:
+                        throw new InvalidOperationException();
+                }
+
+                if (copy_size == 0)
+                    state = delta_state.init;
+
+                if (r == 0)
+                    return skipped;
+
+                skipped += r;
+                requested -= r;
+            }
+            return skipped;
+        }
+
+        private async Task SeekBase()
+        {
+            while (state == delta_state.base_seek)
+            {
+                long cp = BaseBucket.Position!.Value;
+
+                if (copy_offset < cp)
+                {
+                    await BaseBucket.ResetAsync();
+                    cp = 0;
+                }
+
+                while (cp < copy_offset)
+                {
+                    long skipped = await BaseBucket.ReadSkipAsync(copy_offset - cp);
+                    if (skipped == 0)
+                        throw new InvalidOperationException($"Unexpected seek failure on {BaseBucket.Name} Bucket position {copy_offset} from {cp}");
+
+                    cp += skipped;
+                }
+
+                if (cp == copy_offset)
+                {
+                    state = delta_state.base_copy;
+                    copy_offset = 0;
+                }
+            }
+        }
+
         public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
             while (state < delta_state.init)
@@ -287,21 +354,24 @@ namespace Amp.Buckets.Git
 
         public override async ValueTask<BucketBytes> PeekAsync()
         {
-            if (state == delta_state.base_copy && copy_offset < 0)
+            if (state == delta_state.base_seek)
+                await SeekBase();
+
+            if (state == delta_state.base_copy)
             {
                 var data = await BaseBucket.PeekAsync();
 
                 if (copy_size < data.Length)
-                    data = data.Slice(copy_size);
+                    data = data.Slice(0, copy_size);
 
                 return data;
             }
-            else if (state == delta_state.src_copy && copy_offset < 0)
+            else if (state == delta_state.src_copy)
             {
                 var data = await BaseBucket.PeekAsync();
 
                 if (copy_size < data.Length)
-                    data = data.Slice(copy_size);
+                    data = data.Slice(0, copy_size);
 
                 return data;
             }

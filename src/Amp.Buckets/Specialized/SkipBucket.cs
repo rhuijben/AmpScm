@@ -102,5 +102,10 @@ namespace Amp.Buckets.Specialized
             else
                 throw new InvalidOperationException();
         }
+
+        protected override PositionBucket NewPositionBucket(Bucket duplicatedInner)
+        {
+            return new SkipBucket(duplicatedInner, FirstPosition);
+        }
     }
 }
