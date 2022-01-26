@@ -68,6 +68,17 @@ namespace Amp.Buckets.Git
             return await reader!.ReadAsync(requested);
         }
 
+        public override async ValueTask<int> ReadSkipAsync(int requested)
+        {
+            if (reader == null || state != frame_state.body)
+            {
+                if (!await ReadInfoAsync())
+                    return 0;
+            }
+
+            return await reader!.ReadSkipAsync(requested);
+        }
+
         public async ValueTask<bool> ReadInfoAsync()
         {
             if (state < frame_state.body)
