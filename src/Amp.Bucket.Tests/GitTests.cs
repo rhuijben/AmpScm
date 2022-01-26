@@ -602,7 +602,7 @@ namespace Amp.BucketTests
         public async Task WalkLocalPacks(string packFile)
         {
             byte[]? fileChecksum = null;
-            using var srcFile = FileBucket.OpenRead(packFile);
+            using var srcFile = FileBucket.OpenRead(packFile, false);
 
             long l = (await srcFile.ReadRemainingBytesAsync()).Value;
 
@@ -691,7 +691,7 @@ namespace Amp.BucketTests
 
             index += fileChecksum.AsBucket();
 
-            using var indexFile = FileBucket.OpenRead(Path.ChangeExtension(packFile, ".idx"));
+            using var indexFile = FileBucket.OpenRead(Path.ChangeExtension(packFile, ".idx"), false);
             long lIdx = (await indexFile.ReadRemainingBytesAsync()).Value;
 
             byte[]? idxChecksum = null;
@@ -707,7 +707,7 @@ namespace Amp.BucketTests
             var r = new Random();
             var allData = File.ReadAllBytes(packFile);
 
-            using (FileBucket fb = FileBucket.OpenRead(packFile))
+            using (FileBucket fb = FileBucket.OpenRead(packFile, false))
             {
                 for (int i = 0; i < 32768; i++)
                 {
@@ -724,6 +724,23 @@ namespace Amp.BucketTests
                     Assert.AreEqual(d.Length, expectedBytes.Length);
                     Assert.IsTrue(expectedBytes.SequenceEqual(d.ToArray()), $"Bytes identical for {i}/{expectCount}");
                 }
+            }
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(LocalPacks))]
+        public async Task ReadMany(string packFile)
+        {
+            using var srcFile = FileBucket.OpenRead(packFile);
+            var b = new List<Bucket>();
+            for (int i = 0; i < 100;i++)
+                b.Add(await srcFile.Wrap().Skip(i * 1024).DuplicateAsync(true));
+
+            var s = b.Select(b => b.ReadAsync(1024).AsTask()).ToArray();
+            Task.WaitAll(s);
+            foreach (var w in s)
+            {
+                var r = await w;
             }
         }
 
