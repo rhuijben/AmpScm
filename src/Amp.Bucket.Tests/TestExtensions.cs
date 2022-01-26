@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Amp.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
 namespace Amp.BucketTests
 {
     internal static class TestExtensions
