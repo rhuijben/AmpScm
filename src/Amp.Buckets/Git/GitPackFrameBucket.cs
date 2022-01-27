@@ -5,22 +5,7 @@ using Amp.Buckets.Specialized;
 
 namespace Amp.Buckets.Git
 {
-    public enum GitObjectType
-    {
-        None = 0, // Reserved. Unused
-
-        // These types are valid objects
-        Commit = 1,
-        Tree = 2,
-        Blob = 3,
-        Tag = 4,
-
-        // These types are in pack files, but not real objects
-        DeltaOffset = 6,
-        DeltaReference = 7
-    };
-
-    public sealed class GitPackFrameBucket : GitBucket
+    public sealed class GitPackFrameBucket : GitBucket, IGitObjectType
     {
         Bucket wrapped => Inner;
         Bucket? reader;
@@ -29,7 +14,9 @@ namespace Amp.Buckets.Git
         long position;
         long frame_position;
         long delta_position;
-        GitObjectId _oid;
+        GitObjectIdType _oidType;
+        Func<GitObjectId, ValueTask<GitBucket>>? _oidResolver;
+        byte[]? _deltaOid;
 
         enum frame_state
         {
@@ -45,11 +32,15 @@ namespace Amp.Buckets.Git
 
         public override string Name => (reader != null) ? $"GitPackFrame[{reader.Name}]>{Inner.Name}" : base.Name;
 
+        // These types are in pack files, but not real objects
+        const GitObjectType GitObjectType_DeltaOffset = (GitObjectType)6;
+        const GitObjectType GitObjectType_DeltaReference = (GitObjectType)7;
 
-        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType)
+        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType, Func<GitObjectId, ValueTask<GitBucket>>? resolveOid = null)
             : base(inner.WithPosition())
         {
-            _oid = new GitObjectId(oidType, Array.Empty<byte>());
+            _oidType = oidType;
+            _oidResolver = resolveOid;
         }
 
         public override ValueTask<BucketBytes> PeekAsync()
@@ -129,16 +120,17 @@ namespace Amp.Buckets.Git
                         if (0 == (uc & 0x80))
                         {
                             if (position > max_size_len)
-                                throw new InvalidOperationException("Git pack framesize overflows int64");
+                                throw new GitBucketException("Git pack framesize overflows int64");
 
                             if (Type == GitObjectType.None)
-                                throw new InvalidOperationException("Git pack frame 0 is invalid");
+                                throw new GitBucketException("Git pack frame 0 is invalid");
                             else if ((int)Type == 5)
-                                throw new InvalidOperationException("Git pack frame 5 is unsupported");
+                                throw new GitBucketException("Git pack frame 5 is unsupported");
 
                             Debug.Assert(i == read.Length - 1);
                             state = frame_state.size_done;
                             position = 0;
+                            BodySize = body_size;
                         }
                         else
                             position++;
@@ -147,38 +139,30 @@ namespace Amp.Buckets.Git
 
                 while (state == frame_state.size_done)
                 {
-                    if (Type == GitObjectType.DeltaReference)
+                    if (Type == GitObjectType_DeltaReference)
                     {
-                        throw new NotImplementedException("No Delta Reference support yet");
-                        //// Body starts with oid refering to the delta base
-                        //ptrdiff_t base_len;
-                        //
-                        //if (git_type == amp_git_delta_ref || git_type == amp_git_delta_ofs)
-                        //	base_len = (base_oid.type == amp_git_oid_sha1) ? 20 : 32;
-                        //else
-                        //	base_len = 0;
-                        //
-                        //AMP_ASSERT(position <= base_len);
-                        //amp_span read;
-                        //
-                        //if (base_len > position)
-                        //	AMP_ERR((*wrapped)->read(&read, base_len - (ptrdiff_t)position, scratch_pool));
-                        //
-                        //if (read.size_bytes())
-                        //{
-                        //	memcpy(base_oid.bytes + position, read.data(), read.size_bytes());
-                        //	position += read.size_bytes();
-                        //}
-                        //
-                        //if (position >= base_len)
-                        //{
-                        //	AMP_ASSERT(position == base_len);
-                        //	position = 0; // And now start the real body
-                        //	state = state::find_delta;
-                        //	break;
-                        //}
+                        if (_deltaOid == null)
+                        {
+                            _deltaOid = new byte[(_oidType == GitObjectIdType.Sha1) ? 20 : 32];
+                            position = 0;
+                        }
+
+                        while (position < _deltaOid.Length)
+                        {
+                            var read = await Inner.ReadAsync(_deltaOid.Length - (int)position);
+
+                            if (read.IsEof)
+                                return false;
+
+                            for (int i = 0; i < read.Length; i++)
+                                _deltaOid[position++] = read[i];
+                        }
+
+                        state = frame_state.find_delta;
+                        position = 0;
+                        reader = new ZLibBucket(Inner.SeekOnReset().NoClose());
                     }
-                    else if (Type == GitObjectType.DeltaOffset)
+                    else if (Type == GitObjectType_DeltaOffset)
                     {
                         // Body starts with negative offset of the delta base.
                         long max_delta_size_len = 1 + (64 + 6) / 7;
@@ -215,16 +199,15 @@ namespace Amp.Buckets.Git
                             if (0 == (uc & 0x80))
                             {
                                 if (position > max_delta_size_len)
-                                    throw new InvalidOperationException("Git pack delta reference overflows 64 bit integer");
+                                    throw new GitBucketException("Git pack delta reference overflows 64 bit integer");
                                 else if (delta_position > frame_position)
-                                    throw new InvalidOperationException("Delta position must point to earlier object in file");
+                                    throw new GitBucketException("Delta position must point to earlier object in file");
 
                                 Debug.Assert(i == read.Length - 1);
                                 state = frame_state.find_delta;
                                 position = 0;
                                 delta_position = frame_position - delta_position;
                                 reader = new ZLibBucket(Inner.SeekOnReset().NoClose());
-                                BodySize = body_size;
                             }
                         }
                     }
@@ -234,7 +217,7 @@ namespace Amp.Buckets.Git
                         state = frame_state.body;
                         reader = new ZLibBucket(Inner.SeekOnReset().NoClose());
                         DeltaCount = 0;
-                        BodySize = body_size;
+                        _oidResolver = null;
                     }
                 }
 
@@ -242,12 +225,11 @@ namespace Amp.Buckets.Git
                 {
                     Bucket? base_reader = null;
 
-                    if (Type == GitObjectType.DeltaOffset)
+                    if (Type == GitObjectType_DeltaOffset)
                     {
                         // TODO: This is not restartable via async handling, while it should be.
 
                         // The source needs support for this. Our filestream and memorystreams have this support
-
                         Bucket deltaSource = await Inner.DuplicateAsync(true);
                         long to_skip = delta_position;
 
@@ -261,23 +243,35 @@ namespace Amp.Buckets.Git
                             to_skip -= skipped;
                         }
 
-                        base_reader = new GitPackFrameBucket(deltaSource, _oid.Type);
+                        base_reader = new GitPackFrameBucket(deltaSource, _oidType, _oidResolver);
                     }
-                    else
-                        throw new NotImplementedException("Can't obtain delta reference (via oid not implemented yet)");
+                    else 
+                    {
+                        var deltaOid = new GitObjectId(_oidType, _deltaOid!);
+
+                        if (_oidResolver != null)
+                        {
+                            base_reader = await _oidResolver(deltaOid);
+                        }
+
+                        if (base_reader == null)
+                            throw new GitBucketException($"Can't obtain delta reference for {deltaOid}");
+                        _deltaOid = null; // Not used any more
+                    }
 
                     if (base_reader is GitPackFrameBucket fb)
                     {
-                        GitObjectType base_type;
-
                         if (!await fb.ReadInfoAsync())
                             return false;
 
-                        base_type = fb.Type;
                         DeltaCount = fb.DeltaCount + 1;
-
                         state = frame_state.body;
-                        Type = base_type; // type is now resolved
+                        Type = fb.Type; // type is now resolved
+                    }
+                    else if (base_reader is IGitObjectType bt)
+                    {
+                        state = frame_state.body;
+                        Type = bt.Type; // type is now resolved
                     }
 
                     reader = new GitDeltaBucket(reader!, base_reader);

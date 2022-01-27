@@ -296,16 +296,16 @@ namespace Amp.Buckets
             return OpenRead(path, true);
         }
 
-        public static FileBucket OpenRead(FileStream from)
-        {
-            if (from == null)
-                throw new ArgumentNullException(nameof(from));
-            else if (!from.CanRead)
-                throw new ArgumentException("Unreadable stream", nameof(from));
-
-            FileHolder fh = new FileHolder(from, null);
-
-            return new FileBucket(fh);
-        }
+        //public static FileBucket OpenRead(FileStream from)
+        //{
+        //    if (from == null)
+        //        throw new ArgumentNullException(nameof(from));
+        //    else if (!from.CanRead)
+        //        throw new ArgumentException("Unreadable stream", nameof(from));
+        //
+        //    FileHolder fh = new FileHolder(from, null);
+        //
+        //    return new FileBucket(fh);
+        //}
     }
 }

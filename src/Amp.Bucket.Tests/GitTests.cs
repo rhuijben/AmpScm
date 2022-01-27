@@ -676,7 +676,7 @@ namespace Amp.BucketTests
 
             // Let's assume v2 pack index files
             Bucket index = new byte[] { 255, (byte)'t', (byte)'O', (byte)'c' }.AsBucket();
-            index += BitConverter.GetBytes((int)2).Reverse().ToArray().AsBucket();
+            index += BitConverter.GetBytes((int)2).ReverseIfLittleEndian().ToArray().AsBucket();
 
             // Fanout table
             index += fanOut.SelectMany(x => BitConverter.GetBytes(x).ReverseIfLittleEndian()).ToArray().AsBucket();

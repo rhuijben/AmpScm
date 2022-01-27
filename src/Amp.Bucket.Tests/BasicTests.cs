@@ -1,3 +1,4 @@
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -231,6 +232,51 @@ namespace Amp.BucketTests
 
             Assert.AreEqual(10, p.Length);
             Assert.AreEqual("EFGHIJKLMN", Encoding.ASCII.GetString(p.ToArray()));
+        }
+
+        [TestMethod]
+        public void ReadAsStream()
+        {
+            var b = Encoding.ASCII.GetBytes("ABCDEFGHIJKLMNOPQRSTUVWXYZ").AsBucket();
+
+            using var s = b.AsStream();
+
+            Assert.AreEqual(26, s.Length);
+            Assert.AreEqual(0, s.Position);
+
+            Assert.AreEqual((int)'A', s.ReadByte());
+
+            Assert.AreEqual(26, s.Length);
+            Assert.AreEqual(1, s.Position);
+        }
+
+        [TestMethod]
+        public void ReadAsReader()
+        {
+            var b = Encoding.ASCII.GetBytes("ABCDEFGHIJKLMNOPQRSTUVWXYZ").AsBucket();
+
+            using var s = b.AsReader();
+
+            var all = s.ReadToEnd();
+            Assert.AreEqual("ABCDEFGHIJKLMNOPQRSTUVWXYZ", all);
+
+
+            var b2 = Encoding.ASCII.GetBytes("ABCD\nEFGHI\rJKLMNOPQ\r\nRSTUV\0WXYZ").AsBucket();
+
+            using var s2 = b2.AsReader();
+
+            List<string> lines = new List<string>();
+            
+
+            while(s2.ReadLine() is string line)
+            {
+                lines.Add(line);
+            }
+
+            Assert.IsTrue(lines.Count >= 4);
+            Assert.AreEqual("ABCD", lines[0]);
+            Assert.AreEqual("EFGHI", lines[1]);
+            Assert.AreEqual("JKLMNOPQ", lines[2]);
         }
 
         private string FormatHash(byte[] hashResult)

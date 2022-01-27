@@ -166,6 +166,16 @@ namespace Amp.Buckets
             return ToArrayAsync(self).ConfigureAwait(true).GetAwaiter().GetResult();
         }
 
+        public static Stream AsStream(this Bucket self)
+        {
+            return new Wrappers.BucketStream(self);
+        }
+
+        public static TextReader AsReader(this Bucket self)
+        {
+            return new Wrappers.BucketReader(self, null);
+        }
+
         internal static byte[] ReverseInPlace(this byte[] array)
         {
             // Use Array.Reverse() ?
