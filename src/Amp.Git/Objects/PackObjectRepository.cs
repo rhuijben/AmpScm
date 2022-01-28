@@ -11,16 +11,16 @@ namespace Amp.Git.Objects
 {
     internal class PackObjectRepository : GitObjectRepository
     {
-        private string pack;
+        readonly string _packFile;
         FileStream? _fIdx;
         Bucket? _fb;
         int _ver;
         uint[]? _fanOut;
 
-        public PackObjectRepository(GitRepository repository, string pack)
+        public PackObjectRepository(GitRepository repository, string packFile)
             : base(repository)
         {
-            this.pack = pack;
+            _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
         }
 
         internal static uint ToHost(uint value)
@@ -35,7 +35,7 @@ namespace Amp.Git.Objects
 
         void Init()
         {
-            _fIdx ??= File.OpenRead(Path.ChangeExtension(pack, ".idx"));
+            _fIdx ??= File.OpenRead(Path.ChangeExtension(_packFile, ".idx"));
 
             if (_ver == 0)
             {
@@ -74,7 +74,7 @@ namespace Amp.Git.Objects
                     if (fanOut.Length == _fIdx.Read(fanOut, 0, fanOut.Length))
                     {
                         _fanOut = new uint[256];
-                        for(int i = 0; i < 256; i++)
+                        for (int i = 0; i < 256; i++)
                         {
                             _fanOut[i] = ToHost(BitConverter.ToUInt32(fanOut, i * 4));
                         }
@@ -83,47 +83,17 @@ namespace Amp.Git.Objects
             }
         }
 
-        public async override ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
-            where TGitObject : class
-        {
-            Init();
-
-            if (_ver == 2)
-            {
-                uint count = _fanOut![255];
-
-                byte[] oids = GetOidArray(0, count);
-
-                if (TryFindOid(oids, objectId, out var offset))
-                {
-                    var r = GetOffsetArray(0+ offset, 1);
-
-                    _fb ??= FileBucket.OpenRead(pack);
-
-                    var rdr = await _fb.DuplicateAsync(true);
-                    await rdr.ReadSkipAsync(r[0]);
-
-                    GitPackFrameBucket pf = new GitPackFrameBucket(rdr.SeekOnReset().NoClose(), GitObjectIdType.Sha1, Repository.ObjectRepository.ResolveByOid);
-
-                    await pf.ReadRemainingBytesAsync();
-
-                    return GitObject.FromBucket(Repository, pf, typeof(TGitObject), objectId) as TGitObject;
-                }
-
-                //GC.KeepAlive(oids);
-            }
-            return null;
-        }
-
         private bool TryFindOid(byte[] oids, GitObjectId objectId, out int offset)
         {
-            int first = 0, c = oids.Length / 20;
+            int first = 0, c = oids.Length / Repository.InternalConfig.IdBytes;
+            int sz = Repository.InternalConfig.IdBytes;
 
             while (first < c - 1)
             {
                 int mid = (first + c) / 2;
 
-                var check = new Span<byte>(oids, 20 * mid, 20);
+                var check = new Span<byte>(oids, sz * mid, sz);
+                bool equal = true;
 
                 for (int i = 0; i < objectId.Hash.Length; i++)
                 {
@@ -132,11 +102,18 @@ namespace Amp.Git.Objects
                     if (n == 0)
                         continue;
 
+                    equal = false;
                     if (n < 0)
                         c = mid;
                     else
                         first = mid + 1;
                     break;
+                }
+
+                if (equal)
+                {
+                    offset = mid;
+                    return true;
                 }
             }
 
@@ -159,7 +136,7 @@ namespace Amp.Git.Objects
         {
             if (_ver == 2)
             {
-                int sz = 20;
+                int sz = Repository.InternalConfig.IdBytes;
                 byte[] data = new byte[sz * count];
 
                 _fIdx!.Position = 8 /* header */ + 256 * 4 /* fanout */ + sz * start;
@@ -178,11 +155,11 @@ namespace Amp.Git.Objects
                 return Array.Empty<byte>();
         }
 
-        private uint[] GetOffsetArray(int start, uint count)
+        private byte[] GetOffsetArray(int start, uint count, byte[] oids)
         {
             if (_ver == 2)
             {
-                int sz = 20;
+                int sz = Repository.InternalConfig.IdBytes;
                 byte[] data = new byte[4 * count];
 
                 _fIdx!.Position = 8 /* header */ + 256 * 4 /* fanout */
@@ -191,26 +168,103 @@ namespace Amp.Git.Objects
                         + 4 * start;
 
                 if (data.Length != _fIdx.Read(data, 0, data.Length))
-                    return Array.Empty<uint>();
+                    return Array.Empty<byte>();
 
-                uint[] result = new uint[count];
-                for (int i = 0; i < count; i++)
-                    result[i] = ToHost(BitConverter.ToUInt32(data, i*4));
-                return result;
+                return data;
             }
             else if (_ver == 1)
             {
                 // TODO: Data is interleaved
-                return Array.Empty<uint>();
+                return Array.Empty<byte>();
             }
             else
-                return Array.Empty<uint>();
+                return Array.Empty<byte>();
         }
 
-        public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        private uint GetOffset(byte[] offsetArray, int index)
+        {
+            if (_ver == 2)
+            {
+                return ToHost(BitConverter.ToUInt32(offsetArray, index * 4));
+            }
+            else
+                return uint.MaxValue;
+        }
+
+        private GitObjectId GetOid(byte[] oidArray, int index)
+        {
+            if (_ver == 2)
+            {
+                int idBytes = Repository.InternalConfig.IdBytes;
+                return new GitObjectId(Repository.InternalConfig.IdType, oidArray.Skip(index * idBytes).Take(idBytes).ToArray());
+            }
+
+            return null;
+        }
+
+        public async override ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
+            where TGitObject : class
         {
             Init();
-            yield break;
+
+            uint count = _fanOut![255];
+            int start = 0;
+
+            byte[] oids = GetOidArray(start, count);
+
+            if (TryFindOid(oids, objectId, out var index))
+            {
+                var r = GetOffsetArray(index + start, 1, oids);
+                var offset = GetOffset(r, 0);
+
+                _fb ??= FileBucket.OpenRead(_packFile);
+
+                var rdr = await _fb.DuplicateAsync(true);
+                await rdr.ReadSkipAsync(offset);
+
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr.NoClose(), GitObjectIdType.Sha1, Repository.ObjectRepository.ResolveByOid);
+
+                await pf.ReadRemainingBytesAsync();
+
+                return GitObject.FromBucket(Repository, pf, typeof(TGitObject), objectId) as TGitObject;
+            }
+            return null;
+        }
+
+
+        public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+            where TGitObject : class
+        {
+            Init();
+
+            uint count = _fanOut![255];
+
+            if (count == 0)
+                yield break;
+
+            byte[] oids = GetOidArray(0, count);
+            byte[] offsets = GetOffsetArray(0, count, oids);
+
+
+            _fb ??= FileBucket.OpenRead(_packFile);
+
+            for (int i = 0; i < count; i++)
+            {
+                GitObjectId objectId = GetOid(oids, i);
+                long offset = GetOffset(offsets, i);
+
+                var rdr = await _fb.DuplicateAsync(true);
+                await rdr.ReadSkipAsync(offset);
+
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, GitObjectIdType.Sha1, Repository.ObjectRepository.ResolveByOid);
+
+                await pf.ReadRemainingBytesAsync();
+
+                var r = GitObject.FromBucket(Repository, pf, typeof(TGitObject), objectId) as TGitObject;
+
+                if (r != null)
+                    yield return r;
+            }
         }
     }
 }

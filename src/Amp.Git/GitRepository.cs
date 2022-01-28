@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Amp.Buckets.Git;
 using Amp.Git.Implementation;
 using Amp.Git.Sets;
 
@@ -85,5 +86,12 @@ namespace Amp.Git
         {
             return SetQueryProvider.GetAll<TResult>();
         }
+
+        internal class GitInternalConfigAccess
+        {
+            public GitObjectIdType IdType => GitObjectIdType.Sha1;
+            public int IdBytes => 20;
+        }
+        internal GitInternalConfigAccess InternalConfig { get; } = new GitInternalConfigAccess();
     }
 }

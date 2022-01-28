@@ -27,10 +27,15 @@ namespace Amp.Git.Implementation
             }
             while (next);
 
-            var r2 = e.DisposeAsync();
+            if (e is IDisposable d)
+                d.Dispose();
+            else
+            {
+                var r2 = e.DisposeAsync();
 
-            if (!r2.IsCompleted)
-                r2.GetAwaiter().GetResult();
+                if (!r2.IsCompleted)
+                    r2.GetAwaiter().GetResult();
+            }
         }
     }
 }

@@ -126,34 +126,45 @@ namespace Amp.Buckets
         }
 
         #region ZLib optimization. Our ZLib doesn't use Span<> and Memory<> yet, but let's reuse byte[] directly instead of copying
-        static Func<ReadOnlyMemory<byte>, (object, int, int)> MemoryExpander { get; } = FindExpander();
+        static Func<ReadOnlyMemory<byte>, (object, int)> MemoryExpander { get; } = FindExpander();
 
-        static Func<ReadOnlyMemory<byte>, (object, int, int)> FindExpander()
+        static Func<ReadOnlyMemory<byte>, (object, int)> FindExpander()
         {
             ParameterExpression p = Expression.Parameter(typeof(ReadOnlyMemory<byte>), "x");
 
-            var c = Expression.New(typeof((object, int, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
+            var c = Expression.New(typeof((object, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
                        Expression.Field(p, "_object"),
-                       Expression.Field(p, "_index"),
-                       Expression.Field(p, "_length"));
-            return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int, int)>>(c, p).Compile();
+                       Expression.Field(p, "_index"));
+            return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int)>>(c, p).Compile();
         }
 
-        internal (byte[]?, int, int) ExpandToArray(bool fallback = true)
+        internal (byte[]?, int) ExpandToArray()
         {
             if (_data.Length == 0)
-                return (Array.Empty<byte>(), 0, 0);
+                return (Array.Empty<byte>(), 0);
 
-            var (ob, index, length) = MemoryExpander(_data);
+            var (ob, index) = MemoryExpander(_data);
 
-            byte[]? arr = ob as byte[];
-
-            if (arr != null || !fallback)
-                return (arr, index, length);
+            if (ob is byte[] arr)
+                return (arr, index);
 
             byte[] data = ToArray();
 
-            return (data, 0, data.Length);
+            return (data, 0);
+        }
+
+        internal void Deconstruct(out byte[]? array, out int offset)
+        {
+            if (_data.Length == 0)
+            {
+                array = null;
+                offset = 0;
+                return;
+            }
+
+            object ob;
+            (ob, offset) = MemoryExpander(_data);
+            array = ob as byte[];
         }
         #endregion
     }

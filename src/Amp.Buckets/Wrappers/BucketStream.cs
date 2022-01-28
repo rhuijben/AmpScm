@@ -39,11 +39,7 @@ namespace Amp.Buckets.Wrappers
                     if (!p.HasValue)
                         return -1L;
 
-                    var v = Bucket.ReadRemainingBytesAsync();
-                    if (!v.IsCompleted)
-                        v.AsTask().Wait();
-
-                    var r = v.Result;
+                    var r = Bucket.ReadRemainingBytesAsync().Result; // BAD async
 
                     if (r.HasValue)
                         _length = r.Value + p.Value;

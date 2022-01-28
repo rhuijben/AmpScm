@@ -40,7 +40,7 @@ namespace Amp.Git
                 {
                     _tree = oid;
 
-                    var t = Repository.ObjectRepository.Get<GitTree>(oid).GetAwaiter().GetResult();
+                    var t = Repository.ObjectRepository.Get<GitTree>(oid).Result; // BAD async
 
                     if (t != null)
                     {
@@ -66,7 +66,7 @@ namespace Amp.Git
                 {
                     _parent = oid;
 
-                    var t = Repository.ObjectRepository.Get<GitCommit>(oid).GetAwaiter().GetResult();
+                    var t = Repository.ObjectRepository.Get<GitCommit>(oid).Result; // BAD async
 
                     if (t != null)
                     {

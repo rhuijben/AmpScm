@@ -89,12 +89,12 @@ namespace Amp.Buckets.Specialized
                             }
                             else
                             {
-                                var (tb, offs, len) = peek.ExpandToArray(false);
+                                var (tb, offs) = peek;
 
                                 if (tb is not null && offs > 0 && tb[offs - 1] == bOne)
                                 {
                                     // Nice guess. The peek buffer contains the read byte
-                                    read_buffer = new BucketBytes(tb, offs - 1, len + 1);
+                                    read_buffer = new BucketBytes(tb, offs - 1, peek.Length + 1);
                                 }
                                 else if (tb is not null)
                                 {
@@ -123,11 +123,11 @@ namespace Amp.Buckets.Specialized
                     }
                 }
 
-                var (rb, rb_offs, rb_len) = read_buffer.ExpandToArray();
+                var (rb, rb_offs) = read_buffer.ExpandToArray();
 
                 _z.NextIn = rb;
                 _z.NextInIndex = rb_offs;
-                _z.AvailIn = rb_len;
+                _z.AvailIn = read_buffer.Length;
 
                 _z.NextOut = write_data;
                 _z.NextOutIndex = 0;
