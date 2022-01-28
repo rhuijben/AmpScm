@@ -35,6 +35,66 @@ namespace Amp.Buckets.Specialized
                 return self;
         }
 
+        public async static ValueTask<BucketBytes> ReadFullAsync(this Bucket self, int requested)
+        {
+            IEnumerable<byte>? result = null;
+
+            while (true)
+            {
+                var bb = await self.ReadAsync(requested);
+
+                if (bb.IsEof)
+                    return (result != null) ? result.ToArray() : bb;
+
+                requested -= bb.Length;
+
+                if (result == null)
+                    result = bb.ToArray();
+                else
+                    result = result.Concat(bb.ToArray());
+
+                if (requested == 0)
+                {
+                    return (result as byte[]) ?? result.ToArray();
+                }
+            }
+        }
+
+        public async static ValueTask<BucketBytes> ReadUntilAsync(this Bucket self, byte b)
+        {
+            IEnumerable<byte>? result = null;
+
+            while(true)
+            {
+                using var poll = await self.PollAsync();
+
+                if (poll.Data.IsEof)
+                    return (result != null) ? new BucketBytes(result.ToArray()) : poll.Data;
+
+                for(int i = 0; i < poll.Data.Length; i++)
+                {
+                    if (poll[i] == b)
+                    {
+                        BucketBytes r;
+                        if (result == null)
+                            r = poll.Data.Slice(0, i + 1).ToArray(); // Make copy, as data is transient
+                        else
+                            r = result.Concat(poll.Data.Slice(0, i + 1).ToArray()).ToArray();
+
+                        await poll.Consume(i + 1);
+                        return r;
+                    }
+                }
+
+                var extra = poll.Data.ToArray();
+                if (result == null)
+                    result = extra;
+                else
+                    result = result.Concat(extra);
+
+                await poll.Consume(poll.Length);
+            }
+        }
 
         public class PollData : IDisposable
         {
@@ -78,6 +138,11 @@ namespace Amp.Buckets.Specialized
                 if (AlreadyRead > 0)
                     throw new BucketException($"{AlreadyRead} polled bytes were not consumed");
             }
+
+            public byte this[int index] => Data[index];
+
+            public bool IsEmpty => Data.IsEmpty;
+            public bool IsEof => Data.IsEof;
         }
 
         public static async ValueTask<PollData> PollAsync(this Bucket self, int minRequested = 1)

@@ -71,15 +71,79 @@ namespace Amp.BucketTests
         }
 
         [TestMethod]
+        public async Task WalkObjectsViaObjectRepository()
+        {
+            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
+
+            await foreach (var c in repo.ObjectRepository.GetAll<GitCommit>())
+            {
+                Console.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
+                if (c.Parent != null)
+                    Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
+                Console.WriteLine($" -tree {c.Tree?.Id}");
+
+                //if (c.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12")
+                foreach (var v in c.Tree)
+                {
+                    Console.WriteLine($"   - {v.Name}");
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task WalkObjectsAsync()
+        {
+            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
+
+            await foreach(var c in repo.Commits)
+            {
+                Console.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
+                if (c.Parent != null)
+                    Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
+                Console.WriteLine($" -tree {c.Tree?.Id}");                
+
+                //if (c.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12")
+                foreach(var v in c.Tree)
+                {
+                    Console.WriteLine($"   - {v.Name}");
+                }
+            }
+        }
+
+        [TestMethod]
         public async Task WalkObjects()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
-            await foreach(var c in repo.ObjectRepository.GetAll<GitCommit>())
+            foreach (var c in repo.Commits)
             {
                 Console.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
-                Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
-                Console.WriteLine($" -tree {c.Tree?.Id}");                
+                if (c.Parent != null)
+                    Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
+                Console.WriteLine($" -tree {c.Tree?.Id}");
+
+                foreach (var v in c.Tree)
+                {
+                    Console.WriteLine($"   - {v.Name}");
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task WalkOne()
+        {
+            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
+
+            var tree = repo.Trees.AsEnumerable().FirstOrDefault(x => x.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12");
+
+            foreach (var v in tree)
+            {
+                Console.WriteLine($"   - {v.Name} - {v.Id}");
+            }
+
+            foreach(var v in tree.AllItems)
+            {
+                Console.WriteLine($"# {v.Path}");
             }
         }
     }

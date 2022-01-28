@@ -11,30 +11,30 @@ namespace Amp.Git.Implementation
         public static IEnumerable<TResult> AsNonAsyncEnumerable<TResult>(this IAsyncEnumerable<TResult> source)
         {
             var e = source.GetAsyncEnumerator();
-            bool next;
-            do
+            try
             {
-                var r = e.MoveNextAsync();
-
-                if (r.IsCompleted)
+                bool next;
+                do
+                {
+                    var r = e.MoveNextAsync().AsTask(); // Store as object instead of struct, as we are yield'ing.
                     next = r.Result;
-                else
-                    next = r.GetAwaiter().GetResult();
 
-
-                if (next)
-                    yield return e.Current;
+                    if (next)
+                        yield return e.Current;
+                }
+                while (next);
             }
-            while (next);
-
-            if (e is IDisposable d)
-                d.Dispose();
-            else
+            finally
             {
-                var r2 = e.DisposeAsync();
+                if (e is IDisposable d)
+                    d.Dispose();
+                else
+                {
+                    var r2 = e.DisposeAsync().AsTask(); // Store as object instead of struct, as we are yield'ing.
 
-                if (!r2.IsCompleted)
-                    r2.GetAwaiter().GetResult();
+                    if (!r2.IsCompleted)
+                        r2.Wait();
+                }
             }
         }
     }

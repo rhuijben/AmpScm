@@ -90,7 +90,7 @@ namespace Amp.Git
             }
         }
 
-        private void Read()
+        private new void Read()
         {
             if (_tree is Bucket b)
             {

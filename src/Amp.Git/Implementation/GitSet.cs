@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Amp.Buckets.Git;
 using Amp.Git.Implementation;
 
 namespace Amp.Git
@@ -57,6 +58,11 @@ namespace Amp.Git
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public ValueTask<T?> GetAsync(GitObjectId id)
+        {
+            return Repository.SetQueryProvider.GetAsync<T>(id);
         }
     }
 }
