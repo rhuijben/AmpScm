@@ -10,6 +10,10 @@ namespace Amp.Buckets.Git
     [Serializable]
     public class GitException : Exception
     {
+        public GitException()
+        {
+        }
+
         public GitException(string message)
             : base(message)
         {
@@ -17,10 +21,8 @@ namespace Amp.Buckets.Git
 
         }
 
-        public GitException(string message, Exception innerexception)
-            : base(message, innerexception)
+        public GitException(string? message, Exception? innerException) : base(message, innerException)
         {
-
         }
 
         protected GitException(SerializationInfo info, StreamingContext context) : base(info, context)
@@ -31,6 +33,10 @@ namespace Amp.Buckets.Git
     [Serializable]
     public class GitBucketException : GitException
     {
+        public GitBucketException()
+        {
+        }
+
         public GitBucketException(string message)
             : base(message)
         {
@@ -38,10 +44,8 @@ namespace Amp.Buckets.Git
 
         }
 
-        public GitBucketException(string message, Exception innerexception)
-            : base(message, innerexception)
+        public GitBucketException(string? message, Exception? innerException) : base(message, innerException)
         {
-
         }
 
         protected GitBucketException(SerializationInfo info, StreamingContext context) : base(info, context)

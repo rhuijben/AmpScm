@@ -32,7 +32,7 @@ namespace Amp.Buckets.Wrappers
             }
             var v = Bucket.ReadAsync(1);
 
-            BucketBytes b = v.IsCompleted ? v.Result : v.GetAwaiter().GetResult();
+            BucketBytes b = v.Result; // BAD async
 
             if (b.IsEof || b.IsEmpty)
                 return -1;
@@ -56,14 +56,14 @@ namespace Amp.Buckets.Wrappers
 
             var v = Bucket.PeekAsync();
 
-            BucketBytes b = v.IsCompleted ? v.Result : v.GetAwaiter().GetResult();
+            BucketBytes b = v.Result; // BAD async
 
             if (!b.IsEmpty)
                 return b[0];
 
             v = Bucket.ReadAsync(1);
 
-            b = v.IsCompleted ? v.Result : v.GetAwaiter().GetResult();
+            b = v.Result; // BAD async
 
             if (b.IsEof || b.IsEmpty)
                 return -1;
@@ -75,7 +75,7 @@ namespace Amp.Buckets.Wrappers
         {
             var v = Bucket.PeekAsync();
 
-            BucketBytes b = v.IsCompleted ? v.Result : v.GetAwaiter().GetResult();
+            BucketBytes b = v.Result; // BAD async
 
             if (!b.IsEmpty)
             {
@@ -86,16 +86,14 @@ namespace Amp.Buckets.Wrappers
 
                 v = Bucket.ReadAsync(b.Length);
 
-                b = v.IsCompleted ? v.Result : v.GetAwaiter().GetResult();
+                b = v.Result; // BAD async
 
                 return b.Length;
             }
             else
             {
                 // THIS is an ugly hack^2
-                v = Bucket.ReadAsync(count);
-
-                b = v.IsCompleted ? v.Result : v.GetAwaiter().GetResult();
+                b = Bucket.ReadAsync(count).Result; // BAD async
 
                 if (b.IsEof)
                     return 0;
