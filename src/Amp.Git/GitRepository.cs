@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Amp.Buckets.Git;
 using Amp.Git.Implementation;
 using Amp.Git.Sets;
@@ -26,6 +28,7 @@ namespace Amp.Git
             Trees = new GitSet<GitTree>(this, () => this.Trees!);
 
             ObjectRepository = null!;
+            GitDir = null!;
         }
 
         internal GitRepository(string path, bool bare = false)
@@ -37,7 +40,7 @@ namespace Amp.Git
             if (bare && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git"))
             {
                 bare = false;
-                FullPath = Path.GetDirectoryName(FullPath);
+                FullPath = Path.GetDirectoryName(FullPath) ?? throw new InvalidOperationException();
             }
 
             IsBare = bare;
@@ -82,16 +85,21 @@ namespace Amp.Git
             GC.SuppressFinalize(this);
         }
 
-        public IQueryable<TResult> GetAll<TResult>() where TResult : GitObject
+        public IQueryable<TResult> GetAll<TResult>()
+            where TResult : GitObject
         {
             return SetQueryProvider.GetAll<TResult>();
         }
 
-        internal class GitInternalConfigAccess
+        ValueTask<TResult?> IGitQueryRoot.GetAsync<TResult>(GitObjectId objectId)
+            where TResult : class
         {
-            public GitObjectIdType IdType => GitObjectIdType.Sha1;
-            public int IdBytes => 20;
+            return GetAsync<TResult>(objectId);
         }
-        internal GitInternalConfigAccess InternalConfig { get; } = new GitInternalConfigAccess();
+
+        internal ValueTask<TResult?> GetAsync<TResult>(GitObjectId objectId) where TResult : GitObject
+        {
+            return SetQueryProvider.GetAsync<TResult>(objectId);
+        }
     }
 }

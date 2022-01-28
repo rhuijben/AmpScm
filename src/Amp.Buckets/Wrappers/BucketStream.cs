@@ -20,6 +20,27 @@ namespace Amp.Buckets.Wrappers
 
         public Bucket Bucket { get; }
 
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (disposing)
+                    Bucket.Dispose();
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }
+        }
+
+#if !NETFRAMEWORK
+        public override async ValueTask DisposeAsync()
+        {
+            await Bucket.DisposeAsync();
+            await base.DisposeAsync();
+        }
+#endif
+
         public override bool CanRead => true;
 
         public override bool CanSeek => Bucket.CanReset;

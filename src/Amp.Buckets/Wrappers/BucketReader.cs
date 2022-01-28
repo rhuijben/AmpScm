@@ -22,6 +22,19 @@ namespace Amp.Buckets.Wrappers
 
         public Encoding? TextEncoding { get; }
 
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (disposing)
+                    Bucket.Dispose();
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }            
+        }
+
 
         public override int Read()
         {

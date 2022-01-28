@@ -7,10 +7,15 @@ using Amp.Buckets.Git;
 
 namespace Amp.Git
 {
-    public class GitObject
+    interface IGitReadObject
     {
-        protected GitRepository Repository { get; }
-        public virtual GitObjectId Id { get; }
+        ValueTask Read();
+    }
+
+    public class GitObject : IGitReadObject, IEquatable<GitObject>
+    {
+        protected internal GitRepository Repository { get; }
+        public GitObjectId Id { get; }
 
         protected GitObject(GitRepository repository, GitObjectId id)
         {
@@ -34,7 +39,26 @@ namespace Amp.Git
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
 
+        public virtual ValueTask Read()
+        {
+            return default;
+        }
+
+        public bool Equals(GitObject? other)
+        {
+            return other?.Id.Equals(Id) ?? false;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj as GitObject);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
         }
     }
 }

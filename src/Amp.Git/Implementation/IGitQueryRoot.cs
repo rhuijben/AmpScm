@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Amp.Buckets.Git;
 using Amp.Git.Sets;
 
 namespace Amp.Git.Implementation
@@ -11,6 +12,9 @@ namespace Amp.Git.Implementation
     internal interface IGitQueryRoot
     {
         IQueryable<TResult> GetAll<TResult>()
+            where TResult : GitObject;
+
+        ValueTask<TResult?> GetAsync<TResult>(GitObjectId objectId)
             where TResult : GitObject;
     }
 }

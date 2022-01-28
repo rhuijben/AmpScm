@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
+using Amp.Buckets.Git;
 using Amp.Git.Sets;
 
 namespace Amp.Git.Implementation
@@ -36,8 +38,6 @@ namespace Amp.Git.Implementation
 
         public object? Execute(Expression expression)
         {
-            
-
             throw new NotImplementedException();
         }
 
@@ -50,7 +50,9 @@ namespace Amp.Git.Implementation
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            expression = new GitQueryVisitor().Visit(expression);
+
+            return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
         }
 
         public List<T> GetList<T>()
@@ -61,7 +63,7 @@ namespace Amp.Git.Implementation
         public IAsyncEnumerator<TResult> GetAsyncEnumerator<TResult>(CancellationToken cancellationToken = default)
             where  TResult : GitObject
         {
-            throw new NotImplementedException();
+            return Repository.ObjectRepository.GetAll<TResult>().GetAsyncEnumerator();
         }
 
         public IEnumerable<TResult> GetEnumerable<TResult>()
@@ -75,6 +77,11 @@ namespace Amp.Git.Implementation
             return GetEnumerable<TResult>().AsQueryable();
         }
 
+        public async ValueTask<TResult?> GetAsync<TResult>(GitObjectId objectId) where TResult : GitObject
+        {
+            return await Repository.ObjectRepository.Get<TResult>(objectId);
+        }
+
         internal static Type? GetElementType(Type type)
         {
             if (type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)) is Type enumerableType)
@@ -83,6 +90,6 @@ namespace Amp.Git.Implementation
             }
             else
                 return null;
-        }
+        }        
     }
 }

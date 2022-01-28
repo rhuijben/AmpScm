@@ -35,10 +35,10 @@ namespace Amp.Git.Objects
 
         void Init()
         {
-            _fIdx ??= File.OpenRead(Path.ChangeExtension(_packFile, ".idx"));
-
             if (_ver == 0)
             {
+                _fIdx ??= File.OpenRead(Path.ChangeExtension(_packFile, ".idx"));
+
                 byte[] header = new byte[8];
                 long fanOutOffset = -1;
                 if (8 == _fIdx.Read(header, 0, header.Length))
@@ -54,8 +54,10 @@ namespace Amp.Git.Objects
                     else if (header.Take(4).SequenceEqual(index.Take(4)))
                     {
                         // We have an unsupported future header
-                        fanOutOffset = -1;
                         _ver = -1;
+                        _fIdx.Dispose();
+                        _fIdx = null;
+                        return;
                     }
                     else
                     {
@@ -83,19 +85,38 @@ namespace Amp.Git.Objects
             }
         }
 
-        private bool TryFindOid(byte[] oids, GitObjectId objectId, out int offset)
+        private bool TryFindOid(byte[] oids, GitObjectId objectId, out uint index)
         {
-            int first = 0, c = oids.Length / Repository.InternalConfig.IdBytes;
-            int sz = Repository.InternalConfig.IdBytes;
+            int sz;
+            int hashLen = objectId.Hash.Length;
+
+            if (oids.Length == 0)
+            {
+                index = 0;
+                return false;
+            }
+
+            if (_ver == 2)
+                sz = Repository.InternalConfig.IdBytes;
+            else if (_ver == 1)
+                sz = Repository.InternalConfig.IdBytes + 4;
+            else
+            {
+                index = 0;
+                return false;
+            }
+
+            int first = 0, count = oids.Length / sz;
+            int c = count;
 
             while (first < c - 1)
             {
                 int mid = (first + c) / 2;
 
-                var check = new Span<byte>(oids, sz * mid, sz);
+                var check = new Span<byte>(oids, sz * mid, hashLen);
                 bool equal = true;
 
-                for (int i = 0; i < objectId.Hash.Length; i++)
+                for (int i = 0; i < hashLen; i++)
                 {
                     int n = objectId.Hash[i] - check[i];
 
@@ -112,27 +133,33 @@ namespace Amp.Git.Objects
 
                 if (equal)
                 {
-                    offset = mid;
+                    index = (uint)mid;
                     return true;
                 }
             }
 
-            var check2 = new Span<byte>(oids, 20 * first, 20);
+            if (first >= count)
+            {
+                index = 0;
+                return false;
+            }
+
+            var check2 = new Span<byte>(oids, sz * first, hashLen);
             for (int i = 0; i < objectId.Hash.Length; i++)
             {
                 int n = objectId.Hash[i] - check2[i];
 
                 if (n != 0)
                 {
-                    offset = 0;
+                    index = 0;
                     return false;
                 }
             }
-            offset = first;
+            index = (uint)first;
             return true;
         }
 
-        private byte[] GetOidArray(int start, uint count)
+        private byte[] GetOidArray(uint start, uint count)
         {
             if (_ver == 2)
             {
@@ -148,14 +175,21 @@ namespace Amp.Git.Objects
             }
             else if (_ver == 1)
             {
-                // TODO: Data is interleaved
-                return Array.Empty<byte>();
+                int sz = Repository.InternalConfig.IdBytes + 4;
+                byte[] data = new byte[sz * count];
+
+                _fIdx!.Position = 256 * 4 /* fanout */ + sz * start;
+
+                if (data.Length != _fIdx.Read(data, 0, data.Length))
+                    return Array.Empty<byte>();
+
+                return data;
             }
             else
                 return Array.Empty<byte>();
         }
 
-        private byte[] GetOffsetArray(int start, uint count, byte[] oids)
+        private byte[] GetOffsetArray(uint start, uint count, byte[] oids)
         {
             if (_ver == 2)
             {
@@ -175,7 +209,7 @@ namespace Amp.Git.Objects
             else if (_ver == 1)
             {
                 // TODO: Data is interleaved
-                return Array.Empty<byte>();
+                return oids ?? throw new ArgumentNullException(nameof(oids));
             }
             else
                 return Array.Empty<byte>();
@@ -187,6 +221,11 @@ namespace Amp.Git.Objects
             {
                 return ToHost(BitConverter.ToUInt32(offsetArray, index * 4));
             }
+            else if (_ver == 1)
+            {
+                // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
+                return ToHost(BitConverter.ToUInt32(offsetArray, index * (4 + Repository.InternalConfig.IdBytes)));
+            }
             else
                 return uint.MaxValue;
         }
@@ -196,10 +235,16 @@ namespace Amp.Git.Objects
             if (_ver == 2)
             {
                 int idBytes = Repository.InternalConfig.IdBytes;
-                return new GitObjectId(Repository.InternalConfig.IdType, oidArray.Skip(index * idBytes).Take(idBytes).ToArray());
+                return new GitObjectId(Repository.InternalConfig.IdType, oidArray.Skip(index * idBytes).Take(Repository.InternalConfig.IdBytes).ToArray());
+            }
+            else if (_ver == 1)
+            {
+                // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
+                int blockBytes = 4 + Repository.InternalConfig.IdBytes;
+                return new GitObjectId(Repository.InternalConfig.IdType, oidArray.Skip(index * blockBytes + 4).Take(Repository.InternalConfig.IdBytes).ToArray());
             }
 
-            return null;
+            throw new GitRepositoryException("Unsupported pack version");
         }
 
         public async override ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
@@ -207,8 +252,13 @@ namespace Amp.Git.Objects
         {
             Init();
 
-            uint count = _fanOut![255];
-            int start = 0;
+            if (_fanOut is null)
+                return null;
+
+            byte byte0 = objectId.Hash[0];
+
+            uint start = (byte0 == 0) ? 0 : _fanOut![byte0-1];
+            uint count = _fanOut![byte0] - start;            
 
             byte[] oids = GetOidArray(start, count);
 
@@ -217,7 +267,7 @@ namespace Amp.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                _fb ??= FileBucket.OpenRead(_packFile);
+                _fb ??= FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
 
                 var rdr = await _fb.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
@@ -237,16 +287,15 @@ namespace Amp.Git.Objects
         {
             Init();
 
-            uint count = _fanOut![255];
-
-            if (count == 0)
+            if (_fanOut is null || _fanOut[255] == 0)
                 yield break;
+
+            uint count = _fanOut[255];
 
             byte[] oids = GetOidArray(0, count);
             byte[] offsets = GetOffsetArray(0, count, oids);
 
-
-            _fb ??= FileBucket.OpenRead(_packFile);
+            _fb ??= FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
 
             for (int i = 0; i < count; i++)
             {
