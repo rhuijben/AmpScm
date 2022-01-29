@@ -27,7 +27,7 @@ namespace Amp.Git
             _tree = rdr;
         }
 
-        public GitTree? Tree
+        public GitTree Tree
         {
             get
             {
@@ -49,7 +49,7 @@ namespace Amp.Git
                     }
                 }
 
-                return null;
+                return null!;
             }
         }
 

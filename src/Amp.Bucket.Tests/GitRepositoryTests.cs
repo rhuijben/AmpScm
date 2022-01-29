@@ -111,7 +111,7 @@ namespace Amp.BucketTests
         }
 
         [TestMethod]
-        public async Task WalkObjects()
+        public void WalkObjects()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
@@ -130,11 +130,11 @@ namespace Amp.BucketTests
         }
 
         [TestMethod]
-        public async Task WalkOne()
+        public void WalkOne()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
-            var tree = repo.Trees.AsEnumerable().FirstOrDefault(x => x.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12");
+            var tree = repo.Trees.FirstOrDefault(x => x.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12");
 
             foreach (var v in tree)
             {
