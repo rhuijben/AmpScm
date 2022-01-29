@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace Amp.Buckets.Git
+namespace Amp.Git
 {
     public enum GitObjectIdType
     {
@@ -11,17 +12,66 @@ namespace Amp.Buckets.Git
         Sha256 = 2,
     }
 
-    public sealed class GitObjectId : IEquatable<GitObjectId>
+    [DebuggerDisplay("{Type}:{ToString(),nq}")]
+    public sealed class GitObjectId : IEquatable<GitObjectId>, IComparable<GitObjectId>, IFormattable
     {
+        byte[] _bytes;
+        int _offset;
         public GitObjectIdType Type { get; }
-        public byte[] Hash { get; }
+
+        public byte[] Hash
+        {
+            get => (_offset == 0 && _bytes.Length == HashLength(Type)) ? _bytes : CopyArray();
+        }
+
+        private byte[] CopyArray()
+        {
+            var newBytes = new byte[HashLength(Type)];
+            Array.Copy(_bytes, _offset, newBytes, 0, newBytes.Length);
+            _bytes = newBytes;
+            _offset = 0;
+            return _bytes;
+        }
 
         public GitObjectId(GitObjectIdType type, byte[] hash)
         {
             if (type < GitObjectIdType.None || type > GitObjectIdType.Sha256)
                 throw new ArgumentOutOfRangeException(nameof(type));
 
-            Hash = (type != GitObjectIdType.None ? hash ?? throw new ArgumentNullException(nameof(hash)) : Array.Empty<byte>());
+            Type = type;
+            _bytes = (type != GitObjectIdType.None ? hash ?? throw new ArgumentNullException(nameof(hash)) : Array.Empty<byte>());
+        }
+
+        GitObjectId(GitObjectIdType type, byte[] hash, int offset)
+        {
+            Type = type;
+            _bytes = hash;
+            _offset = offset;
+
+            if (offset + HashLength(type) > hash.Length)
+                throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+
+        /// <summary>
+        /// Creates GitObjectId that uses a location inside an existing array.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="hash"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        /// <remarks>Only use this if you are 100% sure the source array doesn't change</remarks>
+#if !DEBUG
+        // Normal users shouldn't need this
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
+        public static GitObjectId FromByteArrayOffset(GitObjectIdType type, byte[] hash, int offset)
+        {
+            return new GitObjectId(type, hash, offset);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj as GitObjectId);
         }
 
         public bool Equals(GitObjectId? other)
@@ -29,7 +79,25 @@ namespace Amp.Buckets.Git
             if (other is null)
                 return false;
 
-            return (other.Type == Type) && Hash.Length == other.Hash.Length && Hash.SequenceEqual(other.Hash);
+            if (other.Type != Type)
+                return false;
+
+            return HashCompare(other) == 0;
+        }
+
+        public int HashCompare(GitObjectId other)
+        {
+            int sz = HashLength(Type);
+
+            for (int i = 0; i < sz; i++)
+            {
+                int n = _bytes[i + _offset] - other._bytes[i + other._offset];
+
+                if (n != 0)
+                    return n;
+            }
+
+            return 0;
         }
 
         public static bool TryParse(string s, out GitObjectId oid)
@@ -53,25 +121,91 @@ namespace Amp.Buckets.Git
 
         public static byte[] StringToByteArray(string hex)
         {
-            return Enumerable.Range(0, hex.Length / 2)
-                             .Select(x => Convert.ToByte(hex.Substring(x * 2, 2), 16))
-                             .ToArray();
+            int n = hex.Length / 2; // Note this trims an odd final hexdigit, if there is one
+            byte[] bytes = new byte[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+            }
+
+            return bytes;
         }
 
 
         public override int GetHashCode()
         {
-            // Combination of First and last bytes should provide good hashing over subsets of hashes
-            return BitConverter.ToInt32(Hash, 0) ^ BitConverter.ToInt32(Hash, Hash.Length-4);
+            // Combination of First and some other should provide good hashing over subsets of hashes
+            return BitConverter.ToInt32(_bytes, _offset) ^ BitConverter.ToInt32(_bytes, _offset + 16);
         }
 
         public override string ToString()
         {
-            var sb = new StringBuilder(2*Hash.Length);
-            foreach (var b in Hash)
-                sb.Append(b.ToString("x2"));
+            int byteCount = HashLength(Type);
+            var sb = new StringBuilder(2 * byteCount);
+            for (int i = 0; i < byteCount; i++)
+                sb.Append(_bytes[_offset + i].ToString("x2"));
 
             return sb.ToString();
+        }
+
+        public static int HashLength(GitObjectIdType type)
+            => type switch
+            {
+                GitObjectIdType.Sha1 => 20,
+                GitObjectIdType.Sha256 => 32,
+                _ => throw new ArgumentOutOfRangeException(nameof(type))
+            };
+
+        public int CompareTo(GitObjectId? other)
+        {
+            if (other is null)
+                return 1;
+
+            int n = (int)Type - (int)other.Type;
+            if (n != 0)
+                return n;
+
+            return HashCompare(other);
+        }
+
+        string IFormattable.ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString(format);
+        }
+
+        public string ToString(string? format)
+        {
+            if (string.IsNullOrEmpty(format) || format == "G")
+                return ToString();
+
+            if (format == "x")
+                return ToString().Substring(0, 8);
+            else if (format == "X")
+                return ToString().Substring(0, 8).ToUpperInvariant();
+            if (format.StartsWith("x") && int.TryParse(format.Substring(1), out var xLen))
+                return ToString().Substring(0, xLen);
+            else if (format.StartsWith("X") && int.TryParse(format.Substring(1), out var xxlen))
+                return ToString().Substring(0, xxlen).ToUpperInvariant();
+
+            throw new ArgumentOutOfRangeException(nameof(format));
+        }
+
+        public static bool operator ==(GitObjectId? one, GitObjectId? other)
+            => one?.Equals(other) ?? (other is null);
+
+        public static bool operator !=(GitObjectId? one, GitObjectId? other)
+            => !(one?.Equals(other) ?? (other is null));
+
+        public byte this[int index]
+        {
+            get
+            {
+                if (index < 0 || index > HashLength(Type))
+                    throw new ArgumentOutOfRangeException(nameof(index));
+
+                return _bytes[index + _offset];
+            }
         }
     }
 }

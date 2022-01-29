@@ -2,11 +2,12 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Amp.Buckets.Git;
+using Amp.Git.Sets;
 
 namespace Amp.Git
 {
     [DebuggerDisplay("{EntryName} - {Id}")]
-    public abstract class GitTreeEntry : IEquatable<GitTreeEntry>, IGitReadObject
+    public abstract class GitTreeEntry : IEquatable<GitTreeEntry>, IGitObject
     {
         internal GitTreeEntry(GitTree tree, string name, GitObjectId objectId)
         {

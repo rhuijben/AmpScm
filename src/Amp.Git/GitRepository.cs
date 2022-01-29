@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -9,8 +11,10 @@ using Amp.Git.Sets;
 
 namespace Amp.Git
 {
-    public partial class GitRepository : IDisposable, IGitQueryRoot
+    [DebuggerDisplay("GitRepository {GitDir}")]
+    public partial class GitRepository : IDisposable, IGitQueryRoot, IServiceProvider
     {
+        readonly ServiceContainer _container;
         private bool disposedValue;
         public string? FullPath { get; }
         public bool IsBare { get; }
@@ -20,12 +24,15 @@ namespace Amp.Git
         // Not directly creatable for now
         private GitRepository()
         {
+            _container = new ServiceContainer();
+
             SetQueryProvider = new GitQueryProvider(this);
             Objects = new GitSet<GitObject>(this, () => this.Objects!);
             Commits = new GitCommitSet(this, () => this.Commits!);
             Blobs = new GitSet<GitBlob>(this, () => this.Blobs!);
             Tags = new GitSet<GitTag>(this, () => this.Tags!);
             Trees = new GitSet<GitTree>(this, () => this.Trees!);
+            References = new GitReferenceSet(this, () => this.References!);
 
             ObjectRepository = null!;
             GitDir = null!;
@@ -57,7 +64,9 @@ namespace Amp.Git
         public GitCommitSet Commits { get; }
         public GitSet<GitTree> Trees { get; }
         public GitSet<GitBlob> Blobs { get; }
+
         public GitSet<GitTag> Tags { get; }
+        public GitReferenceSet References { get; }
 
         internal GitQueryProvider SetQueryProvider { get; }
 
@@ -85,21 +94,45 @@ namespace Amp.Git
             GC.SuppressFinalize(this);
         }
 
-        public IQueryable<TResult> GetAll<TResult>()
-            where TResult : GitObject
+        IQueryable<TResult> IGitQueryRoot.GetAll<TResult>()
+            where TResult : class
         {
             return SetQueryProvider.GetAll<TResult>();
+        }
+
+        IQueryable<TResult> IGitQueryRoot.GetAllNamed<TResult>()
+            where TResult : class
+        {
+            return SetQueryProvider.GetAllNamed<TResult>();
         }
 
         ValueTask<TResult?> IGitQueryRoot.GetAsync<TResult>(GitObjectId objectId)
             where TResult : class
         {
-            return GetAsync<TResult>(objectId);
+            return SetQueryProvider.GetAsync<TResult>(objectId);
         }
 
-        internal ValueTask<TResult?> GetAsync<TResult>(GitObjectId objectId) where TResult : GitObject
+        ValueTask<TResult?> IGitQueryRoot.GetNamedAsync<TResult>(string name)
+            where TResult : class
         {
-            return SetQueryProvider.GetAsync<TResult>(objectId);
+            return SetQueryProvider.GetNamedAsync<TResult>(name);
+        }
+
+        internal ValueTask<TResult?> GetAsync<TResult>(GitObjectId id)
+            where TResult : GitObject
+        {
+            return SetQueryProvider.GetAsync<TResult>(id);
+        }
+
+        object? IServiceProvider.GetService(Type serviceType)
+        {
+            return ((IServiceProvider)_container).GetService(serviceType);
+        }
+
+        internal T? GetService<T>()
+            where T : class
+        {
+            return _container.GetService(typeof(T)) as T;
         }
     }
 }

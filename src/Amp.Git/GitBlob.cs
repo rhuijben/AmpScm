@@ -11,6 +11,8 @@ namespace Amp.Git
     {
         private GitBucket? _rdr;
 
+        public sealed override GitObjectType Type => GitObjectType.Blob;
+
         public GitBlob(GitRepository repository, GitObjectId id)
             : base(repository, id)
         {

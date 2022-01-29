@@ -4,12 +4,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Amp.Git.Sets;
 
 namespace Amp.Git.Implementation
 {
     internal class GitQueryVisitor : ExpressionVisitor
     {
         ConstantExpression? _defaultRoot;
+
+        System.Reflection.MethodInfo GetMethod<TOn>(Expression<Func<TOn, object>> callExpression)
+        {
+            return (callExpression.Body as MethodCallExpression)?.Method ?? throw new ArgumentOutOfRangeException(nameof(callExpression));
+        }
  
         // Fold all root references to exxactly the same value
         protected override Expression VisitConstant(ConstantExpression node)
@@ -46,7 +52,10 @@ namespace Amp.Git.Implementation
 
                         var newArguments = node.Arguments.ToArray();
 
-                        newArguments[i] = Expression.Call(_defaultRoot, "GetAll", new[] { elementType! });
+                        if (typeof(GitObject).IsAssignableFrom(elementType))
+                            newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAll<GitObject>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
+                        else
+                            newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAllNamed<GitReference>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
 
                         node = node.Update(node.Object!, newArguments);
                     }

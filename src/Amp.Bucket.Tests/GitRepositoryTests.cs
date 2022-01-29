@@ -15,7 +15,7 @@ namespace Amp.BucketTests
         public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
-        public void WalkCommits()
+        public void WalkCommitsEmpty()
         {
             using (var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Init")))
             {
@@ -71,7 +71,7 @@ namespace Amp.BucketTests
         }
 
         [TestMethod]
-        public async Task WalkObjectsViaObjectRepository()
+        public async Task WalkCommitsViaObjectRepository()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
@@ -91,13 +91,14 @@ namespace Amp.BucketTests
         }
 
         [TestMethod]
-        public async Task WalkObjectsAsync()
+        public async Task WalkCommitsAsync()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
             await foreach(var c in repo.Commits)
             {
-                Console.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
+                Console.WriteLine($"Commit {c.Id:x10} - {GitTools.FirstLine(c.Message)}");
+                Console.WriteLine($"Author: {c?.Author.ToString() ?? "-"}");
                 if (c.Parent != null)
                     Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
                 Console.WriteLine($" -tree {c.Tree?.Id}");                
@@ -111,13 +112,13 @@ namespace Amp.BucketTests
         }
 
         [TestMethod]
-        public void WalkObjects()
+        public void WalkCommits()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
             foreach (var c in repo.Commits)
             {
-                Console.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
+                Console.WriteLine($"Commit {c.Id:x8} - {GitTools.FirstLine(c.Message)}");
                 if (c.Parent != null)
                     Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
                 Console.WriteLine($" -tree {c.Tree?.Id}");

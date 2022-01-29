@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Amp.Buckets.Specialized;
+using Amp.Git;
 
 namespace Amp.Buckets.Git
 {

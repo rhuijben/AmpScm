@@ -16,11 +16,13 @@ namespace Amp.Git.Objects
         Bucket? _fb;
         int _ver;
         uint[]? _fanOut;
+        GitObjectIdType _type;
 
         public PackObjectRepository(GitRepository repository, string packFile)
             : base(repository)
         {
             _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
+            _type = repository.InternalConfig.IdType;
         }
 
         internal static uint ToHost(uint value)
@@ -88,7 +90,6 @@ namespace Amp.Git.Objects
         private bool TryFindOid(byte[] oids, GitObjectId objectId, out uint index)
         {
             int sz;
-            int hashLen = objectId.Hash.Length;
 
             if (oids.Length == 0)
             {
@@ -97,9 +98,9 @@ namespace Amp.Git.Objects
             }
 
             if (_ver == 2)
-                sz = Repository.InternalConfig.IdBytes;
+                sz = GitObjectId.HashLength(_type);
             else if (_ver == 1)
-                sz = Repository.InternalConfig.IdBytes + 4;
+                sz = GitObjectId.HashLength(_type) + 4;
             else
             {
                 index = 0;
@@ -113,29 +114,19 @@ namespace Amp.Git.Objects
             {
                 int mid = (first + c) / 2;
 
-                var check = new Span<byte>(oids, sz * mid, hashLen);
-                bool equal = true;
+                var check = GitObjectId.FromByteArrayOffset(_type, oids, sz * mid);
 
-                for (int i = 0; i < hashLen; i++)
-                {
-                    int n = objectId.Hash[i] - check[i];
+                int n = objectId.HashCompare(check);
 
-                    if (n == 0)
-                        continue;
-
-                    equal = false;
-                    if (n < 0)
-                        c = mid;
-                    else
-                        first = mid + 1;
-                    break;
-                }
-
-                if (equal)
+                if (n == 0)
                 {
                     index = (uint)mid;
                     return true;
                 }
+                else if (n < 0)
+                    c = mid;
+                else
+                    first = mid + 1;
             }
 
             if (first >= count)
@@ -144,19 +135,10 @@ namespace Amp.Git.Objects
                 return false;
             }
 
-            var check2 = new Span<byte>(oids, sz * first, hashLen);
-            for (int i = 0; i < objectId.Hash.Length; i++)
-            {
-                int n = objectId.Hash[i] - check2[i];
-
-                if (n != 0)
-                {
-                    index = 0;
-                    return false;
-                }
-            }
+            var check2 = GitObjectId.FromByteArrayOffset(_type, oids, sz * first);
             index = (uint)first;
-            return true;
+
+            return objectId.HashCompare(check2) == 0;
         }
 
         private byte[] GetOidArray(uint start, uint count)
@@ -235,13 +217,13 @@ namespace Amp.Git.Objects
             if (_ver == 2)
             {
                 int idBytes = Repository.InternalConfig.IdBytes;
-                return new GitObjectId(Repository.InternalConfig.IdType, oidArray.Skip(index * idBytes).Take(Repository.InternalConfig.IdBytes).ToArray());
+                return GitObjectId.FromByteArrayOffset(Repository.InternalConfig.IdType, oidArray, index * idBytes);
             }
             else if (_ver == 1)
             {
                 // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
                 int blockBytes = 4 + Repository.InternalConfig.IdBytes;
-                return new GitObjectId(Repository.InternalConfig.IdType, oidArray.Skip(index * blockBytes + 4).Take(Repository.InternalConfig.IdBytes).ToArray());
+                return GitObjectId.FromByteArrayOffset(Repository.InternalConfig.IdType, oidArray, index * blockBytes + 4);
             }
 
             throw new GitRepositoryException("Unsupported pack version");
@@ -255,10 +237,10 @@ namespace Amp.Git.Objects
             if (_fanOut is null)
                 return null;
 
-            byte byte0 = objectId.Hash[0];
+            byte byte0 = objectId[0];
 
-            uint start = (byte0 == 0) ? 0 : _fanOut![byte0-1];
-            uint count = _fanOut![byte0] - start;            
+            uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
+            uint count = _fanOut![byte0] - start;
 
             byte[] oids = GetOidArray(start, count);
 
