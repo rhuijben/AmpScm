@@ -11,15 +11,17 @@ namespace Amp.Git
     {
         private GitBucket? _rdr;
 
-        public GitTag(GitRepository repository, GitObjectId id)
+        internal GitTag(GitRepository repository, GitObjectId id)
             : base(repository, id)
         {
         }
 
-        public GitTag(GitRepository repository, GitBucket rdr, GitObjectId id) 
+        internal GitTag(GitRepository repository, GitBucket rdr, GitObjectId id) 
             : this(repository, id)
         {
             _rdr = rdr;
         }
+
+        public override GitObjectType Type => GitObjectType.Tag;
     }
 }

@@ -10,8 +10,23 @@ using System.Threading.Tasks;
 using Amp.Buckets.Git;
 using Amp.Git.Implementation;
 
-namespace Amp.Git
+namespace Amp.Git.Sets
 {
+    public interface IGitObject
+    {
+        ValueTask Read();
+    }
+
+    public interface IGitOidObject : IGitObject
+    {
+        GitObjectId Id { get; }
+    }
+
+    public interface IGitNamedObject : IGitObject
+    {
+        public string Name { get; }
+    }
+
     public class GitSet
     {
         internal GitSet()
@@ -63,6 +78,11 @@ namespace Amp.Git
         public ValueTask<T?> GetAsync(GitObjectId id)
         {
             return Repository.SetQueryProvider.GetAsync<T>(id);
+        }
+
+        public T? this[GitObjectId id]
+        {
+            get => Repository.SetQueryProvider.GetAsync<T>(id).Result;
         }
     }
 }

@@ -18,16 +18,18 @@ namespace Amp.Git
         List<GitTreeEntry> _entries = new List<GitTreeEntry>();
         private GitBucket? _rdr;
 
-        public GitTree(GitRepository repository, GitObjectId id)
+        internal GitTree(GitRepository repository, GitObjectId id)
             : base(repository, id)
         {
         }
 
-        public GitTree(GitRepository repository, GitBucket rdr, GitObjectId id)
+        internal GitTree(GitRepository repository, GitBucket rdr, GitObjectId id)
             : this(repository, id)
         {
             _rdr = rdr;
         }
+
+        public override GitObjectType Type => GitObjectType.Tree;
 
         private async ValueTask ReadNext()
         {

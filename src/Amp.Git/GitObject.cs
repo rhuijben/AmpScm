@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Amp.Buckets.Git;
+using Amp.Git.Sets;
 
 namespace Amp.Git
 {
-    interface IGitReadObject
-    {
-        ValueTask Read();
-    }
-
-    public class GitObject : IGitReadObject, IEquatable<GitObject>
+    [DebuggerDisplay("{Type} {Id.ToString(\"x12\"),nq}")]
+    public abstract class GitObject : IEquatable<GitObject>, IGitOidObject
     {
         protected internal GitRepository Repository { get; }
         public GitObjectId Id { get; }
+
+        public abstract GitObjectType Type { get; }
 
         protected GitObject(GitRepository repository, GitObjectId id)
         {
@@ -59,6 +59,16 @@ namespace Amp.Git
         public override int GetHashCode()
         {
             return Id.GetHashCode();
+        }
+
+        public static bool operator == (GitObject? one, GitObject? other)
+        {
+            return one?.Equals(other) ?? (other is null);
+        }
+
+        public static bool operator !=(GitObject? one, GitObject? other)
+        {
+            return !(one?.Equals(other) ?? (other is null));
         }
     }
 }

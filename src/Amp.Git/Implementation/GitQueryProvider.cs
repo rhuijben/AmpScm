@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -38,7 +39,9 @@ namespace Amp.Git.Implementation
 
         public object? Execute(Expression expression)
         {
-            throw new NotImplementedException();
+            expression = new GitQueryVisitor().Visit(expression);
+
+            return Expression.Lambda<Func<object>>(expression).Compile().Invoke();
         }
 
         public TResult Execute<TResult>(Expression expression)
@@ -48,6 +51,16 @@ namespace Amp.Git.Implementation
             return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
         }
 
+        internal IAsyncEnumerator<T> GetNamedAsyncEnumerator<T>(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal IEnumerable<TResult> GetNamedEnumerable<TResult>()
+        {
+            throw new NotImplementedException();
+        }
+
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
         {
             expression = new GitQueryVisitor().Visit(expression);
@@ -55,9 +68,20 @@ namespace Amp.Git.Implementation
             return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
         }
 
-        public List<T> GetList<T>()
+        public ValueTask<T?> GetNamedAsync<T>(object id)
         {
-            return new List<T>();
+            throw new NotImplementedException();
+        }
+
+        internal IList GetNamedList<T>()
+        {
+            return new List<T>(GetNamedEnumerable<T>());
+        }
+
+        public List<T> GetList<T>()
+            where T : GitObject
+        {
+            return new List<T>(GetEnumerable<T>());
         }
 
         public IAsyncEnumerator<TResult> GetAsyncEnumerator<TResult>(CancellationToken cancellationToken = default)
@@ -90,6 +114,18 @@ namespace Amp.Git.Implementation
             }
             else
                 return null;
-        }        
+        }
+
+        public IQueryable<TResult> GetAllNamed<TResult>()
+            where TResult : class, IGitNamedObject
+        {
+            return GetNamedEnumerable<TResult>().AsQueryable();
+        }
+
+        public ValueTask<TResult?> GetNamedAsync<TResult>(string name)
+            where TResult : class, IGitNamedObject
+        {
+            return default;// await Repository.ObjectRepository.GetNamed<TResult>(name);
+        }
     }
 }

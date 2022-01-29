@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Amp.Buckets;
 using Amp.Buckets.Git;
 using Amp.Buckets.Specialized;
+using Amp.Git;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Amp.BucketTests

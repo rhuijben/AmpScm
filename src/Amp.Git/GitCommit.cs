@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,12 +9,16 @@ using Amp.Buckets.Git;
 
 namespace Amp.Git
 {
+    [DebuggerDisplay("{DebuggerDisplay, nq}")]
     public class GitCommit : GitObject
     {
         object? _tree;
         object? _parent;
         Dictionary<string, string>? _headers;
         string? _message;
+        string? _summary;
+        GitSignature? _author;
+        GitSignature? _committer;
 
         public GitCommit(GitRepository repository, GitObjectId id)
             : base(repository, id)
@@ -21,11 +26,13 @@ namespace Amp.Git
             _tree = null;
         }
 
-        public GitCommit(GitRepository repository, GitBucket rdr, GitObjectId id) 
+        public GitCommit(GitRepository repository, GitBucket rdr, GitObjectId id)
             : this(repository, id)
         {
             _tree = rdr;
         }
+
+        public override sealed GitObjectType Type => GitObjectType.Commit;
 
         public GitTree Tree
         {
@@ -36,16 +43,24 @@ namespace Amp.Git
 
                 Read();
 
-                if (_tree is string s && GitObjectId.TryParse(s, out var oid))
+                if (_tree is string s && !string.IsNullOrEmpty(s) && GitObjectId.TryParse(s, out var oid))
                 {
                     _tree = oid;
 
-                    var t = Repository.ObjectRepository.Get<GitTree>(oid).Result; // BAD async
-
-                    if (t != null)
+                    try
                     {
-                        _tree = t;
-                        return t;
+                        var t = Repository.ObjectRepository.Get<GitTree>(oid).Result; // BAD async
+
+                        if (t != null)
+                        {
+                            _tree = t;
+                            return t;
+                        }
+                    }
+                    catch
+                    {
+                        _tree = s; // Continue later
+                        throw;
                     }
                 }
 
@@ -83,10 +98,40 @@ namespace Amp.Git
         {
             get
             {
-                if (_message == null)
+                if (_message is null)
                     Read();
 
                 return _message;
+            }
+        }
+
+        public string? Summary
+        {
+            get
+            {
+                return _summary ?? (_summary = GitTools.CreateSummary(Message));
+            }
+        }
+
+        public GitSignature Author
+        {
+            get
+            {
+                if (_author is null)
+                    Read();
+
+                return _author!;
+            }
+        }
+
+        public GitSignature? Committer
+        {
+            get
+            {
+                if (_committer is null)
+                    Read();
+
+                return _committer;
             }
         }
 
@@ -94,9 +139,10 @@ namespace Amp.Git
         {
             if (_tree is Bucket b)
             {
+                _tree = "";
                 using var s = b.AsReader();
 
-                while(s.ReadLine() is string line)
+                while (s.ReadLine() is string line)
                 {
                     if (line.Length == 0)
                         break;
@@ -115,6 +161,13 @@ namespace Amp.Git
 
                             _parent = id;
                             break;
+                        case "author":
+                            _author = new GitSignature(parts[1]);
+                            break;
+                        case "committer":
+                            _committer = new GitSignature(parts[1]);
+                            break;
+
                         default:
                             _headers ??= new Dictionary<string, string>();
                             if (_headers.TryGetValue(parts[0], out var v))
@@ -126,7 +179,18 @@ namespace Amp.Git
                 }
 
                 _message = s.ReadToEnd();
-                b.Dispose();
+            }
+        }
+
+        [DebuggerHidden]
+        private string DebuggerDisplay
+        {
+            get
+            {
+                if (_message == null)
+                    return $"Commit {Id:x12}";
+                else
+                    return $"Commit {Id:x12} - {Summary}";
             }
         }
     }

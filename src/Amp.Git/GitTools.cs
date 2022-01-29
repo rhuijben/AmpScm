@@ -48,5 +48,25 @@ namespace Amp.Git
 
             return message.Split(new char[] { '\n' }, 2)[0].Trim();
         }
+
+        internal static string? CreateSummary(string? message)
+        {
+            if (message == null)
+                return null;
+            
+            if (message.Contains('\r'))
+                message = message.Replace("\r", "");
+
+            var lines = message.Split(new char[] { '\n' }, 4);
+
+            int st;
+            for(st = 0; st < lines.Length; st++)
+            {
+                if (string.IsNullOrWhiteSpace(lines[st]))
+                    break;
+            }
+
+            return  string.Join("\n", lines.Take(st));
+        }
     }
 }
