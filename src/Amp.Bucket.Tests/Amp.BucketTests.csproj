@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Amp.Buckets\Amp.Buckets.csproj" />
+		<ProjectReference Include="..\Amp.Git.Client\Amp.Git.Client.csproj" />
 		<ProjectReference Include="..\Amp.Git\Amp.Git.csproj" />
 	</ItemGroup>
 

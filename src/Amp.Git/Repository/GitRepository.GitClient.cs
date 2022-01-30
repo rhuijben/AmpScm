@@ -14,7 +14,6 @@ namespace Amp.Git
 {
     partial class GitRepository
     {
-
         internal GitRepository(GitRepositoryOpenArgs a)
             : this(GitRepositoryOpenArgs.NotNull(a).Path, a.Bare)
         {
