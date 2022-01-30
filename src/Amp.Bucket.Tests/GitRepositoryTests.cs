@@ -83,7 +83,7 @@ namespace Amp.BucketTests
                 Console.WriteLine($" -tree {c.Tree?.Id}");
 
                 //if (c.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12")
-                foreach (var v in c.Tree)
+                foreach (var v in c.Tree!)
                 {
                     Console.WriteLine($"   - {v.Name}");
                 }
@@ -123,7 +123,7 @@ namespace Amp.BucketTests
                     Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
                 Console.WriteLine($" -tree {c.Tree?.Id}");
 
-                foreach (var v in c.Tree)
+                foreach (var v in c.Tree!)
                 {
                     Console.WriteLine($"   - {v.Name}");
                 }
