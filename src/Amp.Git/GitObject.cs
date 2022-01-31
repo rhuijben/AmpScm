@@ -41,7 +41,7 @@ namespace Amp.Git
             }
         }
 
-        public virtual ValueTask Read()
+        public virtual ValueTask ReadAsync()
         {
             return default;
         }

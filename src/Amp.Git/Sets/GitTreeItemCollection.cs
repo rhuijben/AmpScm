@@ -43,7 +43,7 @@ namespace Amp.Git.Sets
 
                         inside ??= new Stack<(IAsyncEnumerator<GitTreeEntry>, string)>();
 
-                        await dir.Read();
+                        await dir.ReadAsync();
 
                         var t = dir.Tree?.GetAsyncEnumerator();
 

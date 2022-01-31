@@ -12,17 +12,17 @@ namespace Amp.Git.Objects
     internal class PackObjectRepository : GitObjectRepository
     {
         readonly string _packFile;
+        readonly GitObjectIdType _idType;
         FileStream? _fIdx;
         Bucket? _fb;
         int _ver;
         uint[]? _fanOut;
-        GitObjectIdType _type;
 
-        public PackObjectRepository(GitRepository repository, string packFile)
+        public PackObjectRepository(GitRepository repository, string packFile, GitObjectIdType idType)
             : base(repository)
         {
             _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
-            _type = repository.InternalConfig.IdType;
+            _idType = idType;
         }
 
         internal static uint ToHost(uint value)
@@ -98,9 +98,9 @@ namespace Amp.Git.Objects
             }
 
             if (_ver == 2)
-                sz = GitObjectId.HashLength(_type);
+                sz = GitObjectId.HashLength(_idType);
             else if (_ver == 1)
-                sz = GitObjectId.HashLength(_type) + 4;
+                sz = GitObjectId.HashLength(_idType) + 4;
             else
             {
                 index = 0;
@@ -114,7 +114,7 @@ namespace Amp.Git.Objects
             {
                 int mid = (first + c) / 2;
 
-                var check = GitObjectId.FromByteArrayOffset(_type, oids, sz * mid);
+                var check = GitObjectId.FromByteArrayOffset(_idType, oids, sz * mid);
 
                 int n = objectId.HashCompare(check);
 
@@ -135,7 +135,7 @@ namespace Amp.Git.Objects
                 return false;
             }
 
-            var check2 = GitObjectId.FromByteArrayOffset(_type, oids, sz * first);
+            var check2 = GitObjectId.FromByteArrayOffset(_idType, oids, sz * first);
             index = (uint)first;
 
             return objectId.HashCompare(check2) == 0;
@@ -145,7 +145,7 @@ namespace Amp.Git.Objects
         {
             if (_ver == 2)
             {
-                int sz = Repository.InternalConfig.IdBytes;
+                int sz = GitObjectId.HashLength(_idType);
                 byte[] data = new byte[sz * count];
 
                 _fIdx!.Position = 8 /* header */ + 256 * 4 /* fanout */ + sz * start;
@@ -157,7 +157,7 @@ namespace Amp.Git.Objects
             }
             else if (_ver == 1)
             {
-                int sz = Repository.InternalConfig.IdBytes + 4;
+                int sz = GitObjectId.HashLength(_idType) + 4;
                 byte[] data = new byte[sz * count];
 
                 _fIdx!.Position = 256 * 4 /* fanout */ + sz * start;
@@ -175,7 +175,7 @@ namespace Amp.Git.Objects
         {
             if (_ver == 2)
             {
-                int sz = Repository.InternalConfig.IdBytes;
+                int sz = GitObjectId.HashLength(_idType);
                 byte[] data = new byte[4 * count];
 
                 _fIdx!.Position = 8 /* header */ + 256 * 4 /* fanout */
@@ -206,7 +206,7 @@ namespace Amp.Git.Objects
             else if (_ver == 1)
             {
                 // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
-                return ToHost(BitConverter.ToUInt32(offsetArray, index * (4 + Repository.InternalConfig.IdBytes)));
+                return ToHost(BitConverter.ToUInt32(offsetArray, index * (4 + GitObjectId.HashLength(_idType))));
             }
             else
                 return uint.MaxValue;
@@ -216,14 +216,14 @@ namespace Amp.Git.Objects
         {
             if (_ver == 2)
             {
-                int idBytes = Repository.InternalConfig.IdBytes;
-                return GitObjectId.FromByteArrayOffset(Repository.InternalConfig.IdType, oidArray, index * idBytes);
+                int idBytes = GitObjectId.HashLength(_idType);
+                return GitObjectId.FromByteArrayOffset(_idType, oidArray, index * idBytes);
             }
             else if (_ver == 1)
             {
                 // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
-                int blockBytes = 4 + Repository.InternalConfig.IdBytes;
-                return GitObjectId.FromByteArrayOffset(Repository.InternalConfig.IdType, oidArray, index * blockBytes + 4);
+                int blockBytes = 4 + GitObjectId.HashLength(_idType);
+                return GitObjectId.FromByteArrayOffset(_idType, oidArray, index * blockBytes + 4);
             }
 
             throw new GitRepositoryException("Unsupported pack version");
@@ -254,7 +254,7 @@ namespace Amp.Git.Objects
                 var rdr = await _fb.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr.NoClose(), GitObjectIdType.Sha1, Repository.ObjectRepository.ResolveByOid);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr.NoClose(), _idType, Repository.ObjectRepository.ResolveByOid);
 
                 await pf.ReadRemainingBytesAsync();
 
@@ -287,7 +287,7 @@ namespace Amp.Git.Objects
                 var rdr = await _fb.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, GitObjectIdType.Sha1, Repository.ObjectRepository.ResolveByOid);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
 
                 await pf.ReadRemainingBytesAsync();
 

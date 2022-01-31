@@ -10,7 +10,9 @@ namespace Amp.Git.Objects
 {
     internal class GitRepositoryObjectRepository : GitObjectRepository
     {
-        string ObjectsDir { get; }
+        public string ObjectsDir { get; }
+        public string PromisorRemote { get; private set; }
+        public GitObjectIdType _idType;
 
 
         public GitRepositoryObjectRepository(GitRepository repository, string objectsDir)
@@ -21,6 +23,7 @@ namespace Amp.Git.Objects
 
             ObjectsDir = objectsDir;
              _repositories = new Lazy<GitObjectRepository[]>(() => GetRepositories().ToArray());
+            _idType = GitObjectIdType.Sha1;
         }
 
 
@@ -28,12 +31,51 @@ namespace Amp.Git.Objects
 
         private IEnumerable<GitObjectRepository> GetRepositories()
         {
+            int format = Repository.Configuration.GetInt("core", "repositoryformatversion", -1);
+            if (format == 1)
+            {
+                foreach (var (key, value) in Repository.Configuration.GetGroup("extensions", null))
+                {
+                    switch (key.ToLowerInvariant())
+                    {
+                        case "nop":
+                            break;
+                        case "partialclone":
+                            PromisorRemote = value;
+                            break;
+                        case "objectformat":
+                            if (string.Equals(value, "sha1", StringComparison.OrdinalIgnoreCase))
+                            {
+                                /* Do nothing */
+                            }
+                            else if (string.Equals(value, "sha256", StringComparison.OrdinalIgnoreCase))
+                            {
+                                Repository.SetSHA256(); // Ugly experimental hack for now
+                                _idType = GitObjectIdType.Sha256;
+                            }
+                            else
+                                throw new GitException($"Found unsupported objectFormat {value} in repository {Repository.FullPath}");
+                            break;
+#if DEBUG
+                        case "worktreeconfig":
+                            break;
+#endif
+                        default:
+                            throw new GitException($"Found unsupported extension {key} in repository {Repository.FullPath}");
+                    }
+                }
+            }
+            else if (format != 0)
+            {
+                throw new GitException($"Found unsupported repository format {format} for {Repository.FullPath}");
+            }
+
             // TODO: Check for multipack
             // TODO: Check for commitgraph
 
             foreach(var pack in Directory.GetFiles(Path.Combine(ObjectsDir, "pack"), "pack-*.pack"))
             {
-                yield return new PackObjectRepository(Repository, pack);
+                yield return new PackObjectRepository(Repository, pack, _idType);
             }
 
             yield return new FileObjectRepository(Repository, ObjectsDir);

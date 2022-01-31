@@ -16,9 +16,20 @@ namespace Amp.Buckets
         CRLF        = 0x04,
         Zero        = 0x08,
 
+
+        AnyEol      = LF | CR | CRLF,
+
         EolMask     = 0xFF,
-        CRSplit   = 0x100000
+        CRSplit     = 0x100000
     }
+
+    public class BucketEolState
+    {
+        internal byte? _kept;
+
+        public bool IsEmpty => !_kept.HasValue;
+    }
+
     partial class Bucket
     {
         public async virtual ValueTask<(BucketBytes, BucketEol)> ReadUntilEolAsync(BucketEol acceptableEols, int requested = int.MaxValue)
@@ -116,13 +127,13 @@ namespace Amp.Buckets
             {
                 found = BucketEol.LF;
             }
-            else if (BucketEol.CR != (acceptableEols & BucketEol.CR | BucketEol.CRLF) && read[read.Length - 1] == '\r')
+            else if (BucketEol.CR == (acceptableEols & BucketEol.CR | BucketEol.CRLF) && read[read.Length - 1] == '\r')
             {
                 found = BucketEol.CR;
             }
             else if (0 != (acceptableEols & BucketEol.CRLF) && read[read.Length - 1] == '\r')
             {
-                if (single_cr_requested && requested == pdLength)
+                if (single_cr_requested && requested == read.Length)
                     found = BucketEol.CR;
                 else
                     found = BucketEol.CRSplit;

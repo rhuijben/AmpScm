@@ -11,6 +11,7 @@ namespace Amp.Buckets.Git
     {
         long _startOffset;
         long? _length;
+
         public GitObjectFileBucket(Bucket inner) 
             : base(new ZLibBucket(inner))
         {
@@ -22,7 +23,7 @@ namespace Amp.Buckets.Git
         {
             if (_startOffset == 0)
             {
-                var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.Zero);
+                var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.Zero, null);
 
                 if (Type == default)
                 {

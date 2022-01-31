@@ -38,7 +38,7 @@ namespace Amp.Git
             return InTree.GetHashCode() ^ Name.GetHashCode();
         }
 
-        public abstract ValueTask Read();
+        public abstract ValueTask ReadAsync();
 
         public abstract GitObject GitObject { get; }
 
@@ -64,13 +64,13 @@ namespace Amp.Git
             get
             {
                 if (!_loaded)
-                    Read().GetAwaiter().GetResult();
+                    ReadAsync().GetAwaiter().GetResult();
 
                 return _object!;
             }
         }
 
-        public override async ValueTask Read()
+        public override async ValueTask ReadAsync()
         {
             _object = await InTree.Repository.GetAsync<TObject>(Id);
             _loaded = true;

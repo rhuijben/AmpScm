@@ -61,18 +61,43 @@ namespace Amp.Buckets.Specialized
             }
         }
 
-        public async static ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, int requested = int.MaxValue)
+        public async static ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, BucketEolState? eolState, int requested = int.MaxValue)
         {
             IEnumerable<byte>? result = null;
-            bool inSplit = false;
+
+            if (eolState?._kept.HasValue ?? false)
+            {
+                var kept = eolState._kept!.Value;
+                eolState._kept = null;
+
+                switch (kept)
+                {
+                    case (byte)'\r' when (0 != (acceptableEols & BucketEol.CR)):
+                        return (new BucketBytes(new[] { kept }, 0, 1), BucketEol.CR);
+                    case (byte)'\0' when (0 != (acceptableEols & BucketEol.Zero)):
+                        return (new BucketBytes(new[] { kept }, 0, 1), BucketEol.Zero);
+                    default:
+                        result = new[] { kept };
+                        break;
+                }
+            }
+            else if (0 != (acceptableEols & BucketEol.CRLF) && eolState == null)
+            {
+                throw new ArgumentNullException(nameof(eolState));
+            }
             while (true)
             {
-                var (bb, eol) = await self.ReadUntilEolAsync(acceptableEols | (inSplit ? BucketEol.LF : BucketEol.None));
+                BucketBytes bb;
+                BucketEol eol;
+
+                (bb, eol) = await self.ReadUntilEolAsync(acceptableEols);
 
                 if (bb.IsEof)
                     return ((result != null) ? result.ToArray() : bb, eol);
                 else if (bb.IsEmpty)
                     throw new InvalidOperationException();
+                else if (result == null && eol != BucketEol.None && eol != BucketEol.CRSplit)
+                    return (bb, eol);
 
                 requested -= bb.Length;
 
@@ -87,7 +112,43 @@ namespace Amp.Buckets.Specialized
                 }
                 else if (eol == BucketEol.CRSplit)
                 {
-                    inSplit = true;
+                    // Bad case. We may have a \r that might be a \n
+
+                    var poll = await self.PollAsync(1);
+
+                    if (!poll.Data.IsEmpty && bb[0] == '\n')
+                    {
+                        // Phew, we were lucky. We got a \r\n
+                        result = result.Concat(new byte[] { bb[0] }).ToArray();
+
+                        await poll.Consume(1);
+
+                        return (result.ToArray(), BucketEol.CRLF);
+                    }
+                    else if (!poll.Data.IsEmpty)
+                    {
+                        // We got something else
+                        if (0 != (acceptableEols & BucketEol.CR))
+                        {
+                            // Keep the next byte for the next read :(
+                            eolState!._kept = bb[0];
+                            await poll.Consume(1);
+                            return (result.ToArray(), BucketEol.CR);
+                        }
+                        else
+                        {
+                            await poll.Consume(1);
+                            result = result.Concat(new byte[] { bb[0] }).ToArray();
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        // We are at eof, so no issues with future reads
+                        eol = (0 != (acceptableEols & BucketEol.CR) ? BucketEol.CR : BucketEol.None);
+
+                        return (result.ToArray(), eol);
+                    }
                 }
                 else if (eol == BucketEol.None)
                     continue;
@@ -102,14 +163,14 @@ namespace Amp.Buckets.Specialized
         {
             IEnumerable<byte>? result = null;
 
-            while(true)
+            while (true)
             {
                 using var poll = await self.PollAsync();
 
                 if (poll.Data.IsEof)
                     return (result != null) ? new BucketBytes(result.ToArray()) : poll.Data;
 
-                for(int i = 0; i < poll.Data.Length; i++)
+                for (int i = 0; i < poll.Data.Length; i++)
                 {
                     if (poll[i] == b)
                     {
@@ -134,12 +195,13 @@ namespace Amp.Buckets.Specialized
             }
         }
 
-        public static int CharCount(this BucketEol eol) 
-            => eol switch {
-                    BucketEol.CRLF => 2,
-                    BucketEol.None => 0,                    
-                    _ => 1,
-                };
+        public static int CharCount(this BucketEol eol)
+            => eol switch
+            {
+                BucketEol.CRLF => 2,
+                BucketEol.None => 0,
+                _ => 1,
+            };
 
         public class PollData : IDisposable
         {
@@ -234,7 +296,7 @@ namespace Amp.Buckets.Specialized
 
                             if (equal)
                             {
-                                return new BucketBytes(arr, offset-copy, bb.Length+copy);
+                                return new BucketBytes(arr, offset - copy, bb.Length + copy);
                             }
                         }
 
@@ -306,7 +368,7 @@ namespace Amp.Buckets.Specialized
 
             if (arr is not null && offset > alreadyRead)
             {
-                if ((alreadyRead == 1 && arr[offset-1] == byte0)
+                if ((alreadyRead == 1 && arr[offset - 1] == byte0)
                     || arr.Skip(offset - alreadyRead).Take(alreadyRead).SequenceEqual(dataBytes!))
                 {
                     // The very lucky, but common case. The peek buffer starts with what we read
@@ -325,7 +387,7 @@ namespace Amp.Buckets.Specialized
                 else
                     Array.Copy(dataBytes!, result, alreadyRead);
 
-                for(int i = alreadyRead; i < result.Length; i++)
+                for (int i = alreadyRead; i < result.Length; i++)
                 {
                     result[i] = data[i - alreadyRead];
                 }
