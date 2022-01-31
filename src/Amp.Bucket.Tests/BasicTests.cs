@@ -343,19 +343,51 @@ namespace Amp.BucketTests
 
             Assert.AreEqual("abc\0", total.Replace("|", "").Replace("!", ""));
             Assert.AreEqual("|a|bc|\0!", total);
+
+
+            r = MakeBucket("a\r\nb\rcd\r", "\nefg\rhi\r\n", "j\r", "\rk");
+
+            total = "";
+            while (true)
+            {
+                (bb, eol) = await r.ReadUntilEolAsync(BucketEol.AnyEol);
+
+                if (bb.IsEof)
+                    break;
+
+                total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
+            }
+
+            Assert.AreEqual("|a[CRLF]|b[CR]|cd[CRSplit]|[LF]|efg[CR]|hi[CRLF]|j[CRSplit]|[CR]|k[None]",
+                            total.Replace("\r", "/r/"));
+
+            r = MakeBucket("a\r");
+            total = "";
+            while (true)
+            {
+                (bb, eol) = await r.ReadUntilEolAsync(BucketEol.AnyEol);
+
+                if (bb.IsEof)
+                    break;
+
+                total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
+            }
+
+            Assert.AreEqual("|a[CRSplit]",
+                            total.Replace("\r", "/r/"));
         }
 
         [TestMethod]
         public async Task ReadEolsFull()
         {
-            var (bb, eol) = await MakeBucket("abc\nabc").ReadUntilEolFullAsync(BucketEol.LF);
+            var (bb, eol) = await MakeBucket("abc\nabc").ReadUntilEolFullAsync(BucketEol.LF, new BucketEolState());
 
             Assert.AreEqual(4, bb.Length);
             Assert.AreEqual("abc\n", bb.ToASCIIString());
             Assert.AreEqual("abc", bb.ToASCIIString(eol));
             Assert.AreEqual(BucketEol.LF, eol);
 
-            (bb, eol) = await MakeBucket("abc\0abc").ReadUntilEolFullAsync(BucketEol.Zero);
+            (bb, eol) = await MakeBucket("abc\0abc").ReadUntilEolFullAsync(BucketEol.Zero, new BucketEolState());
 
             Assert.AreEqual(4, bb.Length);
             Assert.AreEqual("abc", bb.ToASCIIString(eol));
@@ -363,28 +395,29 @@ namespace Amp.BucketTests
 
             var b = MakeBucket("a", "b", "c", "\0a", "bc", "d\0a", "b", "c", "\0", "a");
 
-            (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.Zero);
+            (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.Zero, new BucketEolState());
 
             Assert.AreEqual(4, bb.Length);
             Assert.AreEqual("abc", bb.ToASCIIString(eol));
             Assert.AreEqual(BucketEol.Zero, eol);
 
-            (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.Zero);
+            (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.Zero, new BucketEolState());
             Assert.AreEqual(5, bb.Length);
             Assert.AreEqual("abcd", bb.ToASCIIString(eol));
             Assert.AreEqual(BucketEol.Zero, eol);
 
-            (bb, eol) = await b.ReadUntilEolAsync(BucketEol.Zero);
+            (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.Zero, new BucketEolState());
 
-            Assert.AreEqual(1, bb.Length);
-            Assert.AreEqual("a", bb.ToASCIIString(eol));
-            Assert.AreEqual(BucketEol.None, eol);
+            Assert.AreEqual(4, bb.Length);
+            Assert.AreEqual("abc", bb.ToASCIIString(eol));
+            Assert.AreEqual(BucketEol.Zero, eol);
 
             var r = MakeBucket("a", "b", "c", "\0");
             var total = "";
+            var state = new BucketEolState();
             while (true)
             {
-                (bb, eol) = await r.ReadUntilEolFullAsync(BucketEol.Zero);
+                (bb, eol) = await r.ReadUntilEolFullAsync(BucketEol.Zero, state);
 
                 if (bb.IsEof)
                     break;
@@ -397,6 +430,39 @@ namespace Amp.BucketTests
 
             Assert.AreEqual("abc\0", total.Replace("|", "").Replace("!", ""));
             Assert.AreEqual("|abc\0!", total);
+
+            r = MakeBucket("a\r\nb\rcd\r", "\nefg\rhi\r\n", "j\r", "\rk");
+
+            total = "";
+            state = new BucketEolState();
+            while (true)
+            {
+                (bb, eol) = await r.ReadUntilEolFullAsync(BucketEol.AnyEol, state);
+
+                if (bb.IsEof)
+                    break;
+
+                total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
+            }
+
+            Assert.AreEqual("|a[CRLF]|b[CR]|cd[CR]|cefg[CR]|hi[CRLF]|j[CR]|jk[None]",
+                            total.Replace("\r", "/r/"));
+
+            r = MakeBucket("a\r");
+            total = "";
+            state = new BucketEolState();
+            while (true)
+            {
+                (bb, eol) = await r.ReadUntilEolFullAsync(BucketEol.AnyEol, state);
+
+                if (bb.IsEof)
+                    break;
+
+                total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
+            }
+
+            Assert.AreEqual("|a[CR]",
+                            total.Replace("\r", "/r/"));
         }
 
         private Bucket MakeBucket(params string[] args)

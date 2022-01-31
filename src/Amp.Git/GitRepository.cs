@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Amp.Buckets.Git;
 using Amp.Git.Implementation;
+using Amp.Git.Repository;
 using Amp.Git.Sets;
 
 namespace Amp.Git
@@ -18,6 +19,7 @@ namespace Amp.Git
         private bool disposedValue;
         public string? FullPath { get; }
         public bool IsBare { get; }
+        readonly Lazy<GitConfiguration> _gitConfiguration;
 
         protected string GitDir { get; }
 
@@ -33,6 +35,7 @@ namespace Amp.Git
             Tags = new GitSet<GitTag>(this, () => this.Tags!);
             Trees = new GitSet<GitTree>(this, () => this.Trees!);
             References = new GitReferenceSet(this, () => this.References!);
+            _gitConfiguration = new Lazy<GitConfiguration>(LoadConfig);
 
             ObjectRepository = null!;
             GitDir = null!;
@@ -46,11 +49,16 @@ namespace Amp.Git
             // TODO: Needs config check
             if (bare && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git"))
             {
-                bare = false;
-                FullPath = Path.GetDirectoryName(FullPath) ?? throw new InvalidOperationException();
+                GitDir = FullPath;
+
+                if (!(Configuration?.GetBool("core", "bare", false) ?? false))
+                {
+                    bare = false;
+                    FullPath = Path.GetDirectoryName(FullPath) ?? throw new InvalidOperationException();
+                }
             }
 
-            IsBare = bare;
+                IsBare = bare;
 
             if (!IsBare)
                 GitDir = Path.Combine(FullPath, ".git");
@@ -67,6 +75,8 @@ namespace Amp.Git
 
         public GitSet<GitTag> Tags { get; }
         public GitReferenceSet References { get; }
+
+        public GitConfiguration Configuration => _gitConfiguration.Value;
 
         internal GitQueryProvider SetQueryProvider { get; }
 

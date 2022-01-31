@@ -69,7 +69,7 @@ namespace Amp.Buckets.Wrappers
 
             var v = Bucket.PeekAsync();
 
-            BucketBytes b = v.Result; // BAD async
+            BucketBytes b = v.AsTask().ConfigureAwait(true).GetAwaiter().GetResult(); // BAD async
 
             if (!b.IsEmpty)
                 return b[0];

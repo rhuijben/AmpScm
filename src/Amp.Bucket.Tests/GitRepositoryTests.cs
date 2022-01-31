@@ -33,6 +33,8 @@ namespace Amp.BucketTests
                 items = repo.Commits.Where(x => x != null).ToArray();
 
                 Assert.IsNotNull(items.Length);
+
+                Assert.AreEqual(false, repo.Configuration.GetBool("core", "isbare", false));
             }
         }
 

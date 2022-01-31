@@ -13,7 +13,7 @@ namespace Amp.Git.Objects
 
         protected GitObjectRepository(GitRepository repository)
         {
-            Repository = repository;
+            Repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
         public abstract IAsyncEnumerable<TGitObject> GetAll<TGitObject>()

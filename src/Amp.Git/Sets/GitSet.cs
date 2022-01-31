@@ -14,7 +14,7 @@ namespace Amp.Git.Sets
 {
     public interface IGitObject
     {
-        ValueTask Read();
+        ValueTask ReadAsync();
     }
 
     public interface IGitOidObject : IGitObject

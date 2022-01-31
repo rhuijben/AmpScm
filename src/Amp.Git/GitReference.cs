@@ -11,7 +11,7 @@ namespace Amp.Git
     {
         public string Name => throw new NotImplementedException();
 
-        public ValueTask Read()
+        public ValueTask ReadAsync()
         {
             throw new NotImplementedException();
         }
