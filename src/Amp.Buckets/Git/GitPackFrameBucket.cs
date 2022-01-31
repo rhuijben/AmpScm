@@ -46,7 +46,10 @@ namespace Amp.Buckets.Git
 
         public override ValueTask<BucketBytes> PeekAsync()
         {
-            return EmptyTask;
+            if (reader == null || state != frame_state.body)
+                return EmptyTask;
+
+            return reader.PeekAsync();
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
@@ -69,6 +72,11 @@ namespace Amp.Buckets.Git
             }
 
             return await reader!.ReadSkipAsync(requested);
+        }
+
+        public async ValueTask ReadTypeAsync()
+        {
+            await ReadInfoAsync();
         }
 
         public async ValueTask<bool> ReadInfoAsync()

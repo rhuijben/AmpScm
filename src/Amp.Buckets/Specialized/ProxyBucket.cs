@@ -51,6 +51,17 @@ namespace Amp.Buckets.Specialized
             return WrapDuplicate(r, reset) ?? r;
         }
 
+        public override ValueTask<(BucketBytes, BucketEol)> ReadUntilEolAsync(BucketEol acceptableEols, int requested = int.MaxValue)
+        {
+            return Inner.ReadUntilEolAsync(acceptableEols, requested);
+        }
+
+        public override ValueTask<TReadBucket?> ReadBucket<TReadBucket>()
+            where TReadBucket : class
+        {
+            return Inner.ReadBucket<TReadBucket>();
+        }
+
         protected virtual TBucket? WrapDuplicate(Bucket duplicatedInner, bool reset)
         {
             return null;

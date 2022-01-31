@@ -31,6 +31,29 @@ namespace Amp.Buckets.Git
             BaseBucket = baseBucket ?? throw new ArgumentNullException(nameof(baseBucket));
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (disposing && !DontDisposeInner)
+                {
+                    BaseBucket.Dispose();
+                }
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }
+        }
+
+        protected async override ValueTask DisposeAsyncCore()
+        {
+            if (!DontDisposeInner)
+                await BaseBucket.DisposeAsync();
+
+            await base.DisposeAsyncCore();
+        }
+
         public override long? Position => position;
 
         static uint NumberOfSetBits(uint i)
@@ -59,7 +82,7 @@ namespace Amp.Buckets.Git
                     var data = await Inner.ReadAsync(1);
 
                     if (data.IsEof)
-                        throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
+                        throw new GitBucketException($"Unexpected EOF on Source {Inner.Name} Bucket");
 
                     byte uc = data[0];
 
@@ -72,7 +95,7 @@ namespace Amp.Buckets.Git
                         long? base_size = await BaseBucket.ReadRemainingBytesAsync();
 
                         if (base_size != length)
-                            throw new InvalidOperationException($"Expected delta base size {length} doesn't match source size ({base_size}) on {BaseBucket.Name} Bucket");
+                            throw new GitBucketException($"Expected delta base size {length} doesn't match source size ({base_size}) on {BaseBucket.Name} Bucket");
 
                         length = 0;
                         p0 = -1;
@@ -83,7 +106,7 @@ namespace Amp.Buckets.Git
                     var data = await Inner.ReadAsync(1);
 
                     if (data.IsEof)
-                        throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
+                        throw new GitBucketException($"Unexpected EOF on Source {Inner.Name} Bucket");
 
                     byte uc = data[0];
 
@@ -137,7 +160,7 @@ namespace Amp.Buckets.Git
                     data = await Inner.ReadAsync(want);
 
                     if (data.IsEof)
-                        throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name}");
+                        throw new GitBucketException($"Unexpected EOF on Source {Inner.Name}");
 
                     if (!peeked)
                         want = NeedBytes(data[0]);
@@ -159,7 +182,7 @@ namespace Amp.Buckets.Git
                     copy_size = (uc & 0x7F);
 
                     if (copy_size == 0)
-                        throw new InvalidOperationException("0 operation is reserved");
+                        throw new GitBucketException("0 operation is reserved");
                 }
                 else
                 {
@@ -214,7 +237,7 @@ namespace Amp.Buckets.Git
                 var data = await BaseBucket.ReadAsync(Math.Min(requested, copy_size));
 
                 if (data.IsEof)
-                    throw new InvalidOperationException($"Unexpected EOF on Base {BaseBucket.Name} Bucket");
+                    throw new GitBucketException($"Unexpected EOF on Base {BaseBucket.Name} Bucket");
 
                 position += data.Length;
                 copy_size -= data.Length;
@@ -233,7 +256,7 @@ namespace Amp.Buckets.Git
                 var data = await Inner.ReadAsync(Math.Min(requested, copy_size));
 
                 if (data.IsEof)
-                    throw new InvalidOperationException($"Unexpected EOF on Source {Inner.Name} Bucket");
+                    throw new GitBucketException($"Unexpected EOF on Source {Inner.Name} Bucket");
 
                 position += data.Length;
                 copy_size -= data.Length;
@@ -354,9 +377,6 @@ namespace Amp.Buckets.Git
 
         public override async ValueTask<BucketBytes> PeekAsync()
         {
-            if (state == delta_state.base_seek)
-                await SeekBase();
-
             if (state == delta_state.base_copy)
             {
                 var data = await BaseBucket.PeekAsync();
@@ -368,16 +388,14 @@ namespace Amp.Buckets.Git
             }
             else if (state == delta_state.src_copy)
             {
-                var data = await BaseBucket.PeekAsync();
+                var data = await Inner.PeekAsync();
 
                 if (copy_size < data.Length)
                     data = data.Slice(0, copy_size);
 
                 return data;
             }
-            else if (state == delta_state.eof)
-                return BucketBytes.Eof;
-            else
+            else 
                 return BucketBytes.Empty;
         }
 

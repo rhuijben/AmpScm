@@ -33,6 +33,38 @@ namespace Amp.Git
 
         private async ValueTask ReadNext()
         {
+#if !Q
+            if (_rdr == null)
+                return;
+
+            int val;
+            string name;
+            var (bb, eol) = await _rdr.ReadUntilEolFullAsync(BucketEol.Zero);
+
+            if (bb.IsEof)
+            {
+                var r = _rdr;
+                _rdr = null;
+                await r.DisposeAsync();
+                return;
+            }
+
+            if (!bb.IsEmpty && bb[bb.Length - 1] == '\0')
+            {
+                string v = bb.ToUTF8String(eol);
+
+                var p = v.Split(new[] { ' ' }, 2);
+
+                val = int.Parse(p[0]);
+                name = v.Split(new[] { ' ' }, 2)[1];
+            }
+            else
+                throw new GitRepositoryException("Truncated tree");
+
+            bb = await _rdr.ReadFullAsync(Repository.InternalConfig.IdBytes);
+
+            _entries.Add(NewGitTreeEntry(name, val, new GitObjectId(Repository.InternalConfig.IdType, bb.ToArray())));
+#else
             if (_rdr == null)
                 return;
 
@@ -63,6 +95,7 @@ namespace Amp.Git
             bb = await _rdr.ReadFullAsync(Repository.InternalConfig.IdBytes);
 
             _entries.Add(NewGitTreeEntry(name, val, new GitObjectId(Repository.InternalConfig.IdType, bb.ToArray())));
+#endif
         }
 
         private GitTreeEntry NewGitTreeEntry(string name, int val, GitObjectId id)

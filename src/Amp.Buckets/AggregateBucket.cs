@@ -86,7 +86,7 @@ namespace Amp.Buckets
                 if (!r.IsEof)
                 {
                     if (r.Length == 0)
-                        throw new InvalidOperationException("Got 0 byte read");
+                        throw new InvalidOperationException($"Got 0 byte read on {_buckets[_n].Name} bucket");
 
                     _position += r.Length;
 
