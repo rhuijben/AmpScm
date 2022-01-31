@@ -58,7 +58,7 @@ namespace Amp.Git
                 }
             }
 
-                IsBare = bare;
+            IsBare = bare;
 
             if (!IsBare)
                 GitDir = Path.Combine(FullPath, ".git");
@@ -80,7 +80,7 @@ namespace Amp.Git
 
         internal GitQueryProvider SetQueryProvider { get; }
 
-        public Objects.GitObjectRepository ObjectRepository {get;}
+        public Objects.GitObjectRepository ObjectRepository { get; }
 
         protected virtual void Dispose(bool disposing)
         {

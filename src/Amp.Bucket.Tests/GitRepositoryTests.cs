@@ -34,7 +34,32 @@ namespace Amp.BucketTests
 
                 Assert.IsNotNull(items.Length);
 
-                Assert.AreEqual(false, repo.Configuration.GetBool("core", "isbare", false));
+                Assert.AreEqual(false, repo.Configuration.GetBool("core", "bare", false));
+            }
+        }
+
+        [TestMethod]
+        public void TestBareOpen()
+        {
+            using (var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "InitBare"), true))
+            {
+                Assert.IsTrue(repo.IsBare);
+
+                var items = repo.Commits.ToArray();
+
+                Assert.IsNotNull(items.Length);
+
+                var b = repo.Commits.Any();
+
+                Assert.IsFalse(b);
+
+                //repo.Commits.FirstOrDefault(x => x.Tree != null);
+
+                items = repo.Commits.Where(x => x != null).ToArray();
+
+                Assert.IsNotNull(items.Length);
+
+                Assert.AreEqual(true, repo.Configuration.GetBool("core", "bare", false));
             }
         }
 
