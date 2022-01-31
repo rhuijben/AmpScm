@@ -21,6 +21,8 @@ namespace Amp.Buckets.Git
     {
         GitObjectType Type { get; }
 
+        ValueTask ReadTypeAsync();
+
         ValueTask<long?> ReadRemainingBytesAsync();
     }
 }

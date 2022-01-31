@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace Amp.Buckets
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public struct BucketBytes : IEquatable<BucketBytes>, IValueOrEof<ReadOnlyMemory<byte>>
+    public partial struct BucketBytes : IEquatable<BucketBytes>, IValueOrEof<ReadOnlyMemory<byte>>
     {
         ReadOnlyMemory<byte> _data;
-        bool _eof;
+        readonly bool _eof;
 
         public BucketBytes(ReadOnlyMemory<byte> data)
         {
@@ -64,7 +64,9 @@ namespace Amp.Buckets
 
         public byte[] ToArray()
         {
-            return _data.ToArray();
+            var d = _data.ToArray();
+            _data = d;
+            return d;
         }
 
         public static implicit operator BucketBytes(ArraySegment<byte> segment)
@@ -114,6 +116,22 @@ namespace Amp.Buckets
         ReadOnlyMemory<byte> IValueOrEof<ReadOnlyMemory<byte>>.Value => _data;
 
 
+        public int IndexOf(byte value)
+        {
+            return _data.Span.IndexOf(value);
+        }
+
+        public int IndexOf(byte value, int startOffset)
+        {
+            var s = Span.Slice(startOffset).IndexOf(value);
+
+            if (s >= 0)
+                return s + startOffset;
+            else
+                return s; // -1
+        }
+
+
         string DebuggerDisplay
         {
             get
@@ -121,7 +139,7 @@ namespace Amp.Buckets
                 if (IsEof)
                     return "<EOF>";
                 else
-                    return $"Length={Length}, Data='{System.Text.Encoding.ASCII.GetString(_data.Span)}'";
+                    return $"Length={Length}, Data='{ToASCIIString(0, Math.Min(Length, 100))}'";
             }
         }
 

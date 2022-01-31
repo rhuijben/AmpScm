@@ -78,6 +78,12 @@ namespace Amp.Buckets
             return default;
         }
 
+        public virtual ValueTask<TBucket?> ReadBucket<TBucket>()
+            where TBucket : Bucket
+        {
+            return default;
+        }
+
         sealed class EmptyBucket : Bucket
         {
             public override ValueTask<BucketBytes> PeekAsync()
@@ -121,9 +127,9 @@ namespace Amp.Buckets
 
         public static Bucket operator +(Bucket first, Bucket second)
         {
-            if (first == null)
+            if (first is null)
                 return second;
-            else if (second == null)
+            else if (second is null)
                 return first;
             else
                 return first.Append(second);
