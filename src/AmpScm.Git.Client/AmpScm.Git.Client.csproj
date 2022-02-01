@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net5.0;net47</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\AmpScm.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageOutputPath Condition=" '$(SolutionDir)' != '' ">$(SolutionDir)nupkg\$(Configuration)</PackageOutputPath>
+    <RepositoryUrl>https://github.com/AmpScm/AmpScm.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>(c) Copyright AmpScm Project</Copyright>
+    <PackageProjectUrl>https://github.com/AmpScm/AmpScm</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AmpScm.Git.Repository\AmpScm.Git.Repository.csproj" />
+  </ItemGroup>
+
+</Project>
