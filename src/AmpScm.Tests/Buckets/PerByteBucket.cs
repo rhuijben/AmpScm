@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Specialized;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Specialized;
 
-namespace Amp.BucketTests.Buckets
+namespace AmpScm.BucketTests.Buckets
 {
     public sealed class PerByteBucket : ProxyBucket<PerByteBucket>
     {

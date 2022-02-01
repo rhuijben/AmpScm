@@ -3,12 +3,12 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Specialized;
-using Amp.BucketTests.Buckets;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Specialized;
+using AmpScm.BucketTests.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Amp.BucketTests
+namespace AmpScm.BucketTests
 {
     [TestClass]
     public class BasicTests
@@ -79,7 +79,7 @@ namespace Amp.BucketTests
 
             await b.ResetAsync();
 
-            var c = new Amp.Buckets.Specialized.CreateHashBucket(b, MD5.Create());
+            var c = new AmpScm.Buckets.Specialized.CreateHashBucket(b, MD5.Create());
 
             r = await c.ReadSkipAsync(1024);
             Assert.AreEqual(49L, r);
@@ -88,7 +88,7 @@ namespace Amp.BucketTests
             Assert.AreEqual("E358B5530A87E41AF9168B4F45548AFC", FormatHash(c.HashResult));
 
             await b.ResetAsync();
-            var c2 = new Amp.Buckets.Specialized.CreateHashBucket(b, SHA1.Create());
+            var c2 = new AmpScm.Buckets.Specialized.CreateHashBucket(b, SHA1.Create());
 
             r = await c2.ReadSkipAsync(1024);
             Assert.AreEqual(49L, r);

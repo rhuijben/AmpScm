@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Git;
+using AmpScm.Git;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Amp.BucketTests
+namespace AmpScm.BucketTests
 {
     [TestClass]
     public class GitRepositoryTests

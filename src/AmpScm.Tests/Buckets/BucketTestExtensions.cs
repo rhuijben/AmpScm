@@ -1,6 +1,6 @@
-﻿using Amp.Buckets;
+﻿using AmpScm.Buckets;
 
-namespace Amp.BucketTests.Buckets
+namespace AmpScm.BucketTests.Buckets
 {
     public static class BucketTestExtensions
     {

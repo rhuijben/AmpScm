@@ -5,11 +5,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Git;
-using Amp.Git.Client.Plumbing;
+using AmpScm.Git;
+using AmpScm.Git.Client.Plumbing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Amp.BucketTests
+namespace AmpScm.BucketTests
 {
     [TestClass]
     public class GitPlumbingTests
@@ -77,7 +77,7 @@ namespace Amp.BucketTests
                             {
                                 Assert.Fail($"Method {name} is missing on {nameof(GitPlumbing)}");
                             }
-                            else if (typeof(GitPlumbing).Assembly.GetType($"Amp.Git.Client.Plumbing.Git{name}Args") == null)
+                            else if (typeof(GitPlumbing).Assembly.GetType(typeof(GitPlumbing).Namespace + $".Git{name}Args") == null)
                             {
                                 Assert.Fail($"Class Amp.Git.Client.Plumbing.Git{name}Args is missing");
                             }

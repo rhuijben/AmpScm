@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Git;
-using Amp.Buckets.Specialized;
-using Amp.Git;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Specialized;
+using AmpScm.Git;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Amp.BucketTests
+namespace AmpScm.BucketTests
 {
     [TestClass]
     public class GitTests

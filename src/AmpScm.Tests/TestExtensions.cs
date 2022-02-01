@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Amp.Buckets;
+using AmpScm.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
-namespace Amp.BucketTests
+namespace AmpScm.BucketTests
 {
     internal static class TestExtensions
     {
