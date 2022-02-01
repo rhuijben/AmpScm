@@ -35,6 +35,10 @@ namespace AmpScm.BucketTests
                 Assert.IsNotNull(items.Length);
 
                 Assert.AreEqual(false, repo.Configuration.GetBool("core", "bare", false));
+
+                Assert.IsNotNull(repo.Head);
+                Assert.IsNull(repo.Head.Commit);
+                Assert.IsNull(repo.Head.Object);
             }
         }
 

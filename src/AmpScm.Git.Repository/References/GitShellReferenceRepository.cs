@@ -20,8 +20,10 @@ namespace AmpScm.Git.References
 
         private protected override async ValueTask ReadRefs()
         {
-            var (_, o) = await Repository.RunPlumbingCommandOut("show-ref", Array.Empty<string>());
+            var (r, o) = await Repository.RunPlumbingCommandOut("show-ref", Array.Empty<string>(), expectedResults: new int[] {0 /* ok */, 1 /* no references found */});
 
+            if (r != 0)
+                return;
 
             var idLength = GitObjectId.HashLength(Repository.InternalConfig.IdType) * 2;
 
