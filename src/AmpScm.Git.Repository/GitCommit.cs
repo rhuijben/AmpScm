@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Git;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     [DebuggerDisplay("{DebuggerDisplay, nq}")]
     public class GitCommit : GitObject
@@ -135,7 +135,7 @@ namespace Amp.Git
             }
         }
 
-        private new void Read()
+        private void Read()
         {
             if (_tree is Bucket b)
             {

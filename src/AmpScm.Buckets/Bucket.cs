@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{Name}: Position={Position}")]
     public abstract partial class Bucket : IAsyncDisposable, IDisposable

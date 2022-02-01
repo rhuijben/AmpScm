@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Linq.AsyncQueryable
+namespace AmpScm.Linq.AsyncQueryable
 {
     public interface IAsyncQueryProvider : IQueryProvider
     {

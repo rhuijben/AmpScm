@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Specialized
+namespace AmpScm.Buckets.Specialized
 {
     internal class CompressionBucket : WrappingBucket
     {
@@ -231,7 +231,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Specialized
+namespace AmpScm.Buckets.Specialized
 {
     internal class CompressionBucket : WrappingBucket
     {

@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Git;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
 
-namespace Amp.Git.Repository
+namespace AmpScm.Git.Repository
 {
     public class GitConfiguration
     {

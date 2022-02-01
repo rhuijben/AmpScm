@@ -1,4 +1,4 @@
-﻿namespace Amp.Buckets.Specialized
+﻿namespace AmpScm.Buckets.Specialized
 {
     public enum BucketCompressionAlgorithm
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Amp.Buckets.Specialized;
-using Amp.Git;
+using AmpScm.Buckets.Specialized;
+using AmpScm.Git;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     public sealed class GitPackFrameBucket : GitBucket, IGitObjectType
     {

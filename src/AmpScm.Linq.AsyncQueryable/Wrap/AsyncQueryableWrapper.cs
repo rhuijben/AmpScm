@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Amp.Linq.AsyncQueryable.Wrap
+namespace AmpScm.Linq.AsyncQueryable.Wrap
 {
     internal sealed class AsyncQueryableWrapper<T> : IAsyncQueryable<T>, IOrderedAsyncQueryable<T>
     {

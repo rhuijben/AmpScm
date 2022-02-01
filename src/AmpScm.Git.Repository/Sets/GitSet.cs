@@ -7,10 +7,10 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
-using Amp.Git.Implementation;
+using AmpScm.Buckets.Git;
+using AmpScm.Git.Implementation;
 
-namespace Amp.Git.Sets
+namespace AmpScm.Git.Sets
 {
     public interface IGitObject
     {

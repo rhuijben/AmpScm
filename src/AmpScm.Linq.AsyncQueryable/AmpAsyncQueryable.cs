@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Amp.Linq.AsyncQueryable;
-using Amp.Linq.AsyncQueryable.Wrap;
+using AmpScm.Linq.AsyncQueryable;
+using AmpScm.Linq.AsyncQueryable.Wrap;
 
 namespace System.Linq
 {

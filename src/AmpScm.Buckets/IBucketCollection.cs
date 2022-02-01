@@ -1,4 +1,4 @@
-﻿namespace Amp.Buckets
+﻿namespace AmpScm.Buckets
 {
     interface IBucketAggregation
     {

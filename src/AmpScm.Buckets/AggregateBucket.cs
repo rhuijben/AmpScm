@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{Name}: BucketCount={BucketCount}, Current={CurrentBucket}, Position={Position}")]
     public class AggregateBucket : Bucket, IBucketAggregation

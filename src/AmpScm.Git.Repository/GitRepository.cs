@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
-using Amp.Git.Implementation;
-using Amp.Git.Repository;
-using Amp.Git.Sets;
+using AmpScm.Buckets.Git;
+using AmpScm.Git.Implementation;
+using AmpScm.Git.Repository;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     [DebuggerDisplay("GitRepository {GitDir}")]
     public partial class GitRepository : IDisposable, IGitQueryRoot, IServiceProvider

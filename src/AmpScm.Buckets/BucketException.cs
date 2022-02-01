@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     [Serializable]
     public class BucketException : Exception

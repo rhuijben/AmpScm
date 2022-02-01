@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     public class GitDeltaBucket : GitBucket
     {

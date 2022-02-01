@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public partial struct BucketBytes : IEquatable<BucketBytes>, IValueOrEof<ReadOnlyMemory<byte>>

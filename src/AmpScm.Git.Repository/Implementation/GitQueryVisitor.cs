@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Git.Sets;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git.Implementation
+namespace AmpScm.Git.Implementation
 {
     internal class GitQueryVisitor : ExpressionVisitor
     {

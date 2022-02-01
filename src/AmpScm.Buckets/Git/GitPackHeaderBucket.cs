@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     [DebuggerDisplay("{GitType}, Version={Version}, ObjectCount={ObjectCount}")]
     public class GitPackHeaderBucket : GitBucket

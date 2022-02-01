@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Git.Sets
+namespace AmpScm.Git.Sets
 {
     public class GitCommitSet : GitSet<GitCommit>
     {

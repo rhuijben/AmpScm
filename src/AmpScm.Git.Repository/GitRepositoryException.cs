@@ -5,10 +5,10 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     [Serializable]
-    public class GitRepositoryException : Amp.Buckets.Git.GitException
+    public class GitRepositoryException : Buckets.Git.GitException
     {
         public GitRepositoryException(string message) : base(message)
         {

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Wrappers
+namespace AmpScm.Buckets.Wrappers
 {
     public class BucketStream : Stream
     {

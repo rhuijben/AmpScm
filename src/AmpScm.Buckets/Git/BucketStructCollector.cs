@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     [AttributeUsage(AttributeTargets.Field)]
     sealed class NetworkOrderAttribute : Attribute

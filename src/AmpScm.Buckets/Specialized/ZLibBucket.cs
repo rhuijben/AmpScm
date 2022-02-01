@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Elskom.Generic.Libs;
 
-namespace Amp.Buckets.Specialized
+namespace AmpScm.Buckets.Specialized
 {
     public enum ZLibLevel
     {

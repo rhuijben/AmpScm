@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Linq.AsyncQueryable
+namespace AmpScm.Linq.AsyncQueryable
 {
     /// <summary>
     /// Provides functionality to evaluate queries against a specific data source wherein

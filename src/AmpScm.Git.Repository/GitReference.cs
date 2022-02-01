@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Git.Sets;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     public class GitReference : IGitNamedObject
     {

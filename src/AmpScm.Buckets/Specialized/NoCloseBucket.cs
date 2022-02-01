@@ -1,4 +1,4 @@
-﻿namespace Amp.Buckets.Specialized
+﻿namespace AmpScm.Buckets.Specialized
 {
     public sealed class NoCloseBucket : Specialized.ProxyBucket<NoCloseBucket>
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     public class GitSignature : IEquatable<GitSignature>
     {

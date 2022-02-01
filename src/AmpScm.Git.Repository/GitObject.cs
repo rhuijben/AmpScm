@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
-using Amp.Git.Sets;
+using AmpScm.Buckets.Git;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     [DebuggerDisplay("{Type} {Id.ToString(\"x12\"),nq}")]
     public abstract class GitObject : IEquatable<GitObject>, IGitOidObject

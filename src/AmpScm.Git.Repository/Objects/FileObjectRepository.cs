@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Git;
-using Amp.Buckets.Specialized;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Specialized;
 
-namespace Amp.Git.Objects
+namespace AmpScm.Git.Objects
 {
     internal class FileObjectRepository : GitObjectRepository
     {

@@ -7,9 +7,9 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Amp.Git.Implementation;
+using AmpScm.Git.Implementation;
 
-namespace Amp.Git.Sets
+namespace AmpScm.Git.Sets
 {
     public class GitNamedSet<T> : GitSet, IGitAsyncQueryable<T>, IListSource
         where T : class, IGitNamedObject

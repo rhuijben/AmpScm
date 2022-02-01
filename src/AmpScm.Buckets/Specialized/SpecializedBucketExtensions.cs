@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Specialized
+namespace AmpScm.Buckets.Specialized
 {
     public static class SpecializedBucketExtensions
     {

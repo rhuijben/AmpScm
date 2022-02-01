@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
-using Amp.Git.Sets;
+using AmpScm.Buckets.Git;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     [DebuggerDisplay("{EntryName} - {Id}")]
     public abstract class GitTreeEntry : IEquatable<GitTreeEntry>, IGitObject

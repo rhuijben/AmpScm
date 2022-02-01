@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Git.Implementation;
+using AmpScm.Git.Implementation;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     partial class GitRepository
     {

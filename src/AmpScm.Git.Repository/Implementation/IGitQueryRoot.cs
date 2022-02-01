@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
-using Amp.Git.Sets;
+using AmpScm.Buckets.Git;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git.Implementation
+namespace AmpScm.Git.Implementation
 {
     // Internal marker interface
     internal interface IGitQueryRoot

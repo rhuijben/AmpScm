@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Specialized;
+using AmpScm.Buckets.Specialized;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     partial struct BucketBytes
     {
