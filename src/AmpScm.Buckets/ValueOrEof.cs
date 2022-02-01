@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     interface IValueOrEof<T> where T : struct
     {

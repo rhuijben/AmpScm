@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Amp.Git.Implementation
+namespace AmpScm.Git.Implementation
 {
     internal static class QueryExtensions
     {

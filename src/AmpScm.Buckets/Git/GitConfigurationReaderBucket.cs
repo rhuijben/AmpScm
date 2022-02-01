@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Specialized;
+using AmpScm.Buckets.Specialized;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     [DebuggerDisplay("{ToString(),nq}")]
     public sealed class GitConfigurationItem : IComparable<GitConfigurationItem>

@@ -4,9 +4,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using Amp.Buckets.Specialized;
+using AmpScm.Buckets.Specialized;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     public static class BucketExtensions
     {

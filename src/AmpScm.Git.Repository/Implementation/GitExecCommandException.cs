@@ -4,9 +4,9 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
+using AmpScm.Buckets.Git;
 
-namespace Amp.Git.Implementation
+namespace AmpScm.Git.Implementation
 {
     [Serializable]
     public class GitExecCommandException : GitException

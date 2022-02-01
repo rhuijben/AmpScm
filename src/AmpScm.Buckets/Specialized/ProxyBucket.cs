@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Amp.Buckets.Specialized
+namespace AmpScm.Buckets.Specialized
 {
 
     public abstract class ProxyBucket<TBucket> : WrappingBucket, IBucketNoClose

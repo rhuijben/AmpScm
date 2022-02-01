@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets
+namespace AmpScm.Buckets
 {
     public class FileBucket : Bucket
     {

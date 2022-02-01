@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Specialized
+namespace AmpScm.Buckets.Specialized
 {
     public sealed class CreateHashBucket : WrappingBucket
     {

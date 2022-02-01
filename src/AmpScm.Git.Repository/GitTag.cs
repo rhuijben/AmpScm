@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
+using AmpScm.Buckets.Git;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     public class GitTag : GitObject
     {

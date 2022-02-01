@@ -5,10 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Amp.Git.Sets;
-using Amp.Linq.AsyncQueryable;
+using AmpScm.Git.Sets;
+using AmpScm.Linq.AsyncQueryable;
 
-namespace Amp.Git.Implementation
+namespace AmpScm.Git.Implementation
 {
     internal class GitQueryProvider : IAsyncQueryProvider, IGitQueryRoot
     {

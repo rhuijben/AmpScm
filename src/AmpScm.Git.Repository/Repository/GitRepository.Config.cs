@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amp.Buckets.Git;
-using Amp.Git.Repository;
+using AmpScm.Buckets.Git;
+using AmpScm.Git.Repository;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     partial class GitRepository
     {

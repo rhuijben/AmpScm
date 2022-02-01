@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Git.References
+namespace AmpScm.Git.References
 {
     internal class GitPackedRefsReferenceRepository
     {

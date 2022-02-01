@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Git.Client.Plumbing
+namespace AmpScm.Git.Client.Plumbing
 {
     public class GitPackRedundantArgs : GitPlumbingArgs
     {

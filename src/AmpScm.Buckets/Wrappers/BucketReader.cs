@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Wrappers
+namespace AmpScm.Buckets.Wrappers
 {
     public class BucketReader : TextReader
     {

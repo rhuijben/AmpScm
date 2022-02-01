@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Amp.Buckets;
-using Amp.Buckets.Git;
-using Amp.Buckets.Specialized;
-using Amp.Git.Implementation;
-using Amp.Git.Sets;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Specialized;
+using AmpScm.Git.Implementation;
+using AmpScm.Git.Sets;
 
-namespace Amp.Git
+namespace AmpScm.Git
 {
     public class GitTree : GitObject, IEnumerable<GitTreeEntry>, IAsyncEnumerable<GitTreeEntry>
     {

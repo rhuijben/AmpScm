@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Amp.Git.Implementation;
+using AmpScm.Git.Implementation;
 
-namespace Amp.Git.Sets
+namespace AmpScm.Git.Sets
 {
     public class GitTreeItemCollection : IEnumerable<GitTreeItem>, IAsyncEnumerable<GitTreeItem>, IReadOnlyCollection<GitTreeItem>
     {

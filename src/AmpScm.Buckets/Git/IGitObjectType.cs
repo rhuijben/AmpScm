@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     public enum GitObjectType
     {

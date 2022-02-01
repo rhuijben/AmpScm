@@ -1,4 +1,4 @@
-﻿namespace Amp.Git.Client
+﻿namespace AmpScm.Git.Client
 {
     public static partial class GitClientExtensions
     {

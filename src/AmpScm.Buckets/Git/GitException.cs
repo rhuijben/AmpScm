@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Amp.Buckets.Git
+namespace AmpScm.Buckets.Git
 {
     [Serializable]
     public class GitException : Exception
