@@ -196,13 +196,22 @@ namespace AmpScm.Buckets
 
             public async ValueTask<int> TrueReadAtAsync(long readPos, byte[] buffer, int readLen)
             {
-                using (GetFileStream(out var p))
+                bool primary = false;
+                try
                 {
-                    if (p.Position != readPos)
-                        p.Position = readPos;
+                    using (GetFileStream(out var p))
+                    {
+                        primary = (p == _primary);
+                        if (p.Position != readPos)
+                            p.Position = readPos;
 
-                    var r = await p.ReadAsync(buffer, 0, readLen);
-                    return r;
+                        var r = await p.ReadAsync(buffer, 0, readLen);
+                        return r;
+                    }
+                }
+                catch (Exception e) when (primary)
+                {
+                    throw new BucketException("Error reading primary", e);
                 }
             }
 

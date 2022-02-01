@@ -9,8 +9,10 @@ namespace AmpScm.Git.References
 {
     public abstract class GitReferenceRepository
     {
-        protected GitRepository Repository { get; }
-        protected string GitDir { get; }
+        public const string Head = "HEAD";
+
+        protected internal GitRepository Repository { get; }
+        protected internal string GitDir { get; }
 
         protected GitReferenceRepository(GitRepository repository, string gitDir)
         {
@@ -21,45 +23,17 @@ namespace AmpScm.Git.References
 
         public abstract IAsyncEnumerable<GitReference> GetAll();
 
-        public ValueTask<GitReference?> Get(string name)
+        public ValueTask<GitReference?> GetAsync(string name)
         {
-            if (!ValidReferenceName(name))
-                throw new ArgumentOutOfRangeException(nameof(name));
+            if (!GitReference.ValidName(name, true))
+                throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid Reference name");
 
-            return GetUnsafe(name);
+            return GetUnsafeAsync(name, true);
         }
 
-        protected internal abstract ValueTask<GitReference?> GetUnsafe(string name);
+        protected internal abstract ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic);
 
         static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
-
-        private bool ValidReferenceName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-
-            char last = '\0';
-
-            for(int i = 0; i < name.Length; last=name[i++])
-            {
-                if (char.IsLetterOrDigit(name, i))
-                    continue;
-                switch(name[i])
-                {
-                    case '\\':
-                        return false;
-                    case '.' when (last == '/' || last == '\0'):
-                        return false;
-                    case '/' when (last == '\0' || last == '\0'):
-                        return false;
-                    default:
-                        if (char.IsControl(name, i) || InvalidChars.Contains(name[i]))
-                            return false;
-                        break;
-                }
-            }
-            return true;
-        }
 
         public virtual ValueTask<GitReference?> ResolveByOid(GitObjectId arg)
         {

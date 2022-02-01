@@ -22,7 +22,7 @@ namespace AmpScm.Git
         public bool IsLazy => Configuration.Lazy.RepositoryIsLazy;
         readonly Lazy<GitConfiguration> _gitConfiguration;
 
-        protected string GitDir { get; }
+        internal protected string GitDir { get; }
 
         // Not directly creatable for now
         private GitRepository()
@@ -85,6 +85,8 @@ namespace AmpScm.Git
         public Objects.GitObjectRepository ObjectRepository { get; }
         public References.GitReferenceRepository ReferenceRepository { get; }
 
+        public GitReference Head => References.Head;
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -140,6 +142,14 @@ namespace AmpScm.Git
         object? IServiceProvider.GetService(Type serviceType)
         {
             return ((IServiceProvider)_container).GetService(serviceType);
+        }
+
+        public override string ToString()
+        {
+            if (IsBare)
+                return $"[Bare Repository] GitDir={GitDir}";
+            else
+                return $"[Git Repository] FullPath={FullPath}";
         }
 
         internal T? GetService<T>()

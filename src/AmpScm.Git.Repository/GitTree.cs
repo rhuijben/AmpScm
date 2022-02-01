@@ -17,7 +17,7 @@ namespace AmpScm.Git
     {
         List<GitTreeEntry> _entries = new List<GitTreeEntry>();
         private GitBucket? _rdr;
-        BucketEolState _eolState;
+        BucketEolState? _eolState;
 
         internal GitTree(GitRepository repository, GitObjectId id)
             : base(repository, id)
@@ -63,7 +63,7 @@ namespace AmpScm.Git
 
             bb = await _rdr.ReadFullAsync(GitObjectId.HashLength(Id.Type));
 
-            _entries.Add(NewGitTreeEntry(name, val, new GitObjectId(Repository.InternalConfig.IdType, bb.ToArray())));
+            _entries.Add(NewGitTreeEntry(name, val, new GitObjectId(Id.Type, bb.ToArray())));
         }
 
         private GitTreeEntry NewGitTreeEntry(string name, int val, GitObjectId id)

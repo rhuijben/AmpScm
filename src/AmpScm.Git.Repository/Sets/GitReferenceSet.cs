@@ -17,5 +17,7 @@ namespace AmpScm.Git.Sets
             : base(repository, rootExpression)
         {
         }
+
+        public GitReference Head => Repository.ReferenceRepository.GetAsync(Git.References.GitReferenceRepository.Head).Result!;
     }
 }

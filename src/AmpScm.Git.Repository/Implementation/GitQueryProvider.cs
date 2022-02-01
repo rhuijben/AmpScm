@@ -53,12 +53,18 @@ namespace AmpScm.Git.Implementation
 
         internal IAsyncEnumerator<T> GetNamedAsyncEnumerator<T>(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            if (typeof(T) == typeof(GitReference))
+                return (IAsyncEnumerator<T>)Repository.ReferenceRepository.GetAll().GetAsyncEnumerator(cancellationToken);
+
+            return Enumerable.Empty<T>().ToAsyncEnumerable().GetAsyncEnumerator(cancellationToken);
         }
 
         internal IEnumerable<TResult> GetNamedEnumerable<TResult>()
         {
-            throw new NotImplementedException();
+            if (typeof(TResult) == typeof(GitReference))
+                return (IEnumerable<TResult>)Repository.ReferenceRepository.GetAll().AsNonAsyncEnumerable();
+
+            return Enumerable.Empty<TResult>();
         }
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
@@ -66,11 +72,6 @@ namespace AmpScm.Git.Implementation
             expression = new GitQueryVisitor().Visit(expression);
 
             return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
-        }
-
-        public ValueTask<T?> GetNamedAsync<T>(object id)
-        {
-            throw new NotImplementedException();
         }
 
         internal IList GetNamedList<T>()
@@ -85,7 +86,7 @@ namespace AmpScm.Git.Implementation
         }
 
         public IAsyncEnumerator<TResult> GetAsyncEnumerator<TResult>(CancellationToken cancellationToken = default)
-            where  TResult : GitObject
+            where TResult : GitObject
         {
             return Repository.ObjectRepository.GetAll<TResult>().GetAsyncEnumerator();
         }
@@ -93,7 +94,7 @@ namespace AmpScm.Git.Implementation
         public IEnumerable<TResult> GetEnumerable<TResult>()
             where TResult : GitObject
         {
-            return Repository.ObjectRepository.GetAll<TResult>().AsNonAsyncEnumerable();            
+            return Repository.ObjectRepository.GetAll<TResult>().AsNonAsyncEnumerable();
         }
 
         public IQueryable<TResult> GetAll<TResult>() where TResult : GitObject
@@ -122,10 +123,13 @@ namespace AmpScm.Git.Implementation
             return GetNamedEnumerable<TResult>().AsQueryable();
         }
 
-        public ValueTask<TResult?> GetNamedAsync<TResult>(string name)
+        public async ValueTask<TResult?> GetNamedAsync<TResult>(string name)
             where TResult : class, IGitNamedObject
         {
-            return default;// await Repository.ObjectRepository.GetNamed<TResult>(name);
+            if (typeof(TResult) == typeof(GitReference))
+                return Repository.ReferenceRepository.GetAsync(name) as TResult;
+
+            return default;
         }
     }
 }

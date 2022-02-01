@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Git;
+using AmpScm.Git.References;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AmpScm.BucketTests
@@ -42,8 +43,8 @@ namespace AmpScm.BucketTests
         [DynamicData(nameof(TestRepositoryArgs))]
         public async Task CanOpenRepository(string path)
         {
-            Console.WriteLine($"Looking at {path}");
             using var repo = GitRepository.Open(path);
+            Console.WriteLine($"Looking at {repo}");
 
             if (repo.IsBare)
                 Console.WriteLine($"{repo.FullPath} is bare");
@@ -56,6 +57,16 @@ namespace AmpScm.BucketTests
                 Assert.IsTrue(repo.Trees.Any(), "Has trees");
                 Assert.IsTrue(repo.Blobs.Any(), "Has blobs");
                 //Assert.IsTrue(repo.Tags.Any(), "Has tags");
+            }
+
+            Assert.IsNotNull(repo.Head, "Repository has an HEAD");
+            Assert.IsTrue(repo.Head is GitSymbolicReference, "HEAD is an Symbolic reference");
+            Assert.IsNotNull(repo.Head?.Commit, "Head can be resolved");
+            Console.WriteLine($"Last change: {repo.Head.Commit.Author}");
+
+            await foreach(var r in repo.References)
+            {
+                Console.WriteLine($"{r.ShortName} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }
         }
 
