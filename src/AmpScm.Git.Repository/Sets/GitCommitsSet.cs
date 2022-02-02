@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git.Sets
 {
-    public class GitCommitSet : GitSet<GitCommit>
+    public class GitCommitsSet : GitSet<GitCommit>
     {
-        public GitCommitSet(GitRepository repository, Expression<Func<GitSet<GitCommit>>> expression) 
+        public GitCommitsSet(GitRepository repository, Expression<Func<GitSet<GitCommit>>> expression) 
             : base(repository, expression)
         {
         }

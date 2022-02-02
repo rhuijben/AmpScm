@@ -35,7 +35,7 @@ namespace AmpScm.Git.Sets
 
         public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return Repository.SetQueryProvider.GetNamedAsyncEnumerator<T>(cancellationToken);
+            return Repository.SetQueryProvider.GetNamedAsyncEnumerable<T>(cancellationToken).GetAsyncEnumerator(cancellationToken);
         }
 
         public IEnumerator<T> GetEnumerator()

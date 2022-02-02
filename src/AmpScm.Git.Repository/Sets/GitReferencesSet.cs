@@ -11,9 +11,9 @@ using AmpScm.Git.Implementation;
 
 namespace AmpScm.Git.Sets
 {
-    public class GitReferenceSet : GitNamedSet<GitReference>
+    public class GitReferencesSet : GitNamedSet<GitReference>
     {
-        internal GitReferenceSet(GitRepository repository, Expression<Func<GitNamedSet<GitReference>>> rootExpression) 
+        internal GitReferencesSet(GitRepository repository, Expression<Func<GitNamedSet<GitReference>>> rootExpression) 
             : base(repository, rootExpression)
         {
         }

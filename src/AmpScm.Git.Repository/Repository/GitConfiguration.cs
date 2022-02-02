@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
 using AmpScm.Git.Repository.Implementation;
+using AmpScm.Git.Sets;
 
 namespace AmpScm.Git.Repository
 {
@@ -152,6 +153,38 @@ namespace AmpScm.Git.Repository
             }
         }
 
+        internal async ValueTask<GitRemote> GetRemoteAsync(string name)
+        {
+            if (await GetStringAsync("remote", name, "url") is string v)
+            {
+                return new GitRemote(Repository, name, v);
+            }
+
+            return null;
+        }
+
+        internal async IAsyncEnumerable<GitRemote> GetAllRemotes()
+        {
+            HashSet<string> names = new HashSet<string>();
+
+            await LoadAsync();
+
+            foreach (var v in _config)
+            {
+                var (g, s, k) = v.Key;
+
+                if (g != "remote" || s is null)
+                    continue;
+
+                if (!names.Contains(s))
+                {
+                    yield return new GitRemote(Repository, s, (k == "url") ? v.Value : null);
+                    names.Add(s);
+                }
+            }
+        }
+
+
         public async ValueTask<int?> GetIntAsync(string group, string key)
         {
             await LoadAsync();
@@ -184,10 +217,30 @@ namespace AmpScm.Git.Repository
                 return null;
         }
 
+        public async ValueTask<string?> GetStringAsync(string group, string subGroup, string key)
+        {
+            await LoadAsync();
+
+            if (_config.TryGetValue((group, subGroup, key), out var vResult))
+            {
+                if (vResult == "\xFF")
+                    return "";
+                return vResult;
+            }
+            else
+                return null;
+        }
+
         internal string? GetString(string group, string key)
         {
             return GetStringAsync(group, key).Result;
         }
+
+        internal string? GetString(string group, string subGroup, string key)
+        {
+            return GetStringAsync(group, subGroup, key).Result;
+        }
+
 
         public ValueTask<bool> GetBoolAsync(string group, string key, bool defaultValue)
         {
@@ -276,6 +329,7 @@ namespace AmpScm.Git.Repository
         }
 
         Lazy<GitLazyConfig> _lazy;
+        private object rawUrl;
 
         internal GitLazyConfig Lazy => _lazy.Value;
 

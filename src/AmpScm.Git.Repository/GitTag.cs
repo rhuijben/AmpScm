@@ -12,12 +12,11 @@ namespace AmpScm.Git
     public class GitTag : GitObject
     {
         private object _obj;
-        string _message, _summary;
-        GitSignature _tagger;
+        string? _message, _summary;
+        GitSignature? _tagger;
         Dictionary<string, string>? _headers;
         GitObjectType? _objType;
-        string _name;
-
+        string? _name;
 
         internal GitTag(GitRepository repository, GitBucket rdr, GitObjectId id)
             : base(repository, id)

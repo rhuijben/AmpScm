@@ -45,13 +45,17 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(path);
             Console.WriteLine($"Looking at {repo}");
+            Assert.IsNotNull(repo.Remotes["origin"]);
+            Console.WriteLine($" from {repo.Remotes["origin"].Url}");
 
             if (repo.IsBare)
                 Console.WriteLine($"{repo.FullPath} is bare");
             if (repo.IsLazy)
                 Console.WriteLine($"{repo.FullPath} has promisor");
 
-            Assert.IsTrue(repo.Commits.Any(), "Has commits");            
+            Assert.IsTrue(repo.Remotes.Any(), "Has remotes");
+            Assert.IsTrue(repo.Remotes.Any(x => x.Name == "origin"), "Has origin remote");
+            Assert.IsTrue(repo.Commits.Any(), "Has commits");
             if (!repo.IsLazy)
             {
                 Assert.IsTrue(repo.Trees.Any(), "Has trees");
@@ -64,7 +68,7 @@ namespace AmpScm.Tests
             Assert.IsNotNull(repo.Head?.Commit, "Head can be resolved");
             Console.WriteLine($"Last change: {repo.Head.Commit.Author}");
 
-            await foreach(var r in repo.References)
+            await foreach (var r in repo.References)
             {
                 Console.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }

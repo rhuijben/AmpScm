@@ -32,16 +32,18 @@ namespace AmpScm.Git
 
             SetQueryProvider = new GitQueryProvider(this);
             Objects = new GitSet<GitObject>(this, () => this.Objects!);
-            Commits = new GitCommitSet(this, () => this.Commits!);
+            Commits = new GitCommitsSet(this, () => this.Commits!);
             Blobs = new GitSet<GitBlob>(this, () => this.Blobs!);
             Tags = new GitSet<GitTag>(this, () => this.Tags!);
             Trees = new GitSet<GitTree>(this, () => this.Trees!);
-            References = new GitReferenceSet(this, () => this.References!);
+            References = new GitReferencesSet(this, () => this.References!);
+            Remotes = new GitRemotesSet(this, () => this.Remotes!);
             _gitConfiguration = new Lazy<GitConfiguration>(LoadConfig);
 
             ObjectRepository = null!;
             GitDir = null!;
             FullPath = null!;
+            ReferenceRepository = null!;
         }
 
         internal GitRepository(string path, bool bareCheck = false)
@@ -73,12 +75,13 @@ namespace AmpScm.Git
         }
 
         public GitSet<GitObject> Objects { get; }
-        public GitCommitSet Commits { get; }
+        public GitCommitsSet Commits { get; }
         public GitSet<GitTree> Trees { get; }
         public GitSet<GitBlob> Blobs { get; }
 
         public GitSet<GitTag> Tags { get; }
-        public GitReferenceSet References { get; }
+        public GitReferencesSet References { get; }
+        public GitRemotesSet Remotes { get; }
 
         public GitConfiguration Configuration => _gitConfiguration.Value;
 

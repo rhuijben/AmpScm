@@ -51,12 +51,14 @@ namespace AmpScm.Git.Implementation
             return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
         }
 
-        internal IAsyncEnumerator<T> GetNamedAsyncEnumerator<T>(CancellationToken cancellationToken)
+        internal IAsyncEnumerable<T> GetNamedAsyncEnumerable<T>(CancellationToken cancellationToken)
         {
             if (typeof(T) == typeof(GitReference))
-                return (IAsyncEnumerator<T>)Repository.ReferenceRepository.GetAll().GetAsyncEnumerator(cancellationToken);
+                return (IAsyncEnumerable<T>)Repository.ReferenceRepository.GetAll();
+            else if (typeof(T) == typeof(GitRemote))
+                return (IAsyncEnumerable<T>)Repository.Configuration.GetAllRemotes();
 
-            return Enumerable.Empty<T>().ToAsyncEnumerable().GetAsyncEnumerator(cancellationToken);
+            return Enumerable.Empty<T>().ToAsyncEnumerable();
         }
 
         internal IEnumerable<TResult> GetNamedEnumerable<TResult>()
@@ -64,7 +66,7 @@ namespace AmpScm.Git.Implementation
             if (typeof(TResult) == typeof(GitReference))
                 return (IEnumerable<TResult>)Repository.ReferenceRepository.GetAll().AsNonAsyncEnumerable();
 
-            return Enumerable.Empty<TResult>();
+            return GetNamedAsyncEnumerable<TResult>(CancellationToken.None).AsNonAsyncEnumerable();
         }
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
@@ -127,7 +129,9 @@ namespace AmpScm.Git.Implementation
             where TResult : class, IGitNamedObject
         {
             if (typeof(TResult) == typeof(GitReference))
-                return Repository.ReferenceRepository.GetAsync(name) as TResult;
+                return await Repository.ReferenceRepository.GetAsync(name) as TResult;
+            else if (typeof(TResult) == typeof(GitRemote))
+                return await Repository.Configuration.GetRemoteAsync(name) as TResult;
 
             return default;
         }

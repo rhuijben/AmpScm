@@ -112,8 +112,8 @@ namespace AmpScm.Git
             return GetEnumerator();
         }
 
-        GitTreeItemCollection _allFiles;
-        GitTreeItemCollection _allItems;
+        GitTreeItemCollection? _allFiles;
+        GitTreeItemCollection? _allItems;
         public GitTreeItemCollection AllFiles => _allFiles ??= new GitTreeItemCollection(this, true);
 
         public GitTreeItemCollection AllItems => _allItems ??= new GitTreeItemCollection(this, false);

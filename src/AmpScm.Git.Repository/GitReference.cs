@@ -13,17 +13,15 @@ namespace AmpScm.Git
     {
         protected GitReferenceRepository Repository { get; }
         object? _object;
-        object _commit;
+        object? _commit;
         Lazy<GitObjectId?>? _resolver;
-        bool _got;
-        string _shortName;
+        string? _shortName;
 
         internal GitReference(GitReferenceRepository repository, string name, Lazy<GitObjectId?> resolver)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _resolver = resolver;
-            _got = false;
         }
 
         internal GitReference(GitReferenceRepository repository, string name, GitObjectId? value)
@@ -31,7 +29,6 @@ namespace AmpScm.Git
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _object = value;
-            _got = false;
         }
 
         public string Name { get; }
@@ -65,8 +62,6 @@ namespace AmpScm.Git
 
             if (_object is GitObjectId oid)
             {
-                _got = true;
-
                 _object = await Repository.Repository.GetAsync<GitObject>(oid) ?? _object;
             }
         }

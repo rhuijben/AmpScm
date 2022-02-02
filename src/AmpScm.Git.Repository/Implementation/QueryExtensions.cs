@@ -40,6 +40,21 @@ namespace AmpScm.Git.Implementation
             }
         }
 
+        public static IEnumerable<TResult> AsNonAsyncEnumerable<TResult>(this IAsyncEnumerator<TResult> source)
+        {
+            var e = source;
+            bool next;
+            do
+            {
+                var r = e.MoveNextAsync().AsTask(); // Store as object instead of struct, as we are yield'ing.
+                next = r.Result;
+
+                if (next)
+                    yield return e.Current;
+            }
+            while (next);
+        }
+
 #if NETFRAMEWORK
         /// <summary>
         /// Waits asynchronously for the process to exit.
@@ -61,5 +76,5 @@ namespace AmpScm.Git.Implementation
             return process.HasExited ? Task.CompletedTask : tcs.Task;
         }
 #endif
-    }
+        }
 }

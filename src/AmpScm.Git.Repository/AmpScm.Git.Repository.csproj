@@ -7,7 +7,7 @@
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\AmpScm.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <DefaultNamespace>AmpScm.Git</DefaultNamespace>
+    <RootNamespace>AmpScm.Git</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup>

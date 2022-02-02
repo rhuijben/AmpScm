@@ -19,9 +19,9 @@ namespace AmpScm.Git.References
         [DebuggerDisplay("{Oid} {Name} {Peeled}")]
         private protected sealed class GitRefPeel
         {
-            public string Name { get; set; }
-            public GitObjectId Oid { get; set; }
-            public GitObjectId Peeled { get; set; }
+            public string Name { get; set; } = null!;
+            public GitObjectId Oid { get; set; } = null!;
+            public GitObjectId? Peeled { get; set; }
         }
 
         Dictionary<string, GitRefPeel>? _peelRefs;
