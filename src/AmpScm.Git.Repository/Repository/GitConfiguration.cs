@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,9 @@ namespace AmpScm.Git.Repository
         bool _loaded;
         int _repositoryFormatVersion;
         readonly Dictionary<(string, string?, string), string> _config = new Dictionary<(string, string?, string), string>();
+
+        static readonly Lazy<string> _gitExePath = new Lazy<string>(GetGitExePath, true);
+        public static string GitProgramPath => _gitExePath.Value;
 
         public GitConfiguration(GitRepository gitRepository, string gitDir)
         {
@@ -56,7 +60,7 @@ namespace AmpScm.Git.Repository
 
             group = group.ToLowerInvariant();
 
-            foreach(var v in _config)
+            foreach (var v in _config)
             {
                 var (g, s, k) = v.Key;
 
@@ -71,9 +75,9 @@ namespace AmpScm.Git.Repository
                 LoadAsync().GetAwaiter().GetResult();
 
             group = group.ToLowerInvariant();
-            HashSet<string> subGroups = new HashSet<string>(); 
+            HashSet<string> subGroups = new HashSet<string>();
 
-            foreach(var v in _config)
+            foreach (var v in _config)
             {
                 var (g, s, k) = v.Key;
 
@@ -99,7 +103,7 @@ namespace AmpScm.Git.Repository
                 && int.TryParse(vResult, out var r))
             {
                 return r;
-            }            
+            }
             else
                 return defaultValue;
         }
@@ -145,7 +149,7 @@ namespace AmpScm.Git.Repository
                     return false;
                 else if (string.Equals(vResult, "off", StringComparison.OrdinalIgnoreCase))
                     return false;
-                
+
                 else if (string.Equals(vResult, "0", StringComparison.OrdinalIgnoreCase))
                     return false;
 
@@ -198,5 +202,80 @@ namespace AmpScm.Git.Repository
         Lazy<GitLazyConfig> _lazy;
 
         internal GitLazyConfig Lazy => _lazy.Value;
+
+        static string GetGitExePath()
+        {
+            return GitExePathLook() ?? GetExePathWhere() ?? null!;
+        }
+
+        private static string? GetExePathWhere()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("where", "git");
+                psi.RedirectStandardInput = true;
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+                psi.UseShellExecute = false;
+
+                string outputText = "";
+                using var ps = Process.Start(psi);
+
+                if (ps == null)
+                    return null;
+                ps.StandardInput.Close();
+                ps.OutputDataReceived += (sender, e) => outputText += e.Data;
+                ps.ErrorDataReceived += (sender, e) => { };
+                ps.BeginErrorReadLine();
+                ps.BeginOutputReadLine();
+                if (ps.WaitForExit(100) && ps.ExitCode == 0)
+                {
+                    string git = outputText.Split(new[] { '\n' }, 2)[0].Trim();
+
+                    if (File.Exists(git)
+                        && File.Exists(git = Path.GetFullPath(git)))
+                    {
+                        return git;
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return null;
+            }
+        }
+
+        private static string? GitExePathLook()
+        {
+            try
+            {
+                string? path = Environment.GetEnvironmentVariable("PATH");
+
+                if (path == null)
+                    return null;
+
+                foreach(var p in path.Split(Path.PathSeparator))
+                {
+                    try
+                    {
+                        string git;
+                        if (File.Exists(git = Path.Combine(p, "git")))
+                            return Path.GetFullPath(git);
+                        else if (File.Exists(git = Path.Combine(p, "git.exe")))
+                            return Path.GetFullPath(git);
+                    }
+                    catch { }
+                }
+                return null;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return null;
+            }
+        }
     }
 }

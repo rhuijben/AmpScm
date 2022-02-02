@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AmpScm.Git.Repository;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace AmpScm.Tests
+{
+    [TestClass]
+    public class GitClientTests
+    {
+
+        [TestMethod]
+        public void HaveShellClient()
+        {
+            Assert.IsNotNull(GitConfiguration.GitProgramPath);
+
+            Assert.IsTrue(File.Exists(GitConfiguration.GitProgramPath));
+        }
+    }
+}
