@@ -120,7 +120,7 @@ namespace AmpScm.Git
             }
         }
 
-        static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars().Concat(new [] { '^' }));
+        static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars().Concat(new [] { '^', '@', '{', '}' }));
 
         public static bool ValidName(string name, bool allowSpecialSymbols)
         {

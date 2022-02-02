@@ -25,7 +25,7 @@ namespace AmpScm.Git.Repository
         public static string GitProgramPath => _gitExePath.Value;
         public static string UserHomeDir => _homeDir.Value;
 
-        public GitConfiguration(GitRepository gitRepository, string gitDir)
+        internal GitConfiguration(GitRepository gitRepository, string gitDir)
         {
             Repository = gitRepository;
             _gitDir = gitDir;
@@ -153,9 +153,9 @@ namespace AmpScm.Git.Repository
             }
         }
 
-        internal async ValueTask<GitRemote> GetRemoteAsync(string name)
+        internal async ValueTask<GitRemote?> GetRemoteAsync(string name)
         {
-            if (await GetStringAsync("remote", name, "url") is string v)
+            if (await GetStringAsync("remote." +name, "url") is string v)
             {
                 return new GitRemote(Repository, name, v);
             }
@@ -189,7 +189,11 @@ namespace AmpScm.Git.Repository
         {
             await LoadAsync();
 
-            if (_config.TryGetValue((group, null, key), out var vResult)
+            int n = group.IndexOf('.');
+            string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
+            group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
+
+            if (_config.TryGetValue((group, subGroup, key), out var vResult)
                 && int.TryParse(vResult, out var r))
             {
                 return r;
@@ -207,19 +211,9 @@ namespace AmpScm.Git.Repository
         {
             await LoadAsync();
 
-            if (_config.TryGetValue((group, null, key), out var vResult))
-            {
-                if (vResult == "\xFF")
-                    return "";
-                return vResult;
-            }
-            else
-                return null;
-        }
-
-        public async ValueTask<string?> GetStringAsync(string group, string subGroup, string key)
-        {
-            await LoadAsync();
+            int n = group.IndexOf('.');
+            string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
+            group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
 
             if (_config.TryGetValue((group, subGroup, key), out var vResult))
             {
@@ -236,20 +230,14 @@ namespace AmpScm.Git.Repository
             return GetStringAsync(group, key).Result;
         }
 
-        internal string? GetString(string group, string subGroup, string key)
-        {
-            return GetStringAsync(group, subGroup, key).Result;
-        }
 
-
-        public ValueTask<bool> GetBoolAsync(string group, string key, bool defaultValue)
-        {
-            return GetBoolAsync(group, subGroup: null, key, defaultValue);
-        }
-
-        public async ValueTask<bool> GetBoolAsync(string group, string subGroup, string key, bool defaultValue)
+        public async ValueTask<bool> GetBoolAsync(string group, string key, bool defaultValue)
         {
             await LoadAsync();
+
+            int n = group.IndexOf('.');
+            string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
+            group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
 
             if (_config.TryGetValue((group, subGroup, key), out var vResult))
             {
@@ -293,11 +281,6 @@ namespace AmpScm.Git.Repository
             return GetBoolAsync(group, key, defaultValue).Result;
         }
 
-        public bool GetBool(string group, string subGroup, string key, bool defaultValue)
-        {
-            return GetBoolAsync(group, subGroup, key, defaultValue).Result;
-        }
-
         internal class GitLazyConfig
         {
             GitConfiguration Configuration { get; }
@@ -317,7 +300,7 @@ namespace AmpScm.Git.Repository
 
                 foreach (var v in Configuration.GetSubGroups("remote"))
                 {
-                    if (Configuration.GetBool("remote", v, "promisor", false))
+                    if (Configuration.GetBool("remote." + v, "promisor", false))
                         return true;
                 }
 
@@ -329,7 +312,6 @@ namespace AmpScm.Git.Repository
         }
 
         Lazy<GitLazyConfig> _lazy;
-        private object rawUrl;
 
         internal GitLazyConfig Lazy => _lazy.Value;
 

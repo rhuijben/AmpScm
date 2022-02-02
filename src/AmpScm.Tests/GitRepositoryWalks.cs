@@ -45,16 +45,17 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(path);
             Console.WriteLine($"Looking at {repo}");
-            Assert.IsNotNull(repo.Remotes["origin"]);
-            Console.WriteLine($" from {repo.Remotes["origin"].Url}");
+            Console.Write($" from {repo.Remotes["origin"]?.Url}");
 
             if (repo.IsBare)
-                Console.WriteLine($"{repo.FullPath} is bare");
+                Console.Write($" [bare]");
             if (repo.IsLazy)
-                Console.WriteLine($"{repo.FullPath} has promisor");
+                Console.Write($" [lazy-loaded]");
+            Console.WriteLine();
 
             Assert.IsTrue(repo.Remotes.Any(), "Has remotes");
             Assert.IsTrue(repo.Remotes.Any(x => x.Name == "origin"), "Has origin remote");
+
             Assert.IsTrue(repo.Commits.Any(), "Has commits");
             if (!repo.IsLazy)
             {

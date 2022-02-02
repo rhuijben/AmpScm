@@ -41,7 +41,7 @@ namespace AmpScm.Git
             get
             {
                 if (_rawUrl == null)
-                    _rawUrl = Repository.Configuration.GetString("remote", Name, "url") ?? "";
+                    _rawUrl = Repository.Configuration.GetString("remote." + Name, "url") ?? "";
 
                 return (_rawUrl is string s) ? s : _rawUrl?.ToString();
             }
@@ -50,7 +50,7 @@ namespace AmpScm.Git
         public async ValueTask ReadAsync()
         {
             if (_rawUrl == null)
-                _rawUrl = await Repository.Configuration.GetStringAsync("remote", Name, "url") ?? "";
+                _rawUrl = await Repository.Configuration.GetStringAsync("remote." + Name, "url") ?? "";
         }
     }
 }
