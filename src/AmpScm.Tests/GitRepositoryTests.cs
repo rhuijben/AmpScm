@@ -72,6 +72,10 @@ namespace AmpScm.BucketTests
         {
             var sd = Environment.SystemDirectory;
 
+            if (string.IsNullOrEmpty(sd))
+                return; // Not on Windows
+
+
             var normalized = GitTools.GetNormalizedFullPath(sd);
 
             Assert.AreEqual(normalized, GitTools.GetNormalizedFullPath(sd.ToUpperInvariant()));
