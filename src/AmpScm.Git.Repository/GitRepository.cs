@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +18,7 @@ namespace AmpScm.Git
     {
         readonly ServiceContainer _container;
         private bool disposedValue;
-        public string? FullPath { get; }
+        public string FullPath { get; }
         public bool IsBare { get; }
         public bool IsLazy => Configuration.Lazy.RepositoryIsLazy;
         readonly Lazy<GitConfiguration> _gitConfiguration;
@@ -40,26 +41,27 @@ namespace AmpScm.Git
 
             ObjectRepository = null!;
             GitDir = null!;
+            FullPath = null!;
         }
 
-        internal GitRepository(string path, bool bare = false)
+        internal GitRepository(string path, bool bareCheck = false)
             : this()
         {
             FullPath = GitTools.GetNormalizedFullPath(path);
 
             // TODO: Needs config check
-            if (bare && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git"))
+            if (bareCheck && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git"))
             {
                 GitDir = FullPath;
 
                 if (!(Configuration?.GetBool("core", "bare", false) ?? false))
                 {
-                    bare = false;
+                    bareCheck = false;
                     FullPath = Path.GetDirectoryName(FullPath) ?? throw new InvalidOperationException();
                 }
             }
 
-            IsBare = bare;
+            IsBare = bareCheck;
 
             if (!IsBare)
                 GitDir = Path.Combine(FullPath, ".git");
@@ -82,7 +84,9 @@ namespace AmpScm.Git
 
         internal GitQueryProvider SetQueryProvider { get; }
 
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public Objects.GitObjectRepository ObjectRepository { get; }
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public References.GitReferenceRepository ReferenceRepository { get; }
 
         public GitReference Head => References.Head;

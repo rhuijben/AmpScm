@@ -12,6 +12,13 @@ namespace AmpScm.Git
         string? _email;
         DateTimeOffset _when;
 
+        internal GitSignature(string author, string email, DateTime now)
+        {
+            _value = author ?? throw new ArgumentNullException(nameof(author));
+            _email = email ?? throw new ArgumentNullException(nameof(email));
+            _when = now;
+        }
+
         internal GitSignature(string authorValue)
         {
             _value = authorValue;

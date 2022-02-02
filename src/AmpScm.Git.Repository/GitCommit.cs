@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Git
 {
@@ -15,6 +16,7 @@ namespace AmpScm.Git
         object? _tree;
         object? _parent;
         Dictionary<string, string>? _headers;
+        string? _encoding;
         string? _message;
         string? _summary;
         GitSignature? _author;
@@ -137,13 +139,25 @@ namespace AmpScm.Git
 
         private void Read()
         {
+            ReadAsync().GetAwaiter().GetResult();
+        }
+
+        public override async ValueTask ReadAsync()
+        {
             if (_tree is Bucket b)
             {
                 _tree = "";
-                using var s = b.AsReader();
+                BucketEolState? _eolState = null;
 
-                while (s.ReadLine() is string line)
+                while (true)
                 {
+                    var (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.LF, _eolState ??= new BucketEolState());
+
+                    if (bb.IsEof || bb.Length == eol.CharCount())
+                        break;
+
+                    string line = bb.ToUTF8String(eol);
+
                     if (line.Length == 0)
                         break;
 
@@ -167,18 +181,37 @@ namespace AmpScm.Git
                         case "committer":
                             _committer = new GitSignature(parts[1]);
                             break;
+                        case "encoding":
+                            _encoding = parts[1];
+                            break;
+                        case "mergetag":
+                            break;
+
+                        case "gpgsig":
+                            break; // Ignored for now
 
                         default:
-                            _headers ??= new Dictionary<string, string>();
-                            if (_headers.TryGetValue(parts[0], out var v))
-                                _headers[parts[0]] = v + "\n" + parts[1];
-                            else
-                                _headers[parts[0]] = parts[1];
+                            if (!char.IsWhiteSpace(line, 0))
+                            {
+                                _headers ??= new Dictionary<string, string>();
+                                if (_headers.TryGetValue(parts[0], out var v))
+                                    _headers[parts[0]] = v + "\n" + parts[1];
+                                else
+                                    _headers[parts[0]] = parts[1];
+                            }
                             break;
                     }
                 }
 
-                _message = s.ReadToEnd();
+                while (true)
+                {
+                    var (bb, _) = await b.ReadUntilEolFullAsync(BucketEol.Zero, _eolState ??= new BucketEolState());
+
+                    if (bb.IsEof)
+                        break;
+
+                    _message += bb.ToUTF8String();
+                }
             }
         }
 

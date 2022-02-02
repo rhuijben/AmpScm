@@ -25,7 +25,7 @@ namespace AmpScm.Git
                 rootDir = path;
 
             string gitDir = Path.Combine(rootDir, ".git");
-            bool bare = false;
+            bool bareCheck = false;
 
             if (!Directory.Exists(gitDir) || !File.Exists(Path.Combine(gitDir, "config")))
             {
@@ -34,10 +34,10 @@ namespace AmpScm.Git
                 if (!(File.Exists(Path.Combine(gitDir, "config")) && File.Exists(Path.Combine(gitDir, "HEAD"))))
                     throw new GitRepositoryException($"Git repository not found at '{gitDir}'");
 
-                bare = true;
+                bareCheck = true;
             }
 
-            return new GitRepository(rootDir, bare: bare);
+            return new GitRepository(rootDir, bareCheck: bareCheck);
         }
 
         public static string? FindGitRoot(string path)

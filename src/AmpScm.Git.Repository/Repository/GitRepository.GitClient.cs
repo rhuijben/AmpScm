@@ -15,7 +15,7 @@ namespace AmpScm.Git
     partial class GitRepository
     {
         internal GitRepository(GitRepositoryOpenArgs a)
-            : this(GitRepositoryOpenArgs.NotNull(a).Path, a.Bare)
+            : this(GitRepositoryOpenArgs.NotNull(a).Path, a.BareCheck)
         {
 
         }
@@ -30,12 +30,12 @@ namespace AmpScm.Git
             public GitRepositoryOpenArgs(string path)
             {
                 Path = path;
-                Bare = false;
+                BareCheck = false;
             }
 
             public string Path;
 
-            public bool Bare { get; }
+            public bool BareCheck { get; }
 
             public static GitRepositoryOpenArgs NotNull(GitRepositoryOpenArgs a)
             {

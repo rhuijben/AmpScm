@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
+using AmpScm.Git.Repository.Implementation;
 
 namespace AmpScm.Git.Repository
 {
@@ -19,7 +20,9 @@ namespace AmpScm.Git.Repository
         readonly Dictionary<(string, string?, string), string> _config = new Dictionary<(string, string?, string), string>();
 
         static readonly Lazy<string> _gitExePath = new Lazy<string>(GetGitExePath, true);
+        static readonly Lazy<string> _homeDir = new Lazy<string>(GetHomeDirectory, true);
         public static string GitProgramPath => _gitExePath.Value;
+        public static string UserHomeDir => _homeDir.Value;
 
         public GitConfiguration(GitRepository gitRepository, string gitDir)
         {
@@ -32,16 +35,70 @@ namespace AmpScm.Git.Repository
         {
             if (_loaded) return;
 
-            using var b = FileBucket.OpenRead(Path.Combine(_gitDir, "config"));
+            foreach (string path in GetGitConfigurationFilePaths())
+            {
+                await LoadConfig(path);
+            }
+
+            await LoadConfig(Path.Combine(_gitDir, "config"));
+        }
+
+        async ValueTask LoadConfig(string path)
+        {
+            using var b = FileBucket.OpenRead(path);
             using var cr = new GitConfigurationReaderBucket(b);
 
             while (await cr.ReadConfigItem() is GitConfigurationItem item)
             {
                 if (item.Group == "core" || item.Group == "extension")
                     ParseCore(item);
+                else if (item.Group == "includeif")
+                    await ParseIncludeIf(path, item);
+
                 _config[(item.Group, item.SubGroup, item.Key)] = item.Value ?? "\xFF";
             }
             _loaded = true;
+        }
+
+        private async ValueTask ParseIncludeIf(string path, GitConfigurationItem item)
+        {
+            if (!(item.SubGroup is var check) || string.IsNullOrEmpty(check))
+                return;
+            else if (item.Key != "path" || item.Value == null)
+                return; // No other types documented yet
+
+            bool caseInsensitive = false;
+            if (check.StartsWith("gitdir:"))
+            { }
+            else if (check.StartsWith("gitdir/i:"))
+            {
+                caseInsensitive = true;
+                check = check.Remove(6, 2);
+            }
+
+            string dir = ApplyHomeDir(check.Substring(7).Trim());
+
+            if (GitGlob.Match(dir, Repository.FullPath, GitGlobFlags.ParentPath | (caseInsensitive ? GitGlobFlags.CaseInsensitive : GitGlobFlags.None)))
+            {
+                string newPath = Path.Combine(Path.GetDirectoryName(path)!, ApplyHomeDir(item.Value!));
+
+                if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
+                {
+                    await LoadConfig(Path.GetFullPath(newPath));
+                }
+            }
+        }
+
+        static string ApplyHomeDir(string path)
+        {
+            if (path != null && path.StartsWith("~") && UserHomeDir is var homeDir && homeDir != null)
+            {
+                if (path.StartsWith("~/"))
+                    path = homeDir!.TrimEnd(Path.DirectorySeparatorChar) + path.Substring(1);
+                else if (char.IsLetterOrDigit(path, 1))
+                    path = Path.GetDirectoryName(homeDir) + path.Substring(1); // Might need more work on linux, but not common
+            }
+            return path;
         }
 
         private void ParseCore(GitConfigurationItem item)
@@ -95,7 +152,7 @@ namespace AmpScm.Git.Repository
             }
         }
 
-        public async ValueTask<int> GetIntAsync(string group, string key, int defaultValue)
+        public async ValueTask<int?> GetIntAsync(string group, string key)
         {
             await LoadAsync();
 
@@ -105,12 +162,31 @@ namespace AmpScm.Git.Repository
                 return r;
             }
             else
-                return defaultValue;
+                return null;
         }
 
-        internal int GetInt(string group, string key, int defaultValue)
+        internal int? GetInt(string group, string key)
         {
-            return GetIntAsync(group, key, defaultValue).Result;
+            return GetIntAsync(group, key).Result;
+        }
+
+        public async ValueTask<string?> GetStringAsync(string group, string key)
+        {
+            await LoadAsync();
+
+            if (_config.TryGetValue((group, null, key), out var vResult))
+            {
+                if (vResult == "\xFF")
+                    return "";
+                return vResult;
+            }
+            else
+                return null;
+        }
+
+        internal string? GetString(string group, string key)
+        {
+            return GetStringAsync(group, key).Result;
         }
 
         public ValueTask<bool> GetBoolAsync(string group, string key, bool defaultValue)
@@ -212,7 +288,7 @@ namespace AmpScm.Git.Repository
         {
             try
             {
-                var psi = new ProcessStartInfo("where", "git");
+                var psi = new ProcessStartInfo(Environment.NewLine == "\n" ? "which" : "where", "git");
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
@@ -257,7 +333,7 @@ namespace AmpScm.Git.Repository
                 if (path == null)
                     return null;
 
-                foreach(var p in path.Split(Path.PathSeparator))
+                foreach (var p in path.Split(Path.PathSeparator))
                 {
                     try
                     {
@@ -276,6 +352,86 @@ namespace AmpScm.Git.Repository
                 Debug.WriteLine(e);
                 return null;
             }
+        }
+
+        public GitSignature Identity
+        {
+            get
+            {
+                var username = GetString("user", "name") ?? "John Doe";
+                var email = GetString("user", "email") ?? "john@john.doe.local";
+
+                return new GitSignature(username, email, DateTime.Now);
+            }
+        }
+
+        public static IEnumerable<string> GetGitConfigurationFilePaths(bool includeSystem = true)
+        {
+            string f;
+            if (includeSystem && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GIT_CONFIG_NOSYSTEM")))
+            {
+                if (GitProgramPath != null)
+                {
+                    string dir = Path.GetDirectoryName(GitProgramPath)!;
+
+                    if (Path.GetDirectoryName(dir) is var parent && File.Exists(f = Path.Combine(parent!, "etc", "gitconfig")))
+                        yield return Path.GetFullPath(f);
+                    else if (Path.GetDirectoryName(parent) is var parent2 && File.Exists(f = Path.Combine(parent2!, "etc", "gitconfig")))
+                        yield return Path.GetFullPath(f);
+
+                }
+                else if (includeSystem && Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) is var programFiles)
+                {
+                    if (File.Exists(f = Path.Combine(programFiles, "git", "etc", "gitconfig")))
+                        yield return Path.GetFullPath(f);
+                }
+
+                if (includeSystem && Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) is var commonAppData)
+                {
+                    if (File.Exists(f = Path.Combine(commonAppData, "git", "gitconfig")))
+                        yield return Path.GetFullPath(f);
+                }
+            }
+
+            if (UserHomeDir is string home && File.Exists(f = Path.Combine(home, ".gitconfig")))
+                yield return Path.GetFullPath(f);
+            else if (Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) is var localAppData
+                && File.Exists(f = Path.Combine(localAppData, "git", "gitconfig")))
+            {
+                yield return Path.GetFullPath(f);
+            }
+            else if (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) is var appData
+                && File.Exists(f = Path.Combine(appData, "git", "gitconfig")))
+            {
+                yield return Path.GetFullPath(f);
+            }
+
+        }
+
+        static string GetHomeDirectory()
+        {
+            if (Environment.GetEnvironmentVariable("HOME") is string home
+                && Directory.Exists(home))
+            {
+                return Path.GetFullPath(home);
+            }
+            else if (Environment.GetEnvironmentVariable("HOMEDRIVE") is var homeDrive
+                && Environment.GetEnvironmentVariable("HOMEPATH") is var homePath)
+            {
+                homeDrive += "\\";
+                if (homePath.StartsWith("\\") || homePath.StartsWith("/"))
+                    homePath = homeDrive + homePath;
+
+                if (Directory.Exists(home = Path.Combine(homeDrive, homePath!)))
+                    return Path.GetFullPath(home);
+            }
+            else if (Environment.GetEnvironmentVariable("USERPROFILE") is var userProfile)
+            {
+                if (Directory.Exists(userProfile))
+                    return userProfile;
+            }
+
+            return null!;
         }
     }
 }

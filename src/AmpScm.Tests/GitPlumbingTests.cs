@@ -9,7 +9,7 @@ using AmpScm.Git;
 using AmpScm.Git.Client.Plumbing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AmpScm.BucketTests
+namespace AmpScm.Tests
 {
     [TestClass]
     public class GitPlumbingTests

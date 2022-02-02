@@ -59,7 +59,7 @@ namespace AmpScm.Git
                 + "# *~\n"
             );
 
-            return new GitRepository(path, bare: isBare);
+            return new GitRepository(path, bareCheck: isBare);
         }
 
     }

@@ -8,7 +8,7 @@ using AmpScm.Buckets.Specialized;
 using AmpScm.BucketTests.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AmpScm.BucketTests
+namespace AmpScm.Tests
 {
     [TestClass]
     public class BasicTests

@@ -8,7 +8,7 @@ using AmpScm.Git;
 using AmpScm.Git.References;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AmpScm.BucketTests
+namespace AmpScm.Tests
 {
     [TestClass]
     public class GitRepositoryWalks
@@ -66,7 +66,7 @@ namespace AmpScm.BucketTests
 
             await foreach(var r in repo.References)
             {
-                Console.WriteLine($"{r.ShortName} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
+                Console.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }
         }
 

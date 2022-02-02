@@ -19,6 +19,11 @@ namespace AmpScm.Tests
             Assert.IsNotNull(GitConfiguration.GitProgramPath);
 
             Assert.IsTrue(File.Exists(GitConfiguration.GitProgramPath));
+
+            foreach(var v in GitConfiguration.GetGitConfigurationFilePaths(true))
+            {
+                Console.WriteLine(v);
+            }
         }
     }
 }

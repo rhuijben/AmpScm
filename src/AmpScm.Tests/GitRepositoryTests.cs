@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using AmpScm.Git;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AmpScm.BucketTests
+namespace AmpScm.Tests
 {
     [TestClass]
     public class GitRepositoryTests

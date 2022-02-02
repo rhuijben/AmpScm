@@ -31,7 +31,7 @@ namespace AmpScm.Git.Objects
 
         private IEnumerable<GitObjectRepository> GetRepositories()
         {
-            int format = Repository.Configuration.GetInt("core", "repositoryformatversion", -1);
+            int format = Repository.Configuration.GetInt("core", "repositoryformatversion") ?? -1;
             if (format == 1)
             {
                 foreach (var (key, value) in Repository.Configuration.GetGroup("extensions", null))
