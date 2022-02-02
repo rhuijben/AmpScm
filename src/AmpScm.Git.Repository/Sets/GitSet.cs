@@ -12,21 +12,6 @@ using AmpScm.Git.Implementation;
 
 namespace AmpScm.Git.Sets
 {
-    public interface IGitObject
-    {
-        ValueTask ReadAsync();
-    }
-
-    public interface IGitOidObject : IGitObject
-    {
-        GitId Id { get; }
-    }
-
-    public interface IGitNamedObject : IGitObject
-    {
-        public string Name { get; }
-    }
-
     public class GitSet
     {
         internal GitSet()

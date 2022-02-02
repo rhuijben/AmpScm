@@ -18,7 +18,7 @@ namespace AmpScm.Buckets.Git
         long delta_position;
         GitIdType _oidType;
         Func<GitId, ValueTask<GitBucket?>>? _oidResolver;
-        byte[]? _deltaOid;
+        byte[]? _deltaId;
 
         enum frame_state
         {
@@ -150,21 +150,21 @@ namespace AmpScm.Buckets.Git
                 {
                     if (Type == GitObjectType_DeltaReference)
                     {
-                        if (_deltaOid == null)
+                        if (_deltaId == null)
                         {
-                            _deltaOid = new byte[(_oidType == GitIdType.Sha1) ? 20 : 32];
+                            _deltaId = new byte[(_oidType == GitIdType.Sha1) ? 20 : 32];
                             position = 0;
                         }
 
-                        while (position < _deltaOid.Length)
+                        while (position < _deltaId.Length)
                         {
-                            var read = await Inner.ReadAsync(_deltaOid.Length - (int)position);
+                            var read = await Inner.ReadAsync(_deltaId.Length - (int)position);
 
                             if (read.IsEof)
                                 return false;
 
                             for (int i = 0; i < read.Length; i++)
-                                _deltaOid[position++] = read[i];
+                                _deltaId[position++] = read[i];
                         }
 
                         state = frame_state.find_delta;
@@ -256,7 +256,7 @@ namespace AmpScm.Buckets.Git
                     }
                     else 
                     {
-                        var deltaOid = new GitId(_oidType, _deltaOid!);
+                        var deltaOid = new GitId(_oidType, _deltaId!);
 
                         if (_oidResolver != null)
                         {
@@ -265,7 +265,7 @@ namespace AmpScm.Buckets.Git
 
                         if (base_reader == null)
                             throw new GitBucketException($"Can't obtain delta reference for {deltaOid}");
-                        _deltaOid = null; // Not used any more
+                        _deltaId = null; // Not used any more
                     }
 
                     if (base_reader is GitPackFrameBucket fb)

@@ -16,7 +16,5 @@ namespace AmpScm.Buckets.Git
         public GitObjectType Type { get; internal set; }
 
         public abstract ValueTask ReadTypeAsync();
-
-        public override abstract ValueTask<long?> ReadRemainingBytesAsync();
     }
 }

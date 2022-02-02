@@ -1,4 +1,5 @@
-﻿AmpScm.Buckets.Git.GitBucket
+﻿abstract AmpScm.Buckets.Git.GitObjectBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Git.GitBucket
 AmpScm.Buckets.Git.GitBucket.GitBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.GitBucketException
 AmpScm.Buckets.Git.GitBucketException.GitBucketException() -> void
@@ -23,18 +24,15 @@ AmpScm.Buckets.Git.GitDeltaBucket
 AmpScm.Buckets.Git.GitDeltaBucket.BaseBucket.get -> AmpScm.Buckets.Bucket!
 AmpScm.Buckets.Git.GitDeltaBucket.GitDeltaBucket(AmpScm.Buckets.Bucket! source, AmpScm.Buckets.Bucket! baseBucket) -> void
 AmpScm.Buckets.Git.GitObjectBucket
-AmpScm.Buckets.Git.GitObjectBucket.GitObjectBucket() -> void
+AmpScm.Buckets.Git.GitObjectBucket.GitObjectBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitObjectBucket.Type.get -> AmpScm.Git.GitObjectType
 AmpScm.Buckets.Git.GitObjectFileBucket
 AmpScm.Buckets.Git.GitObjectFileBucket.GitObjectFileBucket(AmpScm.Buckets.Bucket! inner) -> void
-AmpScm.Buckets.Git.GitObjectFileBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
-AmpScm.Buckets.Git.GitObjectFileBucket.Type.get -> AmpScm.Git.GitObjectType
 AmpScm.Buckets.Git.GitPackFrameBucket
 AmpScm.Buckets.Git.GitPackFrameBucket.BodySize.get -> long?
 AmpScm.Buckets.Git.GitPackFrameBucket.DeltaCount.get -> int?
 AmpScm.Buckets.Git.GitPackFrameBucket.GitPackFrameBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType oidType, System.Func<AmpScm.Git.GitId!, System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitBucket?>>? resolveOid = null) -> void
 AmpScm.Buckets.Git.GitPackFrameBucket.ReadInfoAsync() -> System.Threading.Tasks.ValueTask<bool>
-AmpScm.Buckets.Git.GitPackFrameBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
-AmpScm.Buckets.Git.GitPackFrameBucket.Type.get -> AmpScm.Git.GitObjectType
 AmpScm.Buckets.Git.GitPackHeaderBucket
 AmpScm.Buckets.Git.GitPackHeaderBucket.GitPackHeaderBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.GitPackHeaderBucket.GitType.get -> string?
@@ -82,6 +80,7 @@ override AmpScm.Buckets.Git.GitObjectFileBucket.PeekAsync() -> System.Threading.
 override AmpScm.Buckets.Git.GitObjectFileBucket.Position.get -> long?
 override AmpScm.Buckets.Git.GitObjectFileBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.Git.GitObjectFileBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitObjectFileBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
 override AmpScm.Buckets.Git.GitObjectFileBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
 override AmpScm.Buckets.Git.GitPackFrameBucket.CanReset.get -> bool
 override AmpScm.Buckets.Git.GitPackFrameBucket.Name.get -> string!
@@ -90,6 +89,7 @@ override AmpScm.Buckets.Git.GitPackFrameBucket.Position.get -> long?
 override AmpScm.Buckets.Git.GitPackFrameBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.Git.GitPackFrameBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
 override AmpScm.Buckets.Git.GitPackFrameBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
 override AmpScm.Buckets.Git.GitPackFrameBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
 override AmpScm.Buckets.Git.GitPackHeaderBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.Git.GitPackHeaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>

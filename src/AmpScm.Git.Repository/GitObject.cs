@@ -10,7 +10,7 @@ using AmpScm.Git.Sets;
 namespace AmpScm.Git
 {
     [DebuggerDisplay("{Type} {Id.ToString(\"x12\"),nq}")]
-    public abstract class GitObject : IEquatable<GitObject>, IGitOidObject
+    public abstract class GitObject : IEquatable<GitObject>
     {
         protected internal GitRepository Repository { get; }
         public GitId Id { get; }

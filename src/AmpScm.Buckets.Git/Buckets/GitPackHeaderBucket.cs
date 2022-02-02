@@ -31,7 +31,7 @@ namespace AmpScm.Buckets.Git
             return BucketBytes.Eof;
         }
 
-        public string? GitType => _header.HasResult ? new string(_header.Result?.GitType) : null;
+        public string? GitType => _header.HasResult ? new string(_header.Result?.GitType!) : null;
         public int? Version => _header.Result?.Version;
         public uint? ObjectCount => _header.Result?.ObjectCount;
 
