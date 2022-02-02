@@ -9,7 +9,7 @@ using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Git
 {
-    public class GitTag : GitObject
+    public sealed class GitTag : GitObject
     {
         private object _obj;
         string? _message, _summary;
@@ -120,7 +120,7 @@ namespace AmpScm.Git
             {
                 _obj = "";
                 _objType = GitObjectType.None;
-                BucketEolState _eolState = null;
+                BucketEolState? _eolState = null;
 
                 while(true)
                 {

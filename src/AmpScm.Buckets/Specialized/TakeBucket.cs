@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
-    interface IBucketTake
-    {
-        Bucket Take(long limit);
-    }
-
-    public sealed class TakeBucket : PositionBucket, IBucketTake
+    internal sealed class TakeBucket : PositionBucket, IBucketTake
     {
         public long Limit { get; private set; }
 

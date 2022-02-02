@@ -7,10 +7,10 @@ using AmpScm.Git.Sets;
 
 namespace AmpScm.Git
 {
-    public class GitRemote : IGitNamedObject
+    public sealed class GitRemote : IGitNamedObject
     {
         protected GitRepository Repository { get; }
-        object _rawUrl;
+        object? _rawUrl;
 
         internal GitRemote(GitRepository repository, string name, string? rawUrl)
         {

@@ -182,7 +182,7 @@ namespace AmpScm.Git
                 return ToString().Substring(0, 8);
             else if (format == "X")
                 return ToString().Substring(0, 8).ToUpperInvariant();
-            if (format.StartsWith("x") && int.TryParse(format.Substring(1), out var xLen))
+            if (format!.StartsWith("x") && int.TryParse(format.Substring(1), out var xLen))
                 return ToString().Substring(0, xLen);
             else if (format.StartsWith("X") && int.TryParse(format.Substring(1), out var xxlen))
                 return ToString().Substring(0, xxlen).ToUpperInvariant();

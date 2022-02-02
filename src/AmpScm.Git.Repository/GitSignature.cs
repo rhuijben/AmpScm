@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git
 {
-    public class GitSignature : IEquatable<GitSignature>
+    public sealed class GitSignature : IEquatable<GitSignature>
     {
         string _value;
         string? _email;
         DateTimeOffset _when;
 
-        internal GitSignature(string author, string email, DateTime now)
+        public GitSignature(string author, string email, DateTime now)
         {
             _value = author ?? throw new ArgumentNullException(nameof(author));
             _email = email ?? throw new ArgumentNullException(nameof(email));
             _when = now;
+            if (email.IndexOfAny(new[] { '<', '>' }) >= 0)
+                throw new ArgumentOutOfRangeException(email);
         }
 
         internal GitSignature(string authorValue)

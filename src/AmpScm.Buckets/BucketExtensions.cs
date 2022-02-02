@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Specialized;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {

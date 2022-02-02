@@ -11,7 +11,7 @@ using AmpScm.Buckets.Specialized;
 namespace AmpScm.Git
 {
     [DebuggerDisplay("{DebuggerDisplay, nq}")]
-    public class GitCommit : GitObject
+    public sealed class GitCommit : GitObject
     {
         object? _tree;
         object? _parent;
@@ -22,14 +22,8 @@ namespace AmpScm.Git
         GitSignature? _author;
         GitSignature? _committer;
 
-        public GitCommit(GitRepository repository, GitObjectId id)
+        internal GitCommit(GitRepository repository, GitBucket rdr, GitObjectId id)
             : base(repository, id)
-        {
-            _tree = null;
-        }
-
-        public GitCommit(GitRepository repository, GitBucket rdr, GitObjectId id)
-            : this(repository, id)
         {
             _tree = rdr;
         }

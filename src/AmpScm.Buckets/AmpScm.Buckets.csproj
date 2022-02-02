@@ -58,8 +58,11 @@
     <PackageReference Include="zlib.managed" Version="1.1.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net47' ">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

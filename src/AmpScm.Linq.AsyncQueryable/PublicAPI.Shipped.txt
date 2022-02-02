@@ -1,0 +1,21 @@
+﻿#nullable enable
+AmpScm.Linq.AsyncQueryable.IAsyncQueryable
+AmpScm.Linq.AsyncQueryable.IAsyncQueryable<T>
+AmpScm.Linq.AsyncQueryable.IAsyncQueryProvider
+AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<T>
+static System.Linq.AmpAsyncQueryable.AsAsyncQueryable(this System.Linq.IQueryable! queryable) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable!
+static System.Linq.AmpAsyncQueryable.AsAsyncQueryable<T>(this System.Collections.Generic.IEnumerable<T>! enumerable) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable<T>!
+static System.Linq.AmpAsyncQueryable.AsAsyncQueryable<T>(this System.Linq.IQueryable<T>! queryable) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable<T>!
+static System.Linq.AmpAsyncQueryable.OrderBy<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.OrderBy<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Collections.Generic.IComparer<TKey>? comparer) -> System.Linq.IOrderedQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.OrderByDescending<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.OrderByDescending<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Collections.Generic.IComparer<TKey>? comparer) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.Select<TSource, TResult>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, int, TResult>!>! selector) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TResult>!
+static System.Linq.AmpAsyncQueryable.Select<TSource, TResult>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TResult>!>! selector) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TResult>!
+static System.Linq.AmpAsyncQueryable.ThenBy<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Collections.Generic.IComparer<TKey>? comparer) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.ThenBy<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.ThenByDescending<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.ThenByDescending<TSource, TKey>(this AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Collections.Generic.IComparer<TKey>? comparer) -> AmpScm.Linq.AsyncQueryable.IOrderedAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.Where<TSource>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, bool>!>! predicate) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>!
+static System.Linq.AmpAsyncQueryable.Where<TSource>(this AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, int, bool>!>! predicate) -> AmpScm.Linq.AsyncQueryable.IAsyncQueryable<TSource>!
+System.Linq.AmpAsyncQueryable

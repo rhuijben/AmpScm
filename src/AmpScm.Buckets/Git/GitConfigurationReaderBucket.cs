@@ -149,7 +149,7 @@ namespace AmpScm.Buckets.Git
                 else if (_group is not null)
                 {
                     int i = 0;
-                    string value;
+                    string? value;
                     while(i < line.Length && char.IsLetterOrDigit(line, i) || line[i] == '-')
                         i++;
 

@@ -97,11 +97,6 @@ namespace AmpScm.Buckets
 
         public byte this[int index] => _data.Span[index];
 
-        public MemoryHandle Pin()
-        {
-            return _data.Pin();
-        }
-
         /// <summary>
         /// Copies the contents of the readonly-only memory into the destination. If the source
         /// and destination overlap, this method behaves as if the original values are in

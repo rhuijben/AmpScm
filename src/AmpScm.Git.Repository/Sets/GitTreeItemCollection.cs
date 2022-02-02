@@ -9,7 +9,7 @@ using AmpScm.Git.Implementation;
 
 namespace AmpScm.Git.Sets
 {
-    public class GitTreeItemCollection : IEnumerable<GitTreeItem>, IAsyncEnumerable<GitTreeItem>, IReadOnlyCollection<GitTreeItem>
+    public class GitTreeItemCollection : IEnumerable<GitTreeItem>, IAsyncEnumerable<GitTreeItem>
     {
         readonly GitTree gitTree;
         readonly bool justFiles;
@@ -21,11 +21,9 @@ namespace AmpScm.Git.Sets
             this.justFiles = justFiles;
         }
 
-        public int Count => throw new NotImplementedException();
-
         public async IAsyncEnumerator<GitTreeItem> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            Stack<(IAsyncEnumerator<GitTreeEntry>, string)> inside = null;
+            Stack<(IAsyncEnumerator<GitTreeEntry>, string)>? inside = null;
 
             IAsyncEnumerator<GitTreeEntry> cur = gitTree.GetAsyncEnumerator();
             string path = "";
@@ -59,6 +57,8 @@ namespace AmpScm.Git.Sets
                     {
                         yield return new GitTreeItem(path + c.Name, c);
                     }
+
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 await cur.DisposeAsync();

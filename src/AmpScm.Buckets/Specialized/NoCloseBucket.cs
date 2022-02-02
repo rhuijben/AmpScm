@@ -1,6 +1,6 @@
 ﻿namespace AmpScm.Buckets.Specialized
 {
-    public sealed class NoCloseBucket : Specialized.ProxyBucket<NoCloseBucket>
+    internal sealed class NoCloseBucket : Specialized.ProxyBucket<NoCloseBucket>
     {
         public NoCloseBucket(Bucket inner) : base(inner, true)
         {

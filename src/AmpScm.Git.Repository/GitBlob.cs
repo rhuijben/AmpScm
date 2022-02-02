@@ -7,18 +7,14 @@ using AmpScm.Buckets.Git;
 
 namespace AmpScm.Git
 {
-    public class GitBlob : GitObject
+    public sealed class GitBlob : GitObject
     {
         private GitBucket? _rdr;
 
         public sealed override GitObjectType Type => GitObjectType.Blob;
 
-        public GitBlob(GitRepository repository, GitObjectId id)
+        internal GitBlob(GitRepository repository, GitBucket rdr, GitObjectId id)
             : base(repository, id)
-        {
-        }
-
-        public GitBlob(GitRepository repository, GitBucket rdr, GitObjectId id) : this(repository, id)
         {
             _rdr = rdr;
         }

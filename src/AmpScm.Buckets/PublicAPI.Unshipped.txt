@@ -1,0 +1,290 @@
+﻿#nullable enable
+AmpScm.Buckets.BucketBytes.ToASCIIString() -> string!
+AmpScm.Buckets.BucketBytes.ToASCIIString(AmpScm.Buckets.BucketEol eol) -> string!
+AmpScm.Buckets.BucketBytes.ToASCIIString(int position, int length) -> string!
+AmpScm.Buckets.BucketBytes.ToASCIIString(int position, int length, AmpScm.Buckets.BucketEol eol) -> string!
+AmpScm.Buckets.BucketBytes.ToUTF8String() -> string!
+AmpScm.Buckets.BucketBytes.ToUTF8String(AmpScm.Buckets.BucketEol eol) -> string!
+AmpScm.Buckets.BucketBytes.ToUTF8String(int position, int length) -> string!
+AmpScm.Buckets.BucketBytes.ToUTF8String(int position, int length, AmpScm.Buckets.BucketEol eol) -> string!
+AmpScm.Buckets.FileBucket
+AmpScm.Buckets.Git.GitBucket
+AmpScm.Buckets.Git.GitBucket.GitBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitBucketException
+AmpScm.Buckets.Git.GitBucketException.GitBucketException() -> void
+AmpScm.Buckets.Git.GitBucketException.GitBucketException(string! message) -> void
+AmpScm.Buckets.Git.GitBucketException.GitBucketException(string? message, System.Exception? innerException) -> void
+AmpScm.Buckets.Git.GitBucketException.GitBucketException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Buckets.Git.GitConfigurationItem
+AmpScm.Buckets.Git.GitConfigurationItem.CompareTo(AmpScm.Buckets.Git.GitConfigurationItem? other) -> int
+AmpScm.Buckets.Git.GitConfigurationItem.GitConfigurationItem() -> void
+AmpScm.Buckets.Git.GitConfigurationItem.Group.get -> string!
+AmpScm.Buckets.Git.GitConfigurationItem.Group.set -> void
+AmpScm.Buckets.Git.GitConfigurationItem.Key.get -> string!
+AmpScm.Buckets.Git.GitConfigurationItem.Key.set -> void
+AmpScm.Buckets.Git.GitConfigurationItem.SubGroup.get -> string?
+AmpScm.Buckets.Git.GitConfigurationItem.SubGroup.set -> void
+AmpScm.Buckets.Git.GitConfigurationItem.Value.get -> string?
+AmpScm.Buckets.Git.GitConfigurationItem.Value.set -> void
+AmpScm.Buckets.Git.GitConfigurationReaderBucket
+AmpScm.Buckets.Git.GitConfigurationReaderBucket.GitConfigurationReaderBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitConfigurationReaderBucket.ReadConfigItem() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitConfigurationItem?>
+AmpScm.Buckets.Git.GitDeltaBucket
+AmpScm.Buckets.Git.GitDeltaBucket.BaseBucket.get -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Git.GitDeltaBucket.GitDeltaBucket(AmpScm.Buckets.Bucket! source, AmpScm.Buckets.Bucket! baseBucket) -> void
+AmpScm.Buckets.Git.GitException
+AmpScm.Buckets.Git.GitException.GitException() -> void
+AmpScm.Buckets.Git.GitException.GitException(string! message) -> void
+AmpScm.Buckets.Git.GitException.GitException(string? message, System.Exception? innerException) -> void
+AmpScm.Buckets.Git.GitException.GitException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Buckets.Git.GitObjectFileBucket
+AmpScm.Buckets.Git.GitObjectFileBucket.GitObjectFileBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitObjectFileBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Git.GitObjectFileBucket.Type.get -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitObjectType.Blob = 3 -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitObjectType.Commit = 1 -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitObjectType.None = 0 -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitObjectType.Tag = 4 -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitObjectType.Tree = 2 -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitPackFrameBucket
+AmpScm.Buckets.Git.GitPackFrameBucket.BodySize.get -> long?
+AmpScm.Buckets.Git.GitPackFrameBucket.DeltaCount.get -> int?
+AmpScm.Buckets.Git.GitPackFrameBucket.GitPackFrameBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitObjectIdType oidType, System.Func<AmpScm.Git.GitObjectId!, System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitBucket?>>? resolveOid = null) -> void
+AmpScm.Buckets.Git.GitPackFrameBucket.ReadInfoAsync() -> System.Threading.Tasks.ValueTask<bool>
+AmpScm.Buckets.Git.GitPackFrameBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Git.GitPackFrameBucket.Type.get -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Git.GitPackHeaderBucket
+AmpScm.Buckets.Git.GitPackHeaderBucket.GitPackHeaderBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitPackHeaderBucket.GitType.get -> string?
+AmpScm.Buckets.Git.GitPackHeaderBucket.ObjectCount.get -> uint?
+AmpScm.Buckets.Git.GitPackHeaderBucket.Version.get -> int?
+AmpScm.Buckets.Git.IGitObjectType
+AmpScm.Buckets.Git.IGitObjectType.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+AmpScm.Buckets.Git.IGitObjectType.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Git.IGitObjectType.Type.get -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Buckets.Interfaces.IBucketNoClose
+AmpScm.Buckets.Interfaces.IBucketNoClose.NoClose() -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.MemoryBucket
+AmpScm.Buckets.MemoryBucket.MemoryBucket(byte[]! data) -> void
+AmpScm.Buckets.MemoryBucket.MemoryBucket(byte[]! data, int start, int length) -> void
+AmpScm.Buckets.MemoryBucket.MemoryBucket(System.ReadOnlyMemory<byte> data) -> void
+AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
+AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.Brotli = 2 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
+AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.Deflate = 0 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
+AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.ZLib = 1 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
+AmpScm.Buckets.Specialized.CreateHashBucket
+AmpScm.Buckets.Specialized.CreateHashBucket.CreateHashBucket(AmpScm.Buckets.Bucket! inner, System.Security.Cryptography.HashAlgorithm! hasher) -> void
+AmpScm.Buckets.Specialized.CreateHashBucket.CreateHashBucket(AmpScm.Buckets.Bucket! inner, System.Security.Cryptography.HashAlgorithm! hasher, System.Action<byte[]!>? hashCreated) -> void
+AmpScm.Buckets.Specialized.CreateHashBucket.HashResult.get -> byte[]?
+AmpScm.Buckets.Specialized.PollData
+AmpScm.Buckets.Specialized.PollData.AlreadyRead.get -> int
+AmpScm.Buckets.Specialized.PollData.Bucket.get -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Specialized.PollData.Consume(int readBytes) -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Specialized.PollData.Data.get -> AmpScm.Buckets.BucketBytes
+AmpScm.Buckets.Specialized.PollData.Dispose() -> void
+AmpScm.Buckets.Specialized.PollData.IsEmpty.get -> bool
+AmpScm.Buckets.Specialized.PollData.IsEof.get -> bool
+AmpScm.Buckets.Specialized.PollData.Length.get -> int
+AmpScm.Buckets.Specialized.PollData.PollData(AmpScm.Buckets.Bucket! bucket, AmpScm.Buckets.BucketBytes data, int alreadyRead) -> void
+AmpScm.Buckets.Specialized.PollData.Position.get -> long?
+AmpScm.Buckets.Specialized.PollData.ReadAsync(int readBytes) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+AmpScm.Buckets.Specialized.PollData.this[int index].get -> byte
+AmpScm.Buckets.Specialized.ProxyBucket
+AmpScm.Buckets.Specialized.ProxyBucket.ProxyBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Specialized.ProxyBucket<TBucket>
+AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ProxyBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Specialized.SpecializedBucketExtensions
+AmpScm.Buckets.Specialized.WrappingBucket
+AmpScm.Buckets.Specialized.WrappingBucket.Inner.get -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Specialized.WrappingBucket.NoClose() -> void
+AmpScm.Buckets.Specialized.WrappingBucket.WrappingBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Specialized.WrappingBucket.WrappingBucket(AmpScm.Buckets.Bucket! inner, bool noDispose) -> void
+AmpScm.Buckets.Specialized.ZLibBucket
+AmpScm.Buckets.Specialized.ZLibBucket.ZLibBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Specialized.ZLibBucket.ZLibBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Buckets.Specialized.ZLibLevel level) -> void
+AmpScm.Buckets.Specialized.ZLibLevel
+AmpScm.Buckets.Specialized.ZLibLevel.BestSpeed = 1 -> AmpScm.Buckets.Specialized.ZLibLevel
+AmpScm.Buckets.Specialized.ZLibLevel.Maximum = 9 -> AmpScm.Buckets.Specialized.ZLibLevel
+AmpScm.Buckets.Specialized.ZLibLevel.Store = 0 -> AmpScm.Buckets.Specialized.ZLibLevel
+AmpScm.Buckets.ValueOrEof<T>
+AmpScm.Buckets.ValueOrEof<T>.IsEof.get -> bool
+AmpScm.Buckets.ValueOrEof<T>.Value.get -> T
+AmpScm.Buckets.ValueOrEof<T>.ValueOrEof() -> void
+AmpScm.Buckets.ValueOrEof<T>.ValueOrEof(bool eof) -> void
+AmpScm.Buckets.ValueOrEof<T>.ValueOrEof(T value) -> void
+AmpScm.Buckets.Wrappers.BucketReader
+AmpScm.Buckets.Wrappers.BucketReader.Bucket.get -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Wrappers.BucketReader.BucketReader(AmpScm.Buckets.Bucket! bucket, System.Text.Encoding? textEncoding) -> void
+AmpScm.Buckets.Wrappers.BucketReader.TextEncoding.get -> System.Text.Encoding?
+AmpScm.Buckets.Wrappers.BucketStream
+AmpScm.Buckets.Wrappers.BucketStream.Bucket.get -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Wrappers.BucketStream.BucketStream(AmpScm.Buckets.Bucket! bucket) -> void
+AmpScm.Git.GitObjectId
+AmpScm.Git.GitObjectId.CompareTo(AmpScm.Git.GitObjectId? other) -> int
+AmpScm.Git.GitObjectId.Equals(AmpScm.Git.GitObjectId? other) -> bool
+AmpScm.Git.GitObjectId.GitObjectId(AmpScm.Git.GitObjectIdType type, byte[]! hash) -> void
+AmpScm.Git.GitObjectId.Hash.get -> byte[]!
+AmpScm.Git.GitObjectId.HashCompare(AmpScm.Git.GitObjectId! other) -> int
+AmpScm.Git.GitObjectId.this[int index].get -> byte
+AmpScm.Git.GitObjectId.ToString(string? format) -> string!
+AmpScm.Git.GitObjectId.Type.get -> AmpScm.Git.GitObjectIdType
+AmpScm.Git.GitObjectIdType
+AmpScm.Git.GitObjectIdType.None = 0 -> AmpScm.Git.GitObjectIdType
+AmpScm.Git.GitObjectIdType.Sha1 = 1 -> AmpScm.Git.GitObjectIdType
+AmpScm.Git.GitObjectIdType.Sha256 = 2 -> AmpScm.Git.GitObjectIdType
+override AmpScm.Buckets.AggregateBucket.CanReset.get -> bool
+override AmpScm.Buckets.AggregateBucket.Dispose(bool disposing) -> void
+override AmpScm.Buckets.AggregateBucket.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.AggregateBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.AggregateBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.AggregateBucket.Position.get -> long?
+override AmpScm.Buckets.AggregateBucket.ReadAsync(int requested = -1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.AggregateBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.AggregateBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.AggregateBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.BucketBytes.GetHashCode() -> int
+override AmpScm.Buckets.FileBucket.CanReset.get -> bool
+override AmpScm.Buckets.FileBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.FileBucket.Name.get -> string!
+override AmpScm.Buckets.FileBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.FileBucket.Position.get -> long?
+override AmpScm.Buckets.FileBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.FileBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.FileBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.FileBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.Git.GitConfigurationItem.ToString() -> string!
+override AmpScm.Buckets.Git.GitConfigurationReaderBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitConfigurationReaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitDeltaBucket.CanReset.get -> bool
+override AmpScm.Buckets.Git.GitDeltaBucket.Dispose(bool disposing) -> void
+override AmpScm.Buckets.Git.GitDeltaBucket.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitDeltaBucket.Name.get -> string!
+override AmpScm.Buckets.Git.GitDeltaBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitDeltaBucket.Position.get -> long?
+override AmpScm.Buckets.Git.GitDeltaBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitDeltaBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitDeltaBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Git.GitDeltaBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitObjectFileBucket.CanReset.get -> bool
+override AmpScm.Buckets.Git.GitObjectFileBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitObjectFileBucket.Position.get -> long?
+override AmpScm.Buckets.Git.GitObjectFileBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitObjectFileBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitObjectFileBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitPackFrameBucket.CanReset.get -> bool
+override AmpScm.Buckets.Git.GitPackFrameBucket.Name.get -> string!
+override AmpScm.Buckets.Git.GitPackFrameBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitPackFrameBucket.Position.get -> long?
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitPackHeaderBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitPackHeaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.MemoryBucket.CanReset.get -> bool
+override AmpScm.Buckets.MemoryBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.MemoryBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.MemoryBucket.Position.get -> long?
+override AmpScm.Buckets.MemoryBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.MemoryBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.MemoryBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Specialized.CreateHashBucket.CanReset.get -> bool
+override AmpScm.Buckets.Specialized.CreateHashBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.Specialized.CreateHashBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Specialized.CreateHashBucket.Position.get -> long?
+override AmpScm.Buckets.Specialized.CreateHashBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Specialized.CreateHashBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Specialized.CreateHashBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Specialized.CreateHashBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Specialized.ProxyBucket.Name.get -> string!
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.CanReset.get -> bool
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.Position.get -> long?
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadBucket<TReadBucket>() -> System.Threading.Tasks.ValueTask<TReadBucket?>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadUntilEolAsync(AmpScm.Buckets.BucketEol acceptableEols, int requested = 2147483647) -> System.Threading.Tasks.ValueTask<(AmpScm.Buckets.BucketBytes, AmpScm.Buckets.BucketEol)>
+override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Specialized.WrappingBucket.Dispose(bool disposing) -> void
+override AmpScm.Buckets.Specialized.WrappingBucket.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Specialized.WrappingBucket.Name.get -> string!
+override AmpScm.Buckets.Specialized.ZLibBucket.CanReset.get -> bool
+override AmpScm.Buckets.Specialized.ZLibBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+override AmpScm.Buckets.Specialized.ZLibBucket.Name.get -> string!
+override AmpScm.Buckets.Specialized.ZLibBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Specialized.ZLibBucket.Position.get -> long?
+override AmpScm.Buckets.Specialized.ZLibBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Specialized.ZLibBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Wrappers.BucketReader.Dispose(bool disposing) -> void
+override AmpScm.Buckets.Wrappers.BucketReader.Peek() -> int
+override AmpScm.Buckets.Wrappers.BucketReader.Read() -> int
+override AmpScm.Buckets.Wrappers.BucketReader.Read(char[]! buffer, int index, int count) -> int
+override AmpScm.Buckets.Wrappers.BucketReader.ReadLine() -> string?
+override AmpScm.Buckets.Wrappers.BucketReader.ReadToEnd() -> string!
+override AmpScm.Buckets.Wrappers.BucketStream.CanRead.get -> bool
+override AmpScm.Buckets.Wrappers.BucketStream.CanSeek.get -> bool
+override AmpScm.Buckets.Wrappers.BucketStream.CanWrite.get -> bool
+override AmpScm.Buckets.Wrappers.BucketStream.Dispose(bool disposing) -> void
+override AmpScm.Buckets.Wrappers.BucketStream.DisposeAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Wrappers.BucketStream.Flush() -> void
+override AmpScm.Buckets.Wrappers.BucketStream.Length.get -> long
+override AmpScm.Buckets.Wrappers.BucketStream.Position.get -> long
+override AmpScm.Buckets.Wrappers.BucketStream.Position.set -> void
+override AmpScm.Buckets.Wrappers.BucketStream.Read(byte[]! buffer, int offset, int count) -> int
+override AmpScm.Buckets.Wrappers.BucketStream.ReadAsync(byte[]! buffer, int offset, int count, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+override AmpScm.Buckets.Wrappers.BucketStream.ReadAsync(System.Memory<byte> buffer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Wrappers.BucketStream.Seek(long offset, System.IO.SeekOrigin origin) -> long
+override AmpScm.Buckets.Wrappers.BucketStream.SetLength(long value) -> void
+override AmpScm.Buckets.Wrappers.BucketStream.Write(byte[]! buffer, int offset, int count) -> void
+override AmpScm.Git.GitObjectId.Equals(object? obj) -> bool
+override AmpScm.Git.GitObjectId.GetHashCode() -> int
+override AmpScm.Git.GitObjectId.ToString() -> string!
+static AmpScm.Buckets.BucketBytes.implicit operator AmpScm.Buckets.BucketBytes(byte[]! array) -> AmpScm.Buckets.BucketBytes
+static AmpScm.Buckets.BucketBytes.implicit operator AmpScm.Buckets.BucketBytes(System.ArraySegment<byte> segment) -> AmpScm.Buckets.BucketBytes
+static AmpScm.Buckets.BucketBytes.implicit operator AmpScm.Buckets.BucketBytes(System.ReadOnlyMemory<byte> segment) -> AmpScm.Buckets.BucketBytes
+static AmpScm.Buckets.BucketBytes.implicit operator System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>(AmpScm.Buckets.BucketBytes v) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+static AmpScm.Buckets.BucketExtensions.Append(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Bucket! newLast) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsBucket(this byte[]! bytes) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsBucket(this byte[]![]! bytes) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsBucket(this byte[]![]! bytes, bool keepOpen) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsBucket(this System.Collections.Generic.IEnumerable<AmpScm.Buckets.Bucket!>! buckets) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsBucket(this System.Collections.Generic.IEnumerable<AmpScm.Buckets.Bucket!>! buckets, bool keepOpen) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsBucket(this System.ReadOnlyMemory<byte> memory) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.AsReader(this AmpScm.Buckets.Bucket! self) -> System.IO.TextReader!
+static AmpScm.Buckets.BucketExtensions.AsStream(this AmpScm.Buckets.Bucket! self) -> System.IO.Stream!
+static AmpScm.Buckets.BucketExtensions.Decompress(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Specialized.BucketCompressionAlgorithm algorithm) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.NoClose(this AmpScm.Buckets.Bucket! bucket, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.Prepend(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Bucket! newFirst) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.SeekOnReset(this AmpScm.Buckets.Bucket! bucket) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.Skip(this AmpScm.Buckets.Bucket! self, long firstPosition, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.Take(this AmpScm.Buckets.Bucket! self, long limit, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.ToArray(this AmpScm.Buckets.Bucket! self) -> byte[]!
+static AmpScm.Buckets.BucketExtensions.ToArrayAsync(this AmpScm.Buckets.Bucket! self) -> System.Threading.Tasks.ValueTask<byte[]!>
+static AmpScm.Buckets.BucketExtensions.VerifyBehavior<TBucket>(this TBucket! toVerify) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.WithPosition(this AmpScm.Buckets.Bucket! self, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.Wrap(this AmpScm.Buckets.Bucket! self) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.FileBucket.OpenRead(string! path) -> AmpScm.Buckets.FileBucket!
+static AmpScm.Buckets.FileBucket.OpenRead(string! path, bool forAsync) -> AmpScm.Buckets.FileBucket!
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.CharCount(this AmpScm.Buckets.BucketEol eol) -> int
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.Crc32(this AmpScm.Buckets.Bucket! self, System.Action<int>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.MD5(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.PollAsync(this AmpScm.Buckets.Bucket! self, int minRequested = 1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Specialized.PollData!>
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadFullAsync(this AmpScm.Buckets.Bucket! self, int requested) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadUntilAsync(this AmpScm.Buckets.Bucket! self, byte b) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadUntilEolFullAsync(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.BucketEol acceptableEols, AmpScm.Buckets.BucketEolState? eolState, int requested = 2147483647) -> System.Threading.Tasks.ValueTask<(AmpScm.Buckets.BucketBytes, AmpScm.Buckets.BucketEol)>
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReverseIfLittleEndian<T>(this System.Collections.Generic.IEnumerable<T>! self) -> System.Collections.Generic.IEnumerable<T>!
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.SHA1(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.SHA256(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
+static AmpScm.Buckets.ValueOrEof<T>.implicit operator AmpScm.Buckets.ValueOrEof<T>(T value) -> AmpScm.Buckets.ValueOrEof<T>
+static AmpScm.Git.GitObjectId.FromByteArrayOffset(AmpScm.Git.GitObjectIdType type, byte[]! hash, int offset) -> AmpScm.Git.GitObjectId!
+static AmpScm.Git.GitObjectId.HashLength(AmpScm.Git.GitObjectIdType type) -> int
+static AmpScm.Git.GitObjectId.operator !=(AmpScm.Git.GitObjectId? one, AmpScm.Git.GitObjectId? other) -> bool
+static AmpScm.Git.GitObjectId.operator ==(AmpScm.Git.GitObjectId? one, AmpScm.Git.GitObjectId? other) -> bool
+static AmpScm.Git.GitObjectId.StringToByteArray(string! hex) -> byte[]!
+static AmpScm.Git.GitObjectId.TryParse(string! s, out AmpScm.Git.GitObjectId! oid) -> bool
+virtual AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.NoClose() -> AmpScm.Buckets.Bucket!
+virtual AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.WrapDuplicate(AmpScm.Buckets.Bucket! duplicatedInner, bool reset) -> TBucket?

@@ -32,7 +32,7 @@ namespace AmpScm.Buckets.Git
 
         public string? GitType => _header.HasResult ? new string(_header.Result?.GitType) : null;
         public int? Version => _header.Result?.Version;
-        public int? ObjectCount => _header.Result?.ObjectCount;
+        public uint? ObjectCount => _header.Result?.ObjectCount;
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -43,7 +43,7 @@ namespace AmpScm.Buckets.Git
             [NetworkOrder]
             public int Version;
             [NetworkOrder]
-            public int ObjectCount;
+            public uint ObjectCount;
         }
     }
 }

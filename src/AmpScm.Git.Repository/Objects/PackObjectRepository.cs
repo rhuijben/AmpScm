@@ -249,12 +249,28 @@ namespace AmpScm.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                _fb ??= FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
+                if (_fb == null)
+                {
+                    _fb = FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
+
+                    using var phr = new GitPackHeaderBucket(_fb.NoClose());
+
+                    var bb = await phr.ReadAsync();
+
+                    if (!bb.IsEof)
+                        throw new GitBucketException("Error during reading of pack header");
+                    else if (phr.GitType != "PACK")
+                        throw new GitBucketException($"Error during reading of pack header, type='{phr.GitType}");
+                    else if(phr.Version != 2)
+                        throw new GitBucketException($"Unexpected pack version '{phr.Version}, expected version 2");
+                    else if (phr.ObjectCount != count)
+                        throw new GitBucketException($"Header has {phr.ObjectCount} records, but the index {count}");
+                }
 
                 var rdr = await _fb.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr.NoClose(), _idType, Repository.ObjectRepository.ResolveByOid);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
 
                 await pf.ReadRemainingBytesAsync();
 

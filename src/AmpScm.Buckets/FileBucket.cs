@@ -15,7 +15,7 @@ namespace AmpScm.Buckets
         long _bufStart;
         readonly int _chunkSizeMinus1;
 
-        private FileBucket(FileHolder holder, int bufferSize = 8192, int chunkSize = 1024)
+        private FileBucket(FileHolder holder, int bufferSize = 8192, int chunkSize = 2048)
         {
             _holder = holder ?? throw new ArgumentNullException(nameof(holder));
             _holder.AddRef();
@@ -246,7 +246,11 @@ namespace AmpScm.Buckets
                     if (_keep.Count > 4 && (f != _primary))
                     {
 #if NET6_0_OR_GREATER
-                        if (!_primary.IsAsync)
+                        if (_primary.IsAsync) // All file instances share the same handle
+                        {
+                            GC.SuppressFinalize(f);
+                        }
+                        else
 #endif
                         {
 

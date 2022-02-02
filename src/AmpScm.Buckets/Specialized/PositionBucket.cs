@@ -2,7 +2,7 @@
 
 namespace AmpScm.Buckets.Specialized
 {
-    public class PositionBucket : ProxyBucket<PositionBucket>
+    internal class PositionBucket : ProxyBucket<PositionBucket>
     {
         long _position;
 

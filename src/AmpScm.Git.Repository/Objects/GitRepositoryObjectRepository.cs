@@ -118,6 +118,12 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
+        internal override ValueTask<GitBucket?> ResolveByOid(GitObjectId arg)
+        {
+            // TODO: Implement
+            return base.ResolveByOid(arg);
+        }
+
         protected GitObjectRepository[] Sources => _repositories.Value;
     }
 }

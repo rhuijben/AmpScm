@@ -8,6 +8,11 @@ using AmpScm.Linq.AsyncQueryable.Wrap;
 
 namespace System.Linq
 {
+    /// <summary>
+    /// Like <see cref="Queryable"/>, but then for lists that implement both <see cref="IQueryable{T}"/> and <see cref="IAsyncEnumerable{T}"/>,
+    /// which makes both the <see cref="Queryable"/> and <see cref="AsyncEnumerable"/> apis apply, and give the compiler no way to choose.
+    /// </summary>
+    /// <remarks>Most work is delegated to <see cref="Queryable"/>, as that handles query building in the way we want it</remarks>
     public static class AmpAsyncQueryable
     {
         internal static MethodInfo GetMethod<T>(Expression<Action<T>> x)

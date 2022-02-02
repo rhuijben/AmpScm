@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
-
     public abstract class ProxyBucket<TBucket> : WrappingBucket, IBucketNoClose
         where TBucket : Bucket
     {
-        public ProxyBucket(Bucket inner)
+        protected ProxyBucket(Bucket inner)
             : base(inner)
         {
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {
@@ -86,7 +87,7 @@ namespace AmpScm.Buckets
                 if (!r.IsEof)
                 {
                     if (r.Length == 0)
-                        throw new InvalidOperationException($"Got 0 byte read on {_buckets[_n].Name} bucket");
+                        throw new InvalidOperationException($"Got 0 byte read on {_buckets[_n]?.Name} bucket");
 
                     _position += r.Length;
 

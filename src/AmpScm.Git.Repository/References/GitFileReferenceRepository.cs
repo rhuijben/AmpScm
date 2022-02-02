@@ -17,7 +17,17 @@ namespace AmpScm.Git.References
 
         public async override IAsyncEnumerable<GitReference> GetAll()
         {
-            yield break;
+            string baseDir = Path.GetFullPath(GitDir);
+
+            foreach (string file in Directory.GetFiles(Path.Combine(baseDir, "refs"), "*"))
+            {
+                if (file.Length > baseDir.Length+1 && file[baseDir.Length] == Path.DirectorySeparatorChar)
+                {
+                    string name = file.Substring(baseDir.Length+1).Replace(Path.DirectorySeparatorChar, '/');
+
+                    yield return new GitReference(this, name, (GitObjectId?)null);
+                }
+            }            
         }
 
         protected internal async override ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
@@ -30,7 +40,7 @@ namespace AmpScm.Git.References
             return new GitReference(this, name, new GitAsyncLazy<GitObjectId?>(async () => await LoadOidFromFile(fileName)));
         }
 
-        static async ValueTask<GitObjectId?> LoadOidFromFile(string fileName)
+        async ValueTask<GitObjectId?> LoadOidFromFile(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException(nameof(fileName));
@@ -56,6 +66,16 @@ namespace AmpScm.Git.References
                 return oid;
             else if (GitObjectId.TryParse(body.Trim(), out oid))
                 return oid;
+            else if (body.StartsWith("ref:"))
+            {
+                try
+                {
+                    var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim());
+
+                    return ob?.ObjectId;
+                }
+                catch { }
+            }
 
             return null;
         }

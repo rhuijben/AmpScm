@@ -1,0 +1,176 @@
+﻿abstract AmpScm.Git.GitObject.Type.get -> AmpScm.Buckets.Git.GitObjectType
+abstract AmpScm.Git.GitTreeEntry.GitObject.get -> AmpScm.Git.GitObject!
+abstract AmpScm.Git.GitTreeEntry.ReadAsync() -> System.Threading.Tasks.ValueTask
+abstract AmpScm.Git.Objects.GitObjectRepository.Get<TGitObject>(AmpScm.Git.GitObjectId! objectId) -> System.Threading.Tasks.ValueTask<TGitObject?>
+abstract AmpScm.Git.Objects.GitObjectRepository.GetAll<TGitObject>() -> System.Collections.Generic.IAsyncEnumerable<TGitObject!>!
+abstract AmpScm.Git.References.GitReferenceRepository.GetAll() -> System.Collections.Generic.IAsyncEnumerable<AmpScm.Git.GitReference!>!
+abstract AmpScm.Git.References.GitReferenceRepository.GetUnsafeAsync(string! name, bool findSymbolic) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
+AmpScm.Git.GitBlob
+AmpScm.Git.GitCommit
+AmpScm.Git.GitCommit.Author.get -> AmpScm.Git.GitSignature!
+AmpScm.Git.GitCommit.Committer.get -> AmpScm.Git.GitSignature?
+AmpScm.Git.GitCommit.Message.get -> string?
+AmpScm.Git.GitCommit.Parent.get -> AmpScm.Git.GitCommit?
+AmpScm.Git.GitCommit.Summary.get -> string?
+AmpScm.Git.GitCommit.Tree.get -> AmpScm.Git.GitTree!
+AmpScm.Git.GitDirectoryTreeEntry
+AmpScm.Git.GitDirectoryTreeEntry.GitObject.get -> AmpScm.Git.GitTree!
+AmpScm.Git.GitDirectoryTreeEntry.Tree.get -> AmpScm.Git.GitTree!
+AmpScm.Git.GitFileTreeEntry
+AmpScm.Git.GitFileTreeEntry.Blob.get -> AmpScm.Git.GitBlob!
+AmpScm.Git.GitFileTreeEntry.GitObject.get -> AmpScm.Git.GitBlob!
+AmpScm.Git.GitObject
+AmpScm.Git.GitObject.Equals(AmpScm.Git.GitObject? other) -> bool
+AmpScm.Git.GitObject.Id.get -> AmpScm.Git.GitObjectId!
+AmpScm.Git.GitReference
+AmpScm.Git.GitReference.Name.get -> string!
+AmpScm.Git.GitReference.ObjectId.get -> AmpScm.Git.GitObjectId?
+AmpScm.Git.GitReference.ShortName.get -> string!
+AmpScm.Git.GitRemote
+AmpScm.Git.GitRemote.Name.get -> string!
+AmpScm.Git.GitRemote.RawUrl.get -> string?
+AmpScm.Git.GitRemote.ReadAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Git.GitRemote.Url.get -> System.Uri?
+AmpScm.Git.GitRepository
+AmpScm.Git.GitRepository.Blobs.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitBlob!>!
+AmpScm.Git.GitRepository.Commits.get -> AmpScm.Git.Sets.GitCommitsSet!
+AmpScm.Git.GitRepository.Configuration.get -> AmpScm.Git.Repository.GitConfiguration!
+AmpScm.Git.GitRepository.Dispose() -> void
+AmpScm.Git.GitRepository.FullPath.get -> string!
+AmpScm.Git.GitRepository.Head.get -> AmpScm.Git.GitReference!
+AmpScm.Git.GitRepository.IsBare.get -> bool
+AmpScm.Git.GitRepository.IsLazy.get -> bool
+AmpScm.Git.GitRepository.ObjectRepository.get -> AmpScm.Git.Objects.GitObjectRepository!
+AmpScm.Git.GitRepository.Objects.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitObject!>!
+AmpScm.Git.GitRepository.ReferenceRepository.get -> AmpScm.Git.References.GitReferenceRepository!
+AmpScm.Git.GitRepository.References.get -> AmpScm.Git.Sets.GitReferencesSet!
+AmpScm.Git.GitRepository.Remotes.get -> AmpScm.Git.Sets.GitRemotesSet!
+AmpScm.Git.GitRepository.Tags.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTag!>!
+AmpScm.Git.GitRepository.Trees.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTree!>!
+AmpScm.Git.GitRepositoryException
+AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message) -> void
+AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message, System.Exception! innerexception) -> void
+AmpScm.Git.GitRepositoryException.GitRepositoryException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Git.GitSignature
+AmpScm.Git.GitSignature.Email.get -> string!
+AmpScm.Git.GitSignature.Equals(AmpScm.Git.GitSignature? other) -> bool
+AmpScm.Git.GitSignature.GitSignature(string! author, string! email, System.DateTime now) -> void
+AmpScm.Git.GitSignature.Name.get -> string!
+AmpScm.Git.GitSignature.When.get -> System.DateTimeOffset
+AmpScm.Git.GitTag
+AmpScm.Git.GitTag.Message.get -> string?
+AmpScm.Git.GitTag.Object.get -> AmpScm.Git.GitObject!
+AmpScm.Git.GitTag.ObjectType.get -> AmpScm.Buckets.Git.GitObjectType
+AmpScm.Git.GitTag.Summary.get -> string?
+AmpScm.Git.GitTag.Tagger.get -> AmpScm.Git.GitSignature!
+AmpScm.Git.GitTools
+AmpScm.Git.GitTree
+AmpScm.Git.GitTree.AllFiles.get -> AmpScm.Git.Sets.GitTreeItemCollection!
+AmpScm.Git.GitTree.AllItems.get -> AmpScm.Git.Sets.GitTreeItemCollection!
+AmpScm.Git.GitTree.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<AmpScm.Git.GitTreeEntry!>!
+AmpScm.Git.GitTree.GetEnumerator() -> System.Collections.Generic.IEnumerator<AmpScm.Git.GitTreeEntry!>!
+AmpScm.Git.GitTreeEntry
+AmpScm.Git.GitTreeEntry.Equals(AmpScm.Git.GitTreeEntry? other) -> bool
+AmpScm.Git.GitTreeEntry.Id.get -> AmpScm.Git.GitObjectId!
+AmpScm.Git.GitTreeEntry.Name.get -> string!
+AmpScm.Git.GitTreeEntry<TEntry, TObject>
+AmpScm.Git.Implementation.GitExecCommandException
+AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException() -> void
+AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string! message) -> void
+AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string? message, System.Exception? innerException) -> void
+AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Git.Implementation.IGitAsyncQueryable<T>
+AmpScm.Git.Objects.GitObjectRepository
+AmpScm.Git.Objects.GitObjectRepository.GitObjectRepository(AmpScm.Git.GitRepository! repository) -> void
+AmpScm.Git.Objects.GitObjectRepository.Repository.get -> AmpScm.Git.GitRepository!
+AmpScm.Git.References.GitReferenceRepository
+AmpScm.Git.References.GitReferenceRepository.GetAsync(string! name) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
+AmpScm.Git.References.GitReferenceRepository.GitDir.get -> string!
+AmpScm.Git.References.GitReferenceRepository.GitReferenceRepository(AmpScm.Git.GitRepository! repository, string! gitDir) -> void
+AmpScm.Git.References.GitReferenceRepository.Repository.get -> AmpScm.Git.GitRepository!
+AmpScm.Git.References.GitSymbolicReference
+AmpScm.Git.References.GitSymbolicReference.Reference.get -> AmpScm.Git.GitReference?
+AmpScm.Git.Repository.GitConfiguration
+AmpScm.Git.Repository.GitConfiguration.GetBool(string! group, string! key, bool defaultValue) -> bool
+AmpScm.Git.Repository.GitConfiguration.GetBoolAsync(string! group, string! key, bool defaultValue) -> System.Threading.Tasks.ValueTask<bool>
+AmpScm.Git.Repository.GitConfiguration.GetIntAsync(string! group, string! key) -> System.Threading.Tasks.ValueTask<int?>
+AmpScm.Git.Repository.GitConfiguration.GetStringAsync(string! group, string! key) -> System.Threading.Tasks.ValueTask<string?>
+AmpScm.Git.Repository.GitConfiguration.GetSubGroups(string! group) -> System.Collections.Generic.IEnumerable<string!>!
+AmpScm.Git.Repository.GitConfiguration.Identity.get -> AmpScm.Git.GitSignature!
+AmpScm.Git.Sets.GitCommitsSet
+AmpScm.Git.Sets.GitNamedSet<T>
+AmpScm.Git.Sets.GitNamedSet<T>.ElementType.get -> System.Type!
+AmpScm.Git.Sets.GitNamedSet<T>.GetAsync(string! name) -> System.Threading.Tasks.ValueTask<T?>
+AmpScm.Git.Sets.GitNamedSet<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<T!>!
+AmpScm.Git.Sets.GitNamedSet<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T!>!
+AmpScm.Git.Sets.GitNamedSet<T>.this[string! name].get -> T?
+AmpScm.Git.Sets.GitReferencesSet
+AmpScm.Git.Sets.GitReferencesSet.Head.get -> AmpScm.Git.GitReference!
+AmpScm.Git.Sets.GitRemotesSet
+AmpScm.Git.Sets.GitSet
+AmpScm.Git.Sets.GitSet<T>
+AmpScm.Git.Sets.GitSet<T>.ElementType.get -> System.Type!
+AmpScm.Git.Sets.GitSet<T>.GetAsync(AmpScm.Git.GitObjectId! id) -> System.Threading.Tasks.ValueTask<T?>
+AmpScm.Git.Sets.GitSet<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<T!>!
+AmpScm.Git.Sets.GitSet<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T!>!
+AmpScm.Git.Sets.GitSet<T>.GetList() -> System.Collections.IList!
+AmpScm.Git.Sets.GitSet<T>.this[AmpScm.Git.GitObjectId! id].get -> T?
+AmpScm.Git.Sets.GitTreeItem
+AmpScm.Git.Sets.GitTreeItem.Entry.get -> AmpScm.Git.GitTreeEntry!
+AmpScm.Git.Sets.GitTreeItem.EntryName.get -> string!
+AmpScm.Git.Sets.GitTreeItem.GitTreeItem() -> void
+AmpScm.Git.Sets.GitTreeItem.GitTreeItem(string! path, AmpScm.Git.GitTreeEntry! entry) -> void
+AmpScm.Git.Sets.GitTreeItem.Name.get -> string!
+AmpScm.Git.Sets.GitTreeItem.Path.get -> string!
+AmpScm.Git.Sets.GitTreeItemCollection
+AmpScm.Git.Sets.GitTreeItemCollection.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<AmpScm.Git.Sets.GitTreeItem>!
+AmpScm.Git.Sets.GitTreeItemCollection.GetEnumerator() -> System.Collections.Generic.IEnumerator<AmpScm.Git.Sets.GitTreeItem>!
+AmpScm.Git.Sets.IGitNamedObject
+AmpScm.Git.Sets.IGitNamedObject.Name.get -> string!
+AmpScm.Git.Sets.IGitObject
+AmpScm.Git.Sets.IGitObject.ReadAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Git.Sets.IGitOidObject
+AmpScm.Git.Sets.IGitOidObject.Id.get -> AmpScm.Git.GitObjectId!
+const AmpScm.Git.References.GitReferenceRepository.Head = "HEAD" -> string!
+override AmpScm.Git.GitCommit.ReadAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Git.GitDirectoryTreeEntry.EntryName.get -> string!
+override AmpScm.Git.GitDirectoryTreeEntry.TypeMask.get -> int
+override AmpScm.Git.GitFileTreeEntry.TypeMask.get -> int
+override AmpScm.Git.GitObject.Equals(object? obj) -> bool
+override AmpScm.Git.GitObject.GetHashCode() -> int
+override AmpScm.Git.GitRepository.ToString() -> string!
+override AmpScm.Git.GitSignature.Equals(object? obj) -> bool
+override AmpScm.Git.GitSignature.GetHashCode() -> int
+override AmpScm.Git.GitSignature.ToString() -> string!
+override AmpScm.Git.GitTag.ReadAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Git.GitTag.Type.get -> AmpScm.Buckets.Git.GitObjectType
+override AmpScm.Git.GitTree.Type.get -> AmpScm.Buckets.Git.GitObjectType
+override AmpScm.Git.GitTreeEntry.Equals(object? obj) -> bool
+override AmpScm.Git.GitTreeEntry.GetHashCode() -> int
+override AmpScm.Git.GitTreeEntry<TEntry, TObject>.ReadAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Git.References.GitSymbolicReference.Commit.get -> AmpScm.Git.GitCommit?
+override AmpScm.Git.References.GitSymbolicReference.Object.get -> AmpScm.Git.GitObject?
+override AmpScm.Git.References.GitSymbolicReference.ReadAsync() -> System.Threading.Tasks.ValueTask
+override sealed AmpScm.Git.GitBlob.Type.get -> AmpScm.Buckets.Git.GitObjectType
+override sealed AmpScm.Git.GitCommit.Type.get -> AmpScm.Buckets.Git.GitObjectType
+override sealed AmpScm.Git.GitTreeEntry<TEntry, TObject>.GitObject.get -> AmpScm.Git.GitObject!
+static AmpScm.Git.GitObject.operator !=(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
+static AmpScm.Git.GitObject.operator ==(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
+static AmpScm.Git.GitReference.ValidName(string! name, bool allowSpecialSymbols) -> bool
+static AmpScm.Git.GitRepository.FindGitRoot(string! path) -> string?
+static AmpScm.Git.GitRepository.Init(string! path) -> AmpScm.Git.GitRepository!
+static AmpScm.Git.GitRepository.Init(string! path, bool isBare) -> AmpScm.Git.GitRepository!
+static AmpScm.Git.GitRepository.Open(string! path) -> AmpScm.Git.GitRepository!
+static AmpScm.Git.GitRepository.Open(string! path, bool findGitRoot) -> AmpScm.Git.GitRepository!
+static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
+static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
+static AmpScm.Git.Repository.GitConfiguration.GetGitConfigurationFilePaths(bool includeSystem = true) -> System.Collections.Generic.IEnumerable<string!>!
+static AmpScm.Git.Repository.GitConfiguration.GitProgramPath.get -> string!
+static AmpScm.Git.Repository.GitConfiguration.UserHomeDir.get -> string!
+virtual AmpScm.Git.GitObject.ReadAsync() -> System.Threading.Tasks.ValueTask
+virtual AmpScm.Git.GitReference.Commit.get -> AmpScm.Git.GitCommit?
+virtual AmpScm.Git.GitReference.Object.get -> AmpScm.Git.GitObject?
+virtual AmpScm.Git.GitReference.ReadAsync() -> System.Threading.Tasks.ValueTask
+virtual AmpScm.Git.GitTreeEntry.EntryName.get -> string!
+virtual AmpScm.Git.GitTreeEntry.TypeMask.get -> int
+virtual AmpScm.Git.References.GitReferenceRepository.ResolveByOid(AmpScm.Git.GitObjectId! arg) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>

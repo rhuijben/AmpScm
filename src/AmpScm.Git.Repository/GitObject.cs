@@ -17,7 +17,7 @@ namespace AmpScm.Git
 
         public abstract GitObjectType Type { get; }
 
-        protected GitObject(GitRepository repository, GitObjectId id)
+        private protected GitObject(GitRepository repository, GitObjectId id)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Id = id ?? throw new ArgumentNullException(nameof(id));

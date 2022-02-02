@@ -104,7 +104,9 @@ namespace AmpScm.Buckets.Wrappers
         }
 
 #if !NETFRAMEWORK
+#pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+#pragma warning restore RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
         {
             var r = await Bucket.ReadAsync(buffer.Length);
 

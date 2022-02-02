@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
-    interface IBucketSkip
-    {
-        Bucket Skip(long firstPosition);
-    }
-
-    public sealed class SkipBucket : PositionBucket, IBucketSkip
+    internal sealed class SkipBucket : PositionBucket, IBucketSkip
     {
         public long FirstPosition { get; private set; }
 

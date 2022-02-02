@@ -13,15 +13,15 @@ namespace AmpScm.Git.Objects
         {
         }
 
-        public async override ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
+        public override ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
             where TGitObject : class
         {
-            return null;
+            return default;
         }
 
-        public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
         {
-            yield break;
+            return AsyncEnumerable.Empty<TGitObject>();
         }
     }
 }

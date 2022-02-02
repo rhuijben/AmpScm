@@ -69,7 +69,7 @@ namespace AmpScm.Git.Repository
                 return; // No other types documented yet
 
             bool caseInsensitive = false;
-            if (check.StartsWith("gitdir:"))
+            if (check!.StartsWith("gitdir:"))
             { }
             else if (check.StartsWith("gitdir/i:"))
             {
@@ -99,7 +99,7 @@ namespace AmpScm.Git.Repository
                 else if (char.IsLetterOrDigit(path, 1))
                     path = Path.GetDirectoryName(homeDir) + path.Substring(1); // Might need more work on linux, but not common
             }
-            return path;
+            return path!;
         }
 
         private void ParseCore(GitConfigurationItem item)
@@ -394,8 +394,8 @@ namespace AmpScm.Git.Repository
         {
             get
             {
-                var username = GetString("user", "name") ?? "John Doe";
-                var email = GetString("user", "email") ?? "john@john.doe.local";
+                var username = GetString("user", "name") ?? Environment.UserName ?? "Someone";
+                var email = GetString("user", "email") ?? $"me@{Environment.MachineName}.local";
 
                 return new GitSignature(username, email, DateTime.Now);
             }
@@ -455,7 +455,7 @@ namespace AmpScm.Git.Repository
                 && Environment.GetEnvironmentVariable("HOMEPATH") is var homePath)
             {
                 homeDrive += "\\";
-                if (homePath.StartsWith("\\") || homePath.StartsWith("/"))
+                if (homePath!.StartsWith("\\") || homePath.StartsWith("/"))
                     homePath = homeDrive + homePath;
 
                 if (Directory.Exists(home = Path.Combine(homeDrive, homePath!)))

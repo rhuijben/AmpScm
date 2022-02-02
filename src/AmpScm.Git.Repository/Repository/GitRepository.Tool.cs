@@ -89,14 +89,15 @@ namespace AmpScm.Git
 #endif
 
             using var p = Process.Start(startInfo);
+
+            if (p == null)
+                throw new GitExecCommandException($"Unable to start 'git {command}' operation");
+
             string outputText = "";
             string errorText = "";
 
             p.OutputDataReceived += (sender, e) => outputText += e.Data + '\n';
             p.ErrorDataReceived += (sender, e) => errorText += e.Data + '\n';
-
-            if (p == null)
-                throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
             if (!string.IsNullOrEmpty(stdinText))
                 p.StandardInput.Write(stdinText);
@@ -105,7 +106,7 @@ namespace AmpScm.Git
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
 
-            await p!.WaitForExitAsync();
+            await p.WaitForExitAsync();
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");

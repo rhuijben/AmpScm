@@ -1,0 +1,65 @@
+﻿#nullable enable
+AmpScm.Buckets.AggregateBucket
+AmpScm.Buckets.AggregateBucket.AggregateBucket(bool keepOpen, params AmpScm.Buckets.Bucket![]! items) -> void
+AmpScm.Buckets.AggregateBucket.AggregateBucket(params AmpScm.Buckets.Bucket![]! items) -> void
+AmpScm.Buckets.AggregateBucket.Append(AmpScm.Buckets.Bucket! bucket) -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.AggregateBucket.Prepend(AmpScm.Buckets.Bucket! bucket) -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Bucket
+abstract AmpScm.Buckets.Bucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+abstract AmpScm.Buckets.Bucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+AmpScm.Buckets.Bucket.Bucket() -> void
+AmpScm.Buckets.Bucket.Dispose() -> void
+AmpScm.Buckets.Bucket.DisposeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Bucket.ReadSkipAsync(long skip) -> System.Threading.Tasks.ValueTask<long>
+override AmpScm.Buckets.Bucket.ToString() -> string!
+static AmpScm.Buckets.Bucket.operator +(AmpScm.Buckets.Bucket! first, AmpScm.Buckets.Bucket! second) -> AmpScm.Buckets.Bucket!
+static readonly AmpScm.Buckets.Bucket.Empty -> AmpScm.Buckets.Bucket!
+static readonly AmpScm.Buckets.BucketBytes.Empty -> AmpScm.Buckets.BucketBytes
+static readonly AmpScm.Buckets.BucketBytes.Eof -> AmpScm.Buckets.BucketBytes
+virtual AmpScm.Buckets.Bucket.CanReset.get -> bool
+virtual AmpScm.Buckets.Bucket.Dispose(bool disposing) -> void
+virtual AmpScm.Buckets.Bucket.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+virtual AmpScm.Buckets.Bucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
+virtual AmpScm.Buckets.Bucket.Name.get -> string!
+virtual AmpScm.Buckets.Bucket.Position.get -> long?
+virtual AmpScm.Buckets.Bucket.ReadBucket<TBucket>() -> System.Threading.Tasks.ValueTask<TBucket?>
+virtual AmpScm.Buckets.Bucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+virtual AmpScm.Buckets.Bucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+virtual AmpScm.Buckets.Bucket.ReadUntilEolAsync(AmpScm.Buckets.BucketEol acceptableEols, int requested = 2147483647) -> System.Threading.Tasks.ValueTask<(AmpScm.Buckets.BucketBytes, AmpScm.Buckets.BucketEol)>
+virtual AmpScm.Buckets.Bucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.BucketBytes
+AmpScm.Buckets.BucketBytes.BucketBytes() -> void
+AmpScm.Buckets.BucketBytes.BucketBytes(byte[]! array, int start, int length) -> void
+AmpScm.Buckets.BucketBytes.BucketBytes(System.ReadOnlyMemory<byte> data) -> void
+AmpScm.Buckets.BucketBytes.CopyTo(System.Memory<byte> destination) -> void
+AmpScm.Buckets.BucketBytes.Equals(AmpScm.Buckets.BucketBytes other) -> bool
+AmpScm.Buckets.BucketBytes.IndexOf(byte value) -> int
+AmpScm.Buckets.BucketBytes.IndexOf(byte value, int startOffset) -> int
+AmpScm.Buckets.BucketBytes.IsEmpty.get -> bool
+AmpScm.Buckets.BucketBytes.IsEof.get -> bool
+AmpScm.Buckets.BucketBytes.Length.get -> int
+AmpScm.Buckets.BucketBytes.Memory.get -> System.ReadOnlyMemory<byte>
+AmpScm.Buckets.BucketBytes.Slice(int start) -> AmpScm.Buckets.BucketBytes
+AmpScm.Buckets.BucketBytes.Slice(int start, int length) -> AmpScm.Buckets.BucketBytes
+AmpScm.Buckets.BucketBytes.Span.get -> System.ReadOnlySpan<byte>
+AmpScm.Buckets.BucketBytes.this[int index].get -> byte
+AmpScm.Buckets.BucketBytes.ToArray() -> byte[]!
+AmpScm.Buckets.BucketBytes.TryCopyTo(System.Memory<byte> destination) -> bool
+AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.AnyEol = AmpScm.Buckets.BucketEol.LF | AmpScm.Buckets.BucketEol.CR | AmpScm.Buckets.BucketEol.CRLF -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.CRLF = 4 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.CRSplit = 1048576 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.EolMask = 255 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.LF = 1 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.None = 0 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.CR = 2 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEol.Zero = 8 -> AmpScm.Buckets.BucketEol
+AmpScm.Buckets.BucketEolState
+AmpScm.Buckets.BucketEolState.BucketEolState() -> void
+AmpScm.Buckets.BucketEolState.IsEmpty.get -> bool
+AmpScm.Buckets.BucketException
+AmpScm.Buckets.BucketException.BucketException() -> void
+AmpScm.Buckets.BucketException.BucketException(string? message) -> void
+AmpScm.Buckets.BucketException.BucketException(string? message, System.Exception? innerException) -> void
+AmpScm.Buckets.BucketException.BucketException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Buckets.BucketExtensions

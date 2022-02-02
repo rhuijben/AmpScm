@@ -39,7 +39,9 @@ namespace AmpScm.Git
             {
                 if (_shortName == null)
                 {
-                    if (Name.StartsWith("refs/remotes/"))
+                    if (Name.StartsWith("refs/heads/"))
+                        _shortName = Name.Substring(11);
+                    else if (Name.StartsWith("refs/remotes/"))
                         _shortName = Name.Substring(13);
                     else if (Name.StartsWith("refs/tags/"))
                         _shortName = Name.Substring(10);
@@ -57,7 +59,8 @@ namespace AmpScm.Git
         {
             if (_object is null)
             {
-                _object = _resolver?.Value ?? null;
+                _object ??= _resolver?.Value;
+                _object ??= await Repository.Repository.References.GetAsync(Name);
             }
 
             if (_object is GitObjectId oid)
@@ -76,6 +79,23 @@ namespace AmpScm.Git
                 return _object as GitObject;
             }
         }
+
+        public GitObjectId? ObjectId
+        {
+            get
+            {
+                if (_object == null)
+                    ReadAsync().GetAwaiter().GetResult();
+
+                if (_object is GitObjectId oid)
+                    return oid;
+                else if (_object is GitObject ob)
+                    return ob.Id;
+                else
+                    return null;
+            }
+        }
+
 
         public virtual GitCommit? Commit
         {
@@ -98,7 +118,7 @@ namespace AmpScm.Git
                 }
                 else if (_commit is GitObjectId oid)
                 {
-                    c3 = Repository.Repository.GetAsync<GitCommit>(oid).GetAwaiter().GetResult();
+                    c3 = Repository.Repository.GetAsync<GitCommit>(oid).Result!;
                     _commit = c3;
                     return c3;
                 }
@@ -111,7 +131,7 @@ namespace AmpScm.Git
                     }
                     else if (ob is GitTag tag2)
                     {
-                        c4 = tag2.Object as GitCommit;
+                        c4 = (tag2.Object as GitCommit)!;
                         _commit = c4;
                         return c4;
                     }
@@ -153,7 +173,7 @@ namespace AmpScm.Git
             return (name.Length > 1) && (allowSpecialSymbols || !AllUpper(name));
         }
 
-        internal GitReference SetPeeled(GitObjectId peeled)
+        internal GitReference SetPeeled(GitObjectId? peeled)
         {
             _commit = peeled;
             return this;

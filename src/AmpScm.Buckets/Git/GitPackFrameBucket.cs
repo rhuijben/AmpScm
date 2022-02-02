@@ -16,7 +16,7 @@ namespace AmpScm.Buckets.Git
         long frame_position;
         long delta_position;
         GitObjectIdType _oidType;
-        Func<GitObjectId, ValueTask<GitBucket>>? _oidResolver;
+        Func<GitObjectId, ValueTask<GitBucket?>>? _oidResolver;
         byte[]? _deltaOid;
 
         enum frame_state
@@ -37,7 +37,7 @@ namespace AmpScm.Buckets.Git
         const GitObjectType GitObjectType_DeltaOffset = (GitObjectType)6;
         const GitObjectType GitObjectType_DeltaReference = (GitObjectType)7;
 
-        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType, Func<GitObjectId, ValueTask<GitBucket>>? resolveOid = null)
+        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType, Func<GitObjectId, ValueTask<GitBucket?>>? resolveOid = null)
             : base(inner.WithPosition())
         {
             _oidType = oidType;

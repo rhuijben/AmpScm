@@ -1,14 +1,8 @@
-﻿namespace AmpScm.Buckets
+﻿namespace AmpScm.Buckets.Interfaces
 {
     interface IBucketAggregation
     {
         Bucket Append(Bucket bucket);
         Bucket Prepend(Bucket bucket);
     }
-
-    public interface IBucketNoClose
-    {
-        Bucket NoClose();
-    }
-
 }
