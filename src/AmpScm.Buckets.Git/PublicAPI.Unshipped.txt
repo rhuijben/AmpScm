@@ -1,0 +1,104 @@
+﻿AmpScm.Buckets.Git.GitBucket
+AmpScm.Buckets.Git.GitBucket.GitBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitBucketException
+AmpScm.Buckets.Git.GitBucketException.GitBucketException() -> void
+AmpScm.Buckets.Git.GitBucketException.GitBucketException(string! message) -> void
+AmpScm.Buckets.Git.GitBucketException.GitBucketException(string? message, System.Exception? innerException) -> void
+AmpScm.Buckets.Git.GitBucketException.GitBucketException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Buckets.Git.GitConfigurationItem
+AmpScm.Buckets.Git.GitConfigurationItem.CompareTo(AmpScm.Buckets.Git.GitConfigurationItem? other) -> int
+AmpScm.Buckets.Git.GitConfigurationItem.GitConfigurationItem() -> void
+AmpScm.Buckets.Git.GitConfigurationItem.Group.get -> string!
+AmpScm.Buckets.Git.GitConfigurationItem.Group.set -> void
+AmpScm.Buckets.Git.GitConfigurationItem.Key.get -> string!
+AmpScm.Buckets.Git.GitConfigurationItem.Key.set -> void
+AmpScm.Buckets.Git.GitConfigurationItem.SubGroup.get -> string?
+AmpScm.Buckets.Git.GitConfigurationItem.SubGroup.set -> void
+AmpScm.Buckets.Git.GitConfigurationItem.Value.get -> string?
+AmpScm.Buckets.Git.GitConfigurationItem.Value.set -> void
+AmpScm.Buckets.Git.GitConfigurationReaderBucket
+AmpScm.Buckets.Git.GitConfigurationReaderBucket.GitConfigurationReaderBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitConfigurationReaderBucket.ReadConfigItem() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitConfigurationItem?>
+AmpScm.Buckets.Git.GitDeltaBucket
+AmpScm.Buckets.Git.GitDeltaBucket.BaseBucket.get -> AmpScm.Buckets.Bucket!
+AmpScm.Buckets.Git.GitDeltaBucket.GitDeltaBucket(AmpScm.Buckets.Bucket! source, AmpScm.Buckets.Bucket! baseBucket) -> void
+AmpScm.Buckets.Git.GitObjectBucket
+AmpScm.Buckets.Git.GitObjectBucket.GitObjectBucket() -> void
+AmpScm.Buckets.Git.GitObjectFileBucket
+AmpScm.Buckets.Git.GitObjectFileBucket.GitObjectFileBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitObjectFileBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Git.GitObjectFileBucket.Type.get -> AmpScm.Git.GitObjectType
+AmpScm.Buckets.Git.GitPackFrameBucket
+AmpScm.Buckets.Git.GitPackFrameBucket.BodySize.get -> long?
+AmpScm.Buckets.Git.GitPackFrameBucket.DeltaCount.get -> int?
+AmpScm.Buckets.Git.GitPackFrameBucket.GitPackFrameBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType oidType, System.Func<AmpScm.Git.GitId!, System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitBucket?>>? resolveOid = null) -> void
+AmpScm.Buckets.Git.GitPackFrameBucket.ReadInfoAsync() -> System.Threading.Tasks.ValueTask<bool>
+AmpScm.Buckets.Git.GitPackFrameBucket.ReadTypeAsync() -> System.Threading.Tasks.ValueTask
+AmpScm.Buckets.Git.GitPackFrameBucket.Type.get -> AmpScm.Git.GitObjectType
+AmpScm.Buckets.Git.GitPackHeaderBucket
+AmpScm.Buckets.Git.GitPackHeaderBucket.GitPackHeaderBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.GitPackHeaderBucket.GitType.get -> string?
+AmpScm.Buckets.Git.GitPackHeaderBucket.ObjectCount.get -> uint?
+AmpScm.Buckets.Git.GitPackHeaderBucket.Version.get -> int?
+AmpScm.Git.GitException
+AmpScm.Git.GitException.GitException() -> void
+AmpScm.Git.GitException.GitException(string! message) -> void
+AmpScm.Git.GitException.GitException(string? message, System.Exception? innerException) -> void
+AmpScm.Git.GitException.GitException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+AmpScm.Git.GitId
+AmpScm.Git.GitId.CompareTo(AmpScm.Git.GitId? other) -> int
+AmpScm.Git.GitId.Equals(AmpScm.Git.GitId? other) -> bool
+AmpScm.Git.GitId.GitId(AmpScm.Git.GitIdType type, byte[]! hash) -> void
+AmpScm.Git.GitId.Hash.get -> byte[]!
+AmpScm.Git.GitId.HashCompare(AmpScm.Git.GitId! other) -> int
+AmpScm.Git.GitId.this[int index].get -> byte
+AmpScm.Git.GitId.ToString(string? format) -> string!
+AmpScm.Git.GitId.Type.get -> AmpScm.Git.GitIdType
+AmpScm.Git.GitIdType
+AmpScm.Git.GitIdType.None = 0 -> AmpScm.Git.GitIdType
+AmpScm.Git.GitIdType.Sha1 = 1 -> AmpScm.Git.GitIdType
+AmpScm.Git.GitIdType.Sha256 = 2 -> AmpScm.Git.GitIdType
+AmpScm.Git.GitObjectType
+AmpScm.Git.GitObjectType.Blob = 3 -> AmpScm.Git.GitObjectType
+AmpScm.Git.GitObjectType.Commit = 1 -> AmpScm.Git.GitObjectType
+AmpScm.Git.GitObjectType.None = 0 -> AmpScm.Git.GitObjectType
+AmpScm.Git.GitObjectType.Tag = 4 -> AmpScm.Git.GitObjectType
+AmpScm.Git.GitObjectType.Tree = 2 -> AmpScm.Git.GitObjectType
+override AmpScm.Buckets.Git.GitConfigurationItem.ToString() -> string!
+override AmpScm.Buckets.Git.GitConfigurationReaderBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitConfigurationReaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitDeltaBucket.CanReset.get -> bool
+override AmpScm.Buckets.Git.GitDeltaBucket.Dispose(bool disposing) -> void
+override AmpScm.Buckets.Git.GitDeltaBucket.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitDeltaBucket.Name.get -> string!
+override AmpScm.Buckets.Git.GitDeltaBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitDeltaBucket.Position.get -> long?
+override AmpScm.Buckets.Git.GitDeltaBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitDeltaBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitDeltaBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Git.GitDeltaBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitObjectFileBucket.CanReset.get -> bool
+override AmpScm.Buckets.Git.GitObjectFileBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitObjectFileBucket.Position.get -> long?
+override AmpScm.Buckets.Git.GitObjectFileBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitObjectFileBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitObjectFileBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitPackFrameBucket.CanReset.get -> bool
+override AmpScm.Buckets.Git.GitPackFrameBucket.Name.get -> string!
+override AmpScm.Buckets.Git.GitPackFrameBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitPackFrameBucket.Position.get -> long?
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
+override AmpScm.Buckets.Git.GitPackFrameBucket.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Git.GitPackHeaderBucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitPackHeaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Git.GitId.Equals(object? obj) -> bool
+override AmpScm.Git.GitId.GetHashCode() -> int
+override AmpScm.Git.GitId.ToString() -> string!
+static AmpScm.Git.GitId.FromByteArrayOffset(AmpScm.Git.GitIdType type, byte[]! hash, int offset) -> AmpScm.Git.GitId!
+static AmpScm.Git.GitId.HashLength(AmpScm.Git.GitIdType type) -> int
+static AmpScm.Git.GitId.operator !=(AmpScm.Git.GitId? one, AmpScm.Git.GitId? other) -> bool
+static AmpScm.Git.GitId.operator ==(AmpScm.Git.GitId? one, AmpScm.Git.GitId? other) -> bool
+static AmpScm.Git.GitId.StringToByteArray(string! hex) -> byte[]!
+static AmpScm.Git.GitId.TryParse(string! s, out AmpScm.Git.GitId! oid) -> bool

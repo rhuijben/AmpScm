@@ -9,7 +9,7 @@ namespace AmpScm.Git
     [DebuggerDisplay("{EntryName} - {Id}")]
     public abstract class GitTreeEntry : IEquatable<GitTreeEntry>, IGitObject
     {
-        internal GitTreeEntry(GitTree tree, string name, GitObjectId objectId)
+        internal GitTreeEntry(GitTree tree, string name, GitId objectId)
         {
             InTree = tree ?? throw new ArgumentNullException(nameof(tree));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -42,7 +42,7 @@ namespace AmpScm.Git
 
         public abstract GitObject GitObject { get; }
 
-        public GitObjectId Id { get; }
+        public GitId Id { get; }
     }
 
     public abstract class GitTreeEntry<TEntry, TObject> : GitTreeEntry
@@ -53,7 +53,7 @@ namespace AmpScm.Git
         TObject? _object;
 
 
-        internal GitTreeEntry(GitTree tree, string name, GitObjectId item) : base(tree, name, item)
+        internal GitTreeEntry(GitTree tree, string name, GitId item) : base(tree, name, item)
         {
         }
 
@@ -79,7 +79,7 @@ namespace AmpScm.Git
 
     public class GitFileTreeEntry : GitTreeEntry<GitFileTreeEntry, GitBlob>
     {
-        internal GitFileTreeEntry(GitTree tree, string name, int mask, GitObjectId item) : base(tree, name, item)
+        internal GitFileTreeEntry(GitTree tree, string name, int mask, GitId item) : base(tree, name, item)
         {
             TypeMask = mask;
         }
@@ -93,7 +93,7 @@ namespace AmpScm.Git
 
     public class GitDirectoryTreeEntry : GitTreeEntry<GitDirectoryTreeEntry, GitTree>
     {
-        internal GitDirectoryTreeEntry(GitTree tree, string name, GitObjectId item) : base(tree, name, item)
+        internal GitDirectoryTreeEntry(GitTree tree, string name, GitId item) : base(tree, name, item)
         {
         }
 

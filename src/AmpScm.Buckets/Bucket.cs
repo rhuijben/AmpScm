@@ -8,8 +8,8 @@ namespace AmpScm.Buckets
     public abstract partial class Bucket : IAsyncDisposable, IDisposable
     {
         public static readonly Bucket Empty = new EmptyBucket();
-        internal static readonly ValueTask<BucketBytes> EofTask = new ValueTask<BucketBytes>(BucketBytes.Eof);
-        internal static readonly ValueTask<BucketBytes> EmptyTask = new ValueTask<BucketBytes>(BucketBytes.Empty);
+        protected internal static readonly ValueTask<BucketBytes> EofTask = new ValueTask<BucketBytes>(BucketBytes.Eof);
+        protected internal static readonly ValueTask<BucketBytes> EmptyTask = new ValueTask<BucketBytes>(BucketBytes.Empty);
 
         protected Bucket()
         {

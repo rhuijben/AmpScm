@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AmpScm.Buckets.Git
+namespace AmpScm.Git
 {
     public enum GitObjectType
     {
@@ -17,12 +17,4 @@ namespace AmpScm.Buckets.Git
         Tag = 4,
     };
 
-    public interface IGitObjectType
-    {
-        GitObjectType Type { get; }
-
-        ValueTask ReadTypeAsync();
-
-        ValueTask<long?> ReadRemainingBytesAsync();
-    }
 }

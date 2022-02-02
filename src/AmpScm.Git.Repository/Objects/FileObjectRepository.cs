@@ -20,7 +20,7 @@ namespace AmpScm.Git.Objects
             this.objectsDir = objectsDir;
         }
 
-        public override async ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
+        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
             where TGitObject : class
         {
             var name = objectId.ToString();
@@ -59,7 +59,7 @@ namespace AmpScm.Git.Objects
                 {
                     string oidString = Path.GetFileName(dir) + Path.GetFileName(file);
 
-                    if (!GitObjectId.TryParse(oidString, out var oid))
+                    if (!GitId.TryParse(oidString, out var oid))
                         continue;
 
                     var r= (await Get<TGitObject>(oid))!;

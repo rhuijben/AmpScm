@@ -17,7 +17,7 @@ namespace AmpScm.Git.Implementation
         IQueryable<TResult> GetAllNamed<TResult>()
             where TResult : class, IGitNamedObject;
 
-        ValueTask<TResult?> GetAsync<TResult>(GitObjectId objectId)
+        ValueTask<TResult?> GetAsync<TResult>(GitId objectId)
             where TResult : GitObject;
 
         ValueTask<TResult?> GetNamedAsync<TResult>(string name)

@@ -20,10 +20,10 @@ namespace AmpScm.Git.Objects
             where TGitObject : GitObject;
 
 
-        public abstract ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
+        public abstract ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
             where TGitObject : GitObject;
 
-        internal virtual ValueTask<GitBucket?> ResolveByOid(GitObjectId arg)
+        internal virtual ValueTask<GitBucket?> ResolveByOid(GitId arg)
         {
             return default;
         }

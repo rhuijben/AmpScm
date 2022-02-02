@@ -32,7 +32,7 @@ namespace AmpScm.Tests
             for (int i = 0; i < gh.ObjectCount; i++)
             {
                 long? offset = b.Position;
-                using var pf = new GitPackFrameBucket(b.NoClose(), GitObjectIdType.Sha1);
+                using var pf = new GitPackFrameBucket(b.NoClose(), GitIdType.Sha1);
 
                 await pf.ReadInfoAsync();
 
@@ -625,7 +625,7 @@ namespace AmpScm.Tests
                 long? offset = b.Position;
                 int crc = 0;
                 using var crcr = b.NoClose().Crc32(c => crc = c);
-                using var pf = new GitPackFrameBucket(crcr, GitObjectIdType.Sha1);
+                using var pf = new GitPackFrameBucket(crcr, GitIdType.Sha1);
 
                 await pf.ReadInfoAsync();
 

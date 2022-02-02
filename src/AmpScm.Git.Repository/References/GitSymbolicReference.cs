@@ -12,7 +12,7 @@ namespace AmpScm.Git.References
         object? _reference;
 
         internal GitSymbolicReference(GitReferenceRepository repository, string name)
-            : base(repository, name, (GitObjectId?)null)
+            : base(repository, name, (GitId?)null)
         {
         }
 

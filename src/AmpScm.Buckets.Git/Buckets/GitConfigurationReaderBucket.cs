@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Buckets.Git

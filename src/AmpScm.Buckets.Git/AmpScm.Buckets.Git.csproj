@@ -30,12 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AmpScm.Buckets.Git\AmpScm.Buckets.Git.csproj" />
-    <ProjectReference Include="..\AmpScm.Linq.AsyncQueryable\AmpScm.Linq.AsyncQueryable.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Buckets\" />
+    <ProjectReference Include="..\AmpScm.Buckets\AmpScm.Buckets.csproj" />
   </ItemGroup>
 
 </Project>

@@ -19,12 +19,12 @@ namespace AmpScm.Git
         private GitBucket? _rdr;
         BucketEolState? _eolState;
 
-        internal GitTree(GitRepository repository, GitObjectId id)
+        internal GitTree(GitRepository repository, GitId id)
             : base(repository, id)
         {
         }
 
-        internal GitTree(GitRepository repository, GitBucket rdr, GitObjectId id)
+        internal GitTree(GitRepository repository, GitBucket rdr, GitId id)
             : this(repository, id)
         {
             _rdr = rdr;
@@ -61,12 +61,12 @@ namespace AmpScm.Git
             else
                 throw new GitRepositoryException("Truncated tree");
 
-            bb = await _rdr.ReadFullAsync(GitObjectId.HashLength(Id.Type));
+            bb = await _rdr.ReadFullAsync(GitId.HashLength(Id.Type));
 
-            _entries.Add(NewGitTreeEntry(name, val, new GitObjectId(Id.Type, bb.ToArray())));
+            _entries.Add(NewGitTreeEntry(name, val, new GitId(Id.Type, bb.ToArray())));
         }
 
-        private GitTreeEntry NewGitTreeEntry(string name, int val, GitObjectId id)
+        private GitTreeEntry NewGitTreeEntry(string name, int val, GitId id)
         {
             if (val == 40000)
                 return new GitDirectoryTreeEntry(this, name, id);

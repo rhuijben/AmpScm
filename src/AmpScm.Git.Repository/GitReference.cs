@@ -14,17 +14,17 @@ namespace AmpScm.Git
         protected GitReferenceRepository Repository { get; }
         object? _object;
         object? _commit;
-        Lazy<GitObjectId?>? _resolver;
+        Lazy<GitId?>? _resolver;
         string? _shortName;
 
-        internal GitReference(GitReferenceRepository repository, string name, Lazy<GitObjectId?> resolver)
+        internal GitReference(GitReferenceRepository repository, string name, Lazy<GitId?> resolver)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _resolver = resolver;
         }
 
-        internal GitReference(GitReferenceRepository repository, string name, GitObjectId? value)
+        internal GitReference(GitReferenceRepository repository, string name, GitId? value)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -63,7 +63,7 @@ namespace AmpScm.Git
                 _object ??= await Repository.Repository.References.GetAsync(Name);
             }
 
-            if (_object is GitObjectId oid)
+            if (_object is GitId oid)
             {
                 _object = await Repository.Repository.GetAsync<GitObject>(oid) ?? _object;
             }
@@ -80,14 +80,14 @@ namespace AmpScm.Git
             }
         }
 
-        public GitObjectId? ObjectId
+        public GitId? ObjectId
         {
             get
             {
                 if (_object == null)
                     ReadAsync().GetAwaiter().GetResult();
 
-                if (_object is GitObjectId oid)
+                if (_object is GitId oid)
                     return oid;
                 else if (_object is GitObject ob)
                     return ob.Id;
@@ -116,7 +116,7 @@ namespace AmpScm.Git
                     _commit = c3;
                     return c3;
                 }
-                else if (_commit is GitObjectId oid)
+                else if (_commit is GitId oid)
                 {
                     c3 = Repository.Repository.GetAsync<GitCommit>(oid).Result!;
                     _commit = c3;
@@ -173,7 +173,7 @@ namespace AmpScm.Git
             return (name.Length > 1) && (allowSpecialSymbols || !AllUpper(name));
         }
 
-        internal GitReference SetPeeled(GitObjectId? peeled)
+        internal GitReference SetPeeled(GitId? peeled)
         {
             _commit = peeled;
             return this;

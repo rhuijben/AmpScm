@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AmpScm.Git
 {
     [Serializable]
-    public class GitRepositoryException : Buckets.Git.GitException
+    public class GitRepositoryException : GitException
     {
         public GitRepositoryException(string message) : base(message)
         {

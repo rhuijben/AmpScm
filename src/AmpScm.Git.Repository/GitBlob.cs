@@ -13,7 +13,7 @@ namespace AmpScm.Git
 
         public sealed override GitObjectType Type => GitObjectType.Blob;
 
-        internal GitBlob(GitRepository repository, GitBucket rdr, GitObjectId id)
+        internal GitBlob(GitRepository repository, GitBucket rdr, GitId id)
             : base(repository, id)
         {
             _rdr = rdr;

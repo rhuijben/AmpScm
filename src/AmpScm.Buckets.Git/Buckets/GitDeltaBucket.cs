@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using AmpScm.Buckets;
 
 namespace AmpScm.Buckets.Git
 {

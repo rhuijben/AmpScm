@@ -104,7 +104,7 @@ namespace AmpScm.Git.Implementation
             return GetEnumerable<TResult>().AsQueryable();
         }
 
-        public async ValueTask<TResult?> GetAsync<TResult>(GitObjectId objectId) where TResult : GitObject
+        public async ValueTask<TResult?> GetAsync<TResult>(GitId objectId) where TResult : GitObject
         {
             return await Repository.ObjectRepository.Get<TResult>(objectId);
         }

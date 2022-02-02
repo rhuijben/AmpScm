@@ -12,17 +12,17 @@ namespace AmpScm.Git
     {
         internal class GitInternalConfigAccess
         {
-            public GitObjectIdType IdType { get; } = GitObjectIdType.Sha1;
+            public GitIdType IdType { get; } = GitIdType.Sha1;
 
             public bool NoAsync => false;
 
-            internal GitInternalConfigAccess(GitObjectIdType type)
+            internal GitInternalConfigAccess(GitIdType type)
             {
                 IdType = type;
             }
                 
         }
-        internal GitInternalConfigAccess InternalConfig { get; private set;  } = new GitInternalConfigAccess(GitObjectIdType.Sha1);
+        internal GitInternalConfigAccess InternalConfig { get; private set;  } = new GitInternalConfigAccess(GitIdType.Sha1);
 
 
         GitConfiguration LoadConfig()
@@ -32,7 +32,7 @@ namespace AmpScm.Git
 
         internal void SetSHA256() // Called from repository object store on config verify
         {
-            InternalConfig = new GitInternalConfigAccess(GitObjectIdType.Sha256);
+            InternalConfig = new GitInternalConfigAccess(GitIdType.Sha256);
         }
     }
 }

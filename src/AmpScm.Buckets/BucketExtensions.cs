@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Specialized;
 using AmpScm.Buckets.Interfaces;
+using System.ComponentModel;
 
 namespace AmpScm.Buckets
 {
@@ -177,7 +178,8 @@ namespace AmpScm.Buckets
             return new Wrappers.BucketReader(self, null);
         }
 
-        internal static byte[] ReverseInPlace(this byte[] array)
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public static byte[] ReverseInPlace(this byte[] array)
         {
             // Use Array.Reverse() ?
             for (int first = array.GetLowerBound(0), last = array.GetUpperBound(0);
@@ -191,7 +193,8 @@ namespace AmpScm.Buckets
             return array;
         }
 
-        internal static byte[] ReverseInPlaceIfLittleEndian(this byte[] array)
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public static byte[] ReverseInPlaceIfLittleEndian(this byte[] array)
         {
             return BitConverter.IsLittleEndian ? ReverseInPlace(array) : array;
         }

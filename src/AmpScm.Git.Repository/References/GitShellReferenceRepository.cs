@@ -25,7 +25,7 @@ namespace AmpScm.Git.References
             if (r != 0)
                 return;
 
-            var idLength = GitObjectId.HashLength(Repository.InternalConfig.IdType) * 2;
+            var idLength = GitId.HashLength(Repository.InternalConfig.IdType) * 2;
 
             GitRefPeel? last = null;
             foreach (string line in o.Split('\n'))

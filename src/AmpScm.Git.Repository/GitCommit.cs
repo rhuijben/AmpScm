@@ -22,7 +22,7 @@ namespace AmpScm.Git
         GitSignature? _author;
         GitSignature? _committer;
 
-        internal GitCommit(GitRepository repository, GitBucket rdr, GitObjectId id)
+        internal GitCommit(GitRepository repository, GitBucket rdr, GitId id)
             : base(repository, id)
         {
             _tree = rdr;
@@ -39,7 +39,7 @@ namespace AmpScm.Git
 
                 Read();
 
-                if (_tree is string s && !string.IsNullOrEmpty(s) && GitObjectId.TryParse(s, out var oid))
+                if (_tree is string s && !string.IsNullOrEmpty(s) && GitId.TryParse(s, out var oid))
                 {
                     _tree = oid;
 
@@ -73,7 +73,7 @@ namespace AmpScm.Git
 
                 Read();
 
-                if (_parent is string s && GitObjectId.TryParse(s, out var oid))
+                if (_parent is string s && GitId.TryParse(s, out var oid))
                 {
                     _parent = oid;
 

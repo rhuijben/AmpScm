@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using AmpScm.Buckets;
 using AmpScm.Buckets.Specialized;
 using AmpScm.Git;
 
 namespace AmpScm.Buckets.Git
 {
-    public sealed class GitPackFrameBucket : GitBucket, IGitObjectType
+    public sealed class GitPackFrameBucket : GitObjectBucket
     {
         Bucket wrapped => Inner;
         Bucket? reader;
@@ -15,8 +16,8 @@ namespace AmpScm.Buckets.Git
         long position;
         long frame_position;
         long delta_position;
-        GitObjectIdType _oidType;
-        Func<GitObjectId, ValueTask<GitBucket?>>? _oidResolver;
+        GitIdType _oidType;
+        Func<GitId, ValueTask<GitBucket?>>? _oidResolver;
         byte[]? _deltaOid;
 
         enum frame_state
@@ -27,7 +28,6 @@ namespace AmpScm.Buckets.Git
             body
         }
 
-        public GitObjectType Type { get; private set; }
         public int? DeltaCount { get; private set; }
         public long? BodySize { get; private set; }
 
@@ -37,7 +37,7 @@ namespace AmpScm.Buckets.Git
         const GitObjectType GitObjectType_DeltaOffset = (GitObjectType)6;
         const GitObjectType GitObjectType_DeltaReference = (GitObjectType)7;
 
-        public GitPackFrameBucket(Bucket inner, GitObjectIdType oidType, Func<GitObjectId, ValueTask<GitBucket?>>? resolveOid = null)
+        public GitPackFrameBucket(Bucket inner, GitIdType oidType, Func<GitId, ValueTask<GitBucket?>>? resolveOid = null)
             : base(inner.WithPosition())
         {
             _oidType = oidType;
@@ -74,7 +74,7 @@ namespace AmpScm.Buckets.Git
             return await reader!.ReadSkipAsync(requested);
         }
 
-        public async ValueTask ReadTypeAsync()
+        public override async ValueTask ReadTypeAsync()
         {
             await ReadInfoAsync();
         }
@@ -152,7 +152,7 @@ namespace AmpScm.Buckets.Git
                     {
                         if (_deltaOid == null)
                         {
-                            _deltaOid = new byte[(_oidType == GitObjectIdType.Sha1) ? 20 : 32];
+                            _deltaOid = new byte[(_oidType == GitIdType.Sha1) ? 20 : 32];
                             position = 0;
                         }
 
@@ -256,7 +256,7 @@ namespace AmpScm.Buckets.Git
                     }
                     else 
                     {
-                        var deltaOid = new GitObjectId(_oidType, _deltaOid!);
+                        var deltaOid = new GitId(_oidType, _deltaOid!);
 
                         if (_oidResolver != null)
                         {
@@ -277,7 +277,7 @@ namespace AmpScm.Buckets.Git
                         state = frame_state.body;
                         Type = fb.Type; // type is now resolved
                     }
-                    else if (base_reader is IGitObjectType bt)
+                    else if (base_reader is GitObjectBucket bt)
                     {
                         state = frame_state.body;
                         Type = bt.Type; // type is now resolved

@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Linq.AsyncQueryable"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Tests", "AmpScm.Tests\AmpScm.Tests.csproj", "{227D4B78-9017-41B4-86BC-F2C03FA9004F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmpScm.Buckets.Git", "AmpScm.Buckets.Git\AmpScm.Buckets.Git.csproj", "{6A041336-A514-451B-8919-4CC02CF65A8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{227D4B78-9017-41B4-86BC-F2C03FA9004F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{227D4B78-9017-41B4-86BC-F2C03FA9004F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{227D4B78-9017-41B4-86BC-F2C03FA9004F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A041336-A514-451B-8919-4CC02CF65A8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A041336-A514-451B-8919-4CC02CF65A8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A041336-A514-451B-8919-4CC02CF65A8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A041336-A514-451B-8919-4CC02CF65A8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +66,7 @@ Global
 		{EDA1F64C-24C4-4841-8487-9FBDF530AB08} = {808AB523-2A80-4630-A13C-A54CBDF95D51}
 		{44BE25DB-25D5-45EF-97AB-84911CBA8C96} = {808AB523-2A80-4630-A13C-A54CBDF95D51}
 		{227D4B78-9017-41B4-86BC-F2C03FA9004F} = {78BFCCE6-51F9-49B2-B94A-00698882EE67}
+		{6A041336-A514-451B-8919-4CC02CF65A8C} = {808AB523-2A80-4630-A13C-A54CBDF95D51}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {87E00793-7FC0-4CBC-BCA7-7F684F515F8F}

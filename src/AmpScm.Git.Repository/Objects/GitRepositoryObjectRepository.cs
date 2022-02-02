@@ -12,7 +12,7 @@ namespace AmpScm.Git.Objects
     {
         public string ObjectsDir { get; }
         public string? PromisorRemote { get; private set; }
-        public GitObjectIdType _idType;
+        public GitIdType _idType;
 
 
         public GitRepositoryObjectRepository(GitRepository repository, string objectsDir)
@@ -22,7 +22,7 @@ namespace AmpScm.Git.Objects
                 throw new GitRepositoryException($"{objectsDir} does not exist");
 
             ObjectsDir = objectsDir;
-            _idType = GitObjectIdType.Sha1;
+            _idType = GitIdType.Sha1;
 
             _repositories = new Lazy<GitObjectRepository[]>(() => GetRepositories().ToArray());            
         }
@@ -51,7 +51,7 @@ namespace AmpScm.Git.Objects
                             else if (string.Equals(value, "sha256", StringComparison.OrdinalIgnoreCase))
                             {
                                 Repository.SetSHA256(); // Ugly experimental hack for now
-                                _idType = GitObjectIdType.Sha256;
+                                _idType = GitIdType.Sha256;
                             }
                             else
                                 throw new GitException($"Found unsupported objectFormat {value} in repository {Repository.FullPath}");
@@ -85,7 +85,7 @@ namespace AmpScm.Git.Objects
         public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
             where TGitObject : class
         {
-            HashSet<GitObjectId> returned = new HashSet<GitObjectId>();
+            HashSet<GitId> returned = new HashSet<GitId>();
 
             foreach (var p in Sources)
             {
@@ -101,7 +101,7 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        public override async ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
+        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
             where TGitObject : class
         {
             if (objectId == null)
@@ -118,7 +118,7 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal override ValueTask<GitBucket?> ResolveByOid(GitObjectId arg)
+        internal override ValueTask<GitBucket?> ResolveByOid(GitId arg)
         {
             // TODO: Implement
             return base.ResolveByOid(arg);

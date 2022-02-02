@@ -12,13 +12,13 @@ namespace AmpScm.Git.Objects
     internal class PackObjectRepository : GitObjectRepository
     {
         readonly string _packFile;
-        readonly GitObjectIdType _idType;
+        readonly GitIdType _idType;
         FileStream? _fIdx;
         Bucket? _fb;
         int _ver;
         uint[]? _fanOut;
 
-        public PackObjectRepository(GitRepository repository, string packFile, GitObjectIdType idType)
+        public PackObjectRepository(GitRepository repository, string packFile, GitIdType idType)
             : base(repository)
         {
             _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
@@ -87,7 +87,7 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        private bool TryFindOid(byte[] oids, GitObjectId objectId, out uint index)
+        private bool TryFindOid(byte[] oids, GitId objectId, out uint index)
         {
             int sz;
 
@@ -98,9 +98,9 @@ namespace AmpScm.Git.Objects
             }
 
             if (_ver == 2)
-                sz = GitObjectId.HashLength(_idType);
+                sz = GitId.HashLength(_idType);
             else if (_ver == 1)
-                sz = GitObjectId.HashLength(_idType) + 4;
+                sz = GitId.HashLength(_idType) + 4;
             else
             {
                 index = 0;
@@ -114,7 +114,7 @@ namespace AmpScm.Git.Objects
             {
                 int mid = (first + c) / 2;
 
-                var check = GitObjectId.FromByteArrayOffset(_idType, oids, sz * mid);
+                var check = GitId.FromByteArrayOffset(_idType, oids, sz * mid);
 
                 int n = objectId.HashCompare(check);
 
@@ -135,7 +135,7 @@ namespace AmpScm.Git.Objects
                 return false;
             }
 
-            var check2 = GitObjectId.FromByteArrayOffset(_idType, oids, sz * first);
+            var check2 = GitId.FromByteArrayOffset(_idType, oids, sz * first);
             index = (uint)first;
 
             return objectId.HashCompare(check2) == 0;
@@ -145,7 +145,7 @@ namespace AmpScm.Git.Objects
         {
             if (_ver == 2)
             {
-                int sz = GitObjectId.HashLength(_idType);
+                int sz = GitId.HashLength(_idType);
                 byte[] data = new byte[sz * count];
 
                 _fIdx!.Position = 8 /* header */ + 256 * 4 /* fanout */ + sz * start;
@@ -157,7 +157,7 @@ namespace AmpScm.Git.Objects
             }
             else if (_ver == 1)
             {
-                int sz = GitObjectId.HashLength(_idType) + 4;
+                int sz = GitId.HashLength(_idType) + 4;
                 byte[] data = new byte[sz * count];
 
                 _fIdx!.Position = 256 * 4 /* fanout */ + sz * start;
@@ -175,7 +175,7 @@ namespace AmpScm.Git.Objects
         {
             if (_ver == 2)
             {
-                int sz = GitObjectId.HashLength(_idType);
+                int sz = GitId.HashLength(_idType);
                 byte[] data = new byte[4 * count];
 
                 _fIdx!.Position = 8 /* header */ + 256 * 4 /* fanout */
@@ -206,30 +206,30 @@ namespace AmpScm.Git.Objects
             else if (_ver == 1)
             {
                 // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
-                return ToHost(BitConverter.ToUInt32(offsetArray, index * (4 + GitObjectId.HashLength(_idType))));
+                return ToHost(BitConverter.ToUInt32(offsetArray, index * (4 + GitId.HashLength(_idType))));
             }
             else
                 return uint.MaxValue;
         }
 
-        private GitObjectId GetOid(byte[] oidArray, int index)
+        private GitId GetOid(byte[] oidArray, int index)
         {
             if (_ver == 2)
             {
-                int idBytes = GitObjectId.HashLength(_idType);
-                return GitObjectId.FromByteArrayOffset(_idType, oidArray, index * idBytes);
+                int idBytes = GitId.HashLength(_idType);
+                return GitId.FromByteArrayOffset(_idType, oidArray, index * idBytes);
             }
             else if (_ver == 1)
             {
                 // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
-                int blockBytes = 4 + GitObjectId.HashLength(_idType);
-                return GitObjectId.FromByteArrayOffset(_idType, oidArray, index * blockBytes + 4);
+                int blockBytes = 4 + GitId.HashLength(_idType);
+                return GitId.FromByteArrayOffset(_idType, oidArray, index * blockBytes + 4);
             }
 
             throw new GitRepositoryException("Unsupported pack version");
         }
 
-        public async override ValueTask<TGitObject?> Get<TGitObject>(GitObjectId objectId)
+        public async override ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
             where TGitObject : class
         {
             Init();
@@ -297,7 +297,7 @@ namespace AmpScm.Git.Objects
 
             for (int i = 0; i < count; i++)
             {
-                GitObjectId objectId = GetOid(oids, i);
+                GitId objectId = GetOid(oids, i);
                 long offset = GetOffset(offsets, i);
 
                 var rdr = await _fb.DuplicateAsync(true);

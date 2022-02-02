@@ -6,7 +6,7 @@ namespace AmpScm.Buckets.Specialized
     public abstract class WrappingBucket : Bucket
     {
         protected Bucket Inner { get; }
-        internal bool DontDisposeInner { get; set; }
+        internal protected bool DontDisposeInner { get; internal set; }
 
         public WrappingBucket(Bucket inner)
         {

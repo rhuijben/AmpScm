@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AmpScm.Buckets;
 using AmpScm.Buckets.Specialized;
+using AmpScm.Git;
 
 namespace AmpScm.Buckets.Git
 {
-    public class GitObjectFileBucket : GitBucket, IGitObjectType
+    public sealed class GitObjectFileBucket : GitObjectBucket
     {
         long _startOffset;
         long? _length;
@@ -17,9 +19,7 @@ namespace AmpScm.Buckets.Git
         {
         }
 
-        public GitObjectType Type { get; private set; }
-
-        public async ValueTask ReadTypeAsync()
+        public override async ValueTask ReadTypeAsync()
         {
             if (_startOffset == 0)
             {

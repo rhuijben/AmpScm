@@ -6,7 +6,7 @@ using System.Text;
 
 namespace AmpScm.Git
 {
-    public enum GitObjectIdType
+    public enum GitIdType
     {
         None = 0,
         Sha1 = 1,
@@ -14,11 +14,11 @@ namespace AmpScm.Git
     }
 
     [DebuggerDisplay("{Type}:{ToString(),nq}")]
-    public sealed class GitObjectId : IEquatable<GitObjectId>, IComparable<GitObjectId>, IFormattable
+    public sealed class GitId : IEquatable<GitId>, IComparable<GitId>, IFormattable
     {
         byte[] _bytes;
         int _offset;
-        public GitObjectIdType Type { get; }
+        public GitIdType Type { get; }
 
         public byte[] Hash
         {
@@ -34,16 +34,16 @@ namespace AmpScm.Git
             return _bytes;
         }
 
-        public GitObjectId(GitObjectIdType type, byte[] hash)
+        public GitId(GitIdType type, byte[] hash)
         {
-            if (type < GitObjectIdType.None || type > GitObjectIdType.Sha256)
+            if (type < GitIdType.None || type > GitIdType.Sha256)
                 throw new ArgumentOutOfRangeException(nameof(type));
 
             Type = type;
-            _bytes = (type != GitObjectIdType.None ? hash ?? throw new ArgumentNullException(nameof(hash)) : Array.Empty<byte>());
+            _bytes = (type != GitIdType.None ? hash ?? throw new ArgumentNullException(nameof(hash)) : Array.Empty<byte>());
         }
 
-        GitObjectId(GitObjectIdType type, byte[] hash, int offset)
+        GitId(GitIdType type, byte[] hash, int offset)
         {
             Type = type;
             _bytes = hash;
@@ -54,7 +54,7 @@ namespace AmpScm.Git
         }
 
         /// <summary>
-        /// Creates GitObjectId that uses a location inside an existing array.
+        /// Creates GitId that uses a location inside an existing array.
         /// </summary>
         /// <param name="type"></param>
         /// <param name="hash"></param>
@@ -63,17 +63,17 @@ namespace AmpScm.Git
         /// <remarks>Only use this if you are 100% sure the source array doesn't change, as changing it will change the objectid
         /// and break things like equals and hashing</remarks>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public static GitObjectId FromByteArrayOffset(GitObjectIdType type, byte[] hash, int offset)
+        public static GitId FromByteArrayOffset(GitIdType type, byte[] hash, int offset)
         {
-            return new GitObjectId(type, hash, offset);
+            return new GitId(type, hash, offset);
         }
 
         public override bool Equals(object? obj)
         {
-            return base.Equals(obj as GitObjectId);
+            return base.Equals(obj as GitId);
         }
 
-        public bool Equals(GitObjectId? other)
+        public bool Equals(GitId? other)
         {
             if (other is null)
                 return false;
@@ -84,7 +84,7 @@ namespace AmpScm.Git
             return HashCompare(other) == 0;
         }
 
-        public int HashCompare(GitObjectId other)
+        public int HashCompare(GitId other)
         {
             int sz = HashLength(Type);
 
@@ -99,16 +99,16 @@ namespace AmpScm.Git
             return 0;
         }
 
-        public static bool TryParse(string s, out GitObjectId oid)
+        public static bool TryParse(string s, out GitId oid)
         {
             if (s.Length == 40)
             {
-                oid = new GitObjectId(GitObjectIdType.Sha1, StringToByteArray(s));
+                oid = new GitId(GitIdType.Sha1, StringToByteArray(s));
                 return true;
             }
             else if (s.Length == 64)
             {
-                oid = new GitObjectId(GitObjectIdType.Sha256, StringToByteArray(s));
+                oid = new GitId(GitIdType.Sha256, StringToByteArray(s));
                 return true;
             }
             else
@@ -148,15 +148,15 @@ namespace AmpScm.Git
             return sb.ToString();
         }
 
-        public static int HashLength(GitObjectIdType type)
+        public static int HashLength(GitIdType type)
             => type switch
             {
-                GitObjectIdType.Sha1 => 20,
-                GitObjectIdType.Sha256 => 32,
+                GitIdType.Sha1 => 20,
+                GitIdType.Sha256 => 32,
                 _ => throw new ArgumentOutOfRangeException(nameof(type))
             };
 
-        public int CompareTo(GitObjectId? other)
+        public int CompareTo(GitId? other)
         {
             if (other is null)
                 return 1;
@@ -190,10 +190,10 @@ namespace AmpScm.Git
             throw new ArgumentOutOfRangeException(nameof(format));
         }
 
-        public static bool operator ==(GitObjectId? one, GitObjectId? other)
+        public static bool operator ==(GitId? one, GitId? other)
             => one?.Equals(other) ?? (other is null);
 
-        public static bool operator !=(GitObjectId? one, GitObjectId? other)
+        public static bool operator !=(GitId? one, GitId? other)
             => !(one?.Equals(other) ?? (other is null));
 
         public byte this[int index]

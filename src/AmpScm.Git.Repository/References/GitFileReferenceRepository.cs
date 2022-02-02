@@ -25,7 +25,7 @@ namespace AmpScm.Git.References
                 {
                     string name = file.Substring(baseDir.Length+1).Replace(Path.DirectorySeparatorChar, '/');
 
-                    yield return new GitReference(this, name, (GitObjectId?)null);
+                    yield return new GitReference(this, name, (GitId?)null);
                 }
             }            
         }
@@ -37,10 +37,10 @@ namespace AmpScm.Git.References
             if (!File.Exists(fileName))
                 return null;
 
-            return new GitReference(this, name, new GitAsyncLazy<GitObjectId?>(async () => await LoadOidFromFile(fileName)));
+            return new GitReference(this, name, new GitAsyncLazy<GitId?>(async () => await LoadOidFromFile(fileName)));
         }
 
-        async ValueTask<GitObjectId?> LoadOidFromFile(string fileName)
+        async ValueTask<GitId?> LoadOidFromFile(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException(nameof(fileName));
@@ -62,9 +62,9 @@ namespace AmpScm.Git.References
             if (body.Length > 256)
                 return null; // Auch...
 
-            if (GitObjectId.TryParse(body, out var oid))
+            if (GitId.TryParse(body, out var oid))
                 return oid;
-            else if (GitObjectId.TryParse(body.Trim(), out oid))
+            else if (GitId.TryParse(body.Trim(), out oid))
                 return oid;
             else if (body.StartsWith("ref:"))
             {

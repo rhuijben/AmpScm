@@ -13,18 +13,17 @@ namespace AmpScm.Git
     public abstract class GitObject : IEquatable<GitObject>, IGitOidObject
     {
         protected internal GitRepository Repository { get; }
-        public GitObjectId Id { get; }
+        public GitId Id { get; }
 
         public abstract GitObjectType Type { get; }
 
-        private protected GitObject(GitRepository repository, GitObjectId id)
+        private protected GitObject(GitRepository repository, GitId id)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
-        internal static GitObject FromBucket<TBucket>(GitRepository repository, TBucket rdr, Type type, GitObjectId id)
-            where TBucket : GitBucket, IGitObjectType
+        internal static GitObject FromBucket(GitRepository repository, GitObjectBucket rdr, Type type, GitId id)
         {
             switch (rdr.Type)
             {

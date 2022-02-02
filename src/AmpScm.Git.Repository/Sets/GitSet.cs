@@ -19,7 +19,7 @@ namespace AmpScm.Git.Sets
 
     public interface IGitOidObject : IGitObject
     {
-        GitObjectId Id { get; }
+        GitId Id { get; }
     }
 
     public interface IGitNamedObject : IGitObject
@@ -75,12 +75,12 @@ namespace AmpScm.Git.Sets
             return GetEnumerator();
         }
 
-        public ValueTask<T?> GetAsync(GitObjectId id)
+        public ValueTask<T?> GetAsync(GitId id)
         {
             return Repository.SetQueryProvider.GetAsync<T>(id);
         }
 
-        public T? this[GitObjectId id]
+        public T? this[GitId id]
         {
             get => Repository.SetQueryProvider.GetAsync<T>(id).Result;
         }

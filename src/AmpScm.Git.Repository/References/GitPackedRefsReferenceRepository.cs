@@ -20,8 +20,8 @@ namespace AmpScm.Git.References
         private protected sealed class GitRefPeel
         {
             public string Name { get; set; } = null!;
-            public GitObjectId Oid { get; set; } = null!;
-            public GitObjectId? Peeled { get; set; }
+            public GitId Oid { get; set; } = null!;
+            public GitId? Peeled { get; set; }
         }
 
         Dictionary<string, GitRefPeel>? _peelRefs;
@@ -47,7 +47,7 @@ namespace AmpScm.Git.References
             {
                 using var sr = File.OpenText(fileName);
 
-                var idLength = GitObjectId.HashLength(Repository.InternalConfig.IdType) * 2;
+                var idLength = GitId.HashLength(Repository.InternalConfig.IdType) * 2;
 
                 GitRefPeel? last = null;
                 while (await sr.ReadLineAsync() is string line)
@@ -68,7 +68,7 @@ namespace AmpScm.Git.References
 
             if (char.IsLetterOrDigit(line, 0) && line.Length > idLength + 1)
             {
-                if (GitObjectId.TryParse(line.Substring(0, idLength), out var oid))
+                if (GitId.TryParse(line.Substring(0, idLength), out var oid))
                 {
                     string name = line.Substring(idLength + 1).Trim();
 
@@ -78,7 +78,7 @@ namespace AmpScm.Git.References
             }
             else if (line[0] == '^')
             {
-                if (last != null && GitObjectId.TryParse(line.Substring(1).TrimEnd(), out var oid))
+                if (last != null && GitId.TryParse(line.Substring(1).TrimEnd(), out var oid))
                 {
                     last.Peeled = oid;
                 }

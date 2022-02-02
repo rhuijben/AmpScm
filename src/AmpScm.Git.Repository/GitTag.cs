@@ -18,7 +18,7 @@ namespace AmpScm.Git
         GitObjectType? _objType;
         string? _name;
 
-        internal GitTag(GitRepository repository, GitBucket rdr, GitObjectId id)
+        internal GitTag(GitRepository repository, GitBucket rdr, GitId id)
             : base(repository, id)
         {
             _obj = rdr;
@@ -35,7 +35,7 @@ namespace AmpScm.Git
 
                 Read();
 
-                if (_obj is string s && !string.IsNullOrEmpty(s) && GitObjectId.TryParse(s, out var oid))
+                if (_obj is string s && !string.IsNullOrEmpty(s) && GitId.TryParse(s, out var oid))
                 {
                     _obj = oid;
 
