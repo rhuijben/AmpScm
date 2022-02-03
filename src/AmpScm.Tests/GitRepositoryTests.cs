@@ -83,48 +83,6 @@ namespace AmpScm.Tests
         }
 
         [TestMethod]
-        public void OpenDev()
-        {
-            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
-
-            string path = repo.FullPath;
-
-            Assert.IsTrue(Directory.Exists(Path.Combine(path, ".git")));
-            Assert.IsTrue(File.Exists(Path.Combine(path, ".git", "config")));
-            File.ReadAllText(Path.Combine(path, ".git", "config"));
-            Console.WriteLine($"Read {Path.Combine(path, ".git", "config")}");
-            Assert.IsNotNull(repo.FullPath);
-            Assert.IsFalse(repo.IsBare, "Not bare");
-            Assert.IsFalse(repo.IsLazy, "Not lazy");
-
-            {
-                using var repo2 = GitRepository.Open(path, false);
-                Assert.AreEqual(path, repo2.FullPath);
-                Assert.IsFalse(repo2.IsBare);
-                Assert.IsFalse(repo2.IsLazy, "Not lazy");
-            }
-            {
-                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"));
-                Assert.AreEqual(path, repo2.FullPath);
-                Assert.IsFalse(repo2.IsBare);
-                Assert.IsFalse(repo2.IsLazy, "Not lazy");
-            }
-            {
-                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"), false);
-                Assert.AreEqual(path, repo2.FullPath);
-                Assert.IsFalse(repo2.IsBare);
-                Assert.IsFalse(repo2.IsLazy, "Not lazy");
-            }
-
-            {
-                using var repo2 = GitRepository.Open(Path.Combine(path, "a", "b", "c"), true);
-                Assert.AreEqual(path, repo2.FullPath);
-                Assert.IsFalse(repo2.IsBare);
-                Assert.IsFalse(repo2.IsLazy, "Not lazy");
-            }
-        }
-
-        [TestMethod]
         public void OpenInner()
         {
             var repoOuter = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Inner-1"));
