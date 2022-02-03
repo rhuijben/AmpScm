@@ -87,22 +87,38 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
+            string path = repo.FullPath;
             Assert.IsNotNull(repo.FullPath);
-            Assert.IsFalse(repo.IsBare);
+            Assert.IsFalse(repo.IsBare, "Not bare");
+            Assert.IsFalse(repo.IsLazy, "Not lazy");
 
-            using var repo2 = GitRepository.Open(repo.FullPath, false);
-            Assert.IsNotNull(repo2.FullPath);
-            Assert.IsFalse(repo2.IsBare);
-            Assert.AreEqual(repo2.FullPath, repo.FullPath);
+            {
+                using var repo2 = GitRepository.Open(path, false);
+                Assert.AreEqual(path, repo2.FullPath);
+                Assert.IsFalse(repo2.IsBare);
+                Assert.AreEqual(repo2.FullPath, repo.FullPath);
+                Assert.IsFalse(repo2.IsLazy, "Not lazy");
+            }
+            {
+                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"));
+                Assert.AreEqual(path, repo2.FullPath);
+                Assert.IsFalse(repo2.IsBare);
+                Assert.AreEqual(repo2.FullPath, repo.FullPath);
+                Assert.IsFalse(repo2.IsLazy, "Not lazy");
+            }
+            {
+                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"), false);
+                Assert.AreEqual(path, repo2.FullPath);
+                Assert.IsFalse(repo2.IsBare);
+                Assert.IsFalse(repo2.IsLazy, "Not lazy");
+            }
 
-            using var repoGit = GitRepository.Open(Path.Combine(repo.FullPath, ".git"));
-            Assert.IsNotNull(repoGit.FullPath);
-            Assert.IsFalse(repoGit.IsBare);
-            Assert.AreEqual(repoGit.FullPath, repo.FullPath);
-
-            using var repoGit2 = GitRepository.Open(Path.Combine(repo.FullPath, ".git"), false);
-            Assert.IsNotNull(repoGit2.FullPath);
-            Assert.IsFalse(repoGit2.IsBare);
+            {
+                using var repo2 = GitRepository.Open(Path.Combine(path, "a", "b", "c"), true);
+                Assert.AreEqual(path, repo2.FullPath);
+                Assert.IsFalse(repo2.IsBare);
+                Assert.IsFalse(repo2.IsLazy, "Not lazy");
+            }
         }
 
         [TestMethod]
@@ -117,7 +133,6 @@ namespace AmpScm.Tests
                     Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
                 Console.WriteLine($" -tree {c.Tree?.Id}");
 
-                //if (c.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12")
                 foreach (var v in c.Tree!)
                 {
                     Console.WriteLine($"   - {v.Name}");
@@ -130,16 +145,15 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
-            await foreach(var c in repo.Commits)
+            await foreach (var c in repo.Commits)
             {
                 Console.WriteLine($"Commit {c.Id:x10} - {GitTools.FirstLine(c.Message)}");
                 Console.WriteLine($"Author: {c?.Author.ToString() ?? "-"}");
                 if (c.Parent != null)
                     Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
-                Console.WriteLine($" -tree {c.Tree?.Id}");                
+                Console.WriteLine($" -tree {c.Tree?.Id}");
 
-                //if (c.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12")
-                foreach(var v in c.Tree)
+                foreach (var v in c.Tree)
                 {
                     Console.WriteLine($"   - {v.Name}");
                 }
@@ -179,7 +193,7 @@ namespace AmpScm.Tests
                 Console.WriteLine($"   - {v.Name} - {v.Id}");
             }
 
-            foreach(var v in tree.AllItems)
+            foreach (var v in tree.AllItems)
             {
                 Console.WriteLine($"# {v.Path}");
             }
