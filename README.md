@@ -32,5 +32,6 @@ Currently this library is read-only, but writing database entities (blob, commit
   
 ## AmpScm.Git.Client
 [![latest version](https://img.shields.io/nuget/v/AmpScm.Git.Client)](https://www.nuget.org/packages/AmpScm.Git.Client)
+  
 Built on top of the git repository is an early release quick and dirty Git client layer, which forwards operations to the git plumbing code. Mostly
 intended for testing the lower layers, but probly useful for more users.
