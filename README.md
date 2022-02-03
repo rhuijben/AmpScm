@@ -1,5 +1,5 @@
 # AmpScm - Amplifying your Git Source Code Management
-[![Build and Test](https://github.com/AmpScm/AmpScm/actions/workflows/msbuild.yml/badge.svg)](https://github.com/AmpScm/AmpScm/actions/workflows/msbuild.yml)
+[![CI](https://github.com/AmpScm/AmpScm/actions/workflows/msbuild.yml/badge.svg)](https://github.com/AmpScm/AmpScm/actions/workflows/msbuild.yml)
 
 This project provides a few layers of tools that allow accessing your repository from .Net without external dependencies.
 
