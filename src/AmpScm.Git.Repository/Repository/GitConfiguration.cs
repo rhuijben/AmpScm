@@ -23,7 +23,7 @@ namespace AmpScm.Git.Repository
         static readonly Lazy<string> _gitExePath = new Lazy<string>(GetGitExePath, true);
         static readonly Lazy<string> _homeDir = new Lazy<string>(GetHomeDirectory, true);
         public static string GitProgramPath => _gitExePath.Value;
-        public static string UserHomeDir => _homeDir.Value;
+        public static string UserHomeDirectory => _homeDir.Value;
 
         internal GitConfiguration(GitRepository gitRepository, string gitDir)
         {
@@ -38,13 +38,13 @@ namespace AmpScm.Git.Repository
 
             foreach (string path in GetGitConfigurationFilePaths())
             {
-                await LoadConfig(path);
+                await LoadConfigAsync(path);
             }
 
-            await LoadConfig(Path.Combine(_gitDir, "config"));
+            await LoadConfigAsync(Path.Combine(_gitDir, "config"));
         }
 
-        async ValueTask LoadConfig(string path)
+        async ValueTask LoadConfigAsync(string path)
         {
             using var b = FileBucket.OpenRead(path);
             using var cr = new GitConfigurationReaderBucket(b);
@@ -54,14 +54,14 @@ namespace AmpScm.Git.Repository
                 if (item.Group == "core" || item.Group == "extension")
                     ParseCore(item);
                 else if (item.Group == "includeif")
-                    await ParseIncludeIf(path, item);
+                    await ParseIncludeIfAsync(path, item);
 
                 _config[(item.Group, item.SubGroup, item.Key)] = item.Value ?? "\xFF";
             }
             _loaded = true;
         }
 
-        private async ValueTask ParseIncludeIf(string path, GitConfigurationItem item)
+        private async ValueTask ParseIncludeIfAsync(string path, GitConfigurationItem item)
         {
             if (!(item.SubGroup is var check) || string.IsNullOrEmpty(check))
                 return;
@@ -85,14 +85,14 @@ namespace AmpScm.Git.Repository
 
                 if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
                 {
-                    await LoadConfig(Path.GetFullPath(newPath));
+                    await LoadConfigAsync(Path.GetFullPath(newPath));
                 }
             }
         }
 
         static string ApplyHomeDir(string path)
         {
-            if (path != null && path.StartsWith("~") && UserHomeDir is var homeDir && homeDir != null)
+            if (path != null && path.StartsWith("~") && UserHomeDirectory is var homeDir && !string.IsNullOrWhiteSpace(homeDir))
             {
                 if (path.StartsWith("~/"))
                     path = homeDir!.TrimEnd(Path.DirectorySeparatorChar) + path.Substring(1);
@@ -155,7 +155,7 @@ namespace AmpScm.Git.Repository
 
         internal async ValueTask<GitRemote?> GetRemoteAsync(string name)
         {
-            if (await GetStringAsync("remote." +name, "url") is string v)
+            if (await GetStringAsync("remote." + name, "url") is string v)
             {
                 return new GitRemote(Repository, name, v);
             }
@@ -429,7 +429,7 @@ namespace AmpScm.Git.Repository
                 }
             }
 
-            if (UserHomeDir is string home && !string.IsNullOrWhiteSpace(UserHomeDir) && File.Exists(f = Path.Combine(home, ".gitconfig")))
+            if (UserHomeDirectory is string home && !string.IsNullOrWhiteSpace(UserHomeDirectory) && File.Exists(f = Path.Combine(home, ".gitconfig")))
             {
                 yield return Path.GetFullPath(f);
             }
@@ -449,12 +449,14 @@ namespace AmpScm.Git.Repository
         static string GetHomeDirectory()
         {
             if (Environment.GetEnvironmentVariable("HOME") is string home
-                && Directory.Exists(home))
+                && !string.IsNullOrWhiteSpace(home) && Directory.Exists(home))
             {
                 return Path.GetFullPath(home);
             }
-            else if (Environment.GetEnvironmentVariable("HOMEDRIVE") is var homeDrive
-                && Environment.GetEnvironmentVariable("HOMEPATH") is var homePath)
+
+            if (Environment.GetEnvironmentVariable("HOMEDRIVE") is var homeDrive
+                && Environment.GetEnvironmentVariable("HOMEPATH") is var homePath
+                && !string.IsNullOrWhiteSpace(homeDrive) && !string.IsNullOrWhiteSpace(homePath))
             {
                 homeDrive += "\\";
                 if (homePath!.StartsWith("\\") || homePath.StartsWith("/"))
@@ -463,10 +465,11 @@ namespace AmpScm.Git.Repository
                 if (Directory.Exists(home = Path.Combine(homeDrive, homePath!)))
                     return Path.GetFullPath(home);
             }
-            else if (Environment.GetEnvironmentVariable("USERPROFILE") is var userProfile)
+
+            if (Environment.GetEnvironmentVariable("USERPROFILE") is var userProfile
+                && !string.IsNullOrEmpty(userProfile) && Directory.Exists(userProfile))
             {
-                if (Directory.Exists(userProfile))
-                    return userProfile;
+                return userProfile;
             }
 
             return null!;

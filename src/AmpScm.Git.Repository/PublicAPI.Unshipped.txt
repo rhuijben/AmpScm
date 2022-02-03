@@ -166,7 +166,7 @@ static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.G
 static AmpScm.Git.GitTreeEntry.operator ==(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
 static AmpScm.Git.Repository.GitConfiguration.GetGitConfigurationFilePaths(bool includeSystem = true) -> System.Collections.Generic.IEnumerable<string!>!
 static AmpScm.Git.Repository.GitConfiguration.GitProgramPath.get -> string!
-static AmpScm.Git.Repository.GitConfiguration.UserHomeDir.get -> string!
+static AmpScm.Git.Repository.GitConfiguration.UserHomeDirectory.get -> string!
 virtual AmpScm.Git.GitObject.ReadAsync() -> System.Threading.Tasks.ValueTask
 virtual AmpScm.Git.GitReference.Commit.get -> AmpScm.Git.GitCommit?
 virtual AmpScm.Git.GitReference.Object.get -> AmpScm.Git.GitObject?
