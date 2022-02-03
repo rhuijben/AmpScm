@@ -170,7 +170,9 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
-            var tree = repo.Trees.FirstOrDefault(x => x.Id.ToString() == "2a13daf257b049bd85c34fc76cabed82d9b1ca12");
+            var treeId = repo.Head.Commit.Tree.Id.ToString();
+
+            var tree = repo.Trees.FirstOrDefault(x => x.Id.ToString() == treeId);
 
             foreach (var v in tree)
             {
