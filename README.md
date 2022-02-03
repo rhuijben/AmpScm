@@ -15,16 +15,20 @@ Completely managed Git repository level library, providing access to the reposit
   
 Soon walking history should be as easy as something like:
   
-    using(var repo = GitRepository.Open(@"C:\my\repo"))
+```cs
+    using AmpScm.Git;
+    
+    using (var repo = await GitRepository.OpenAsync(Environment.CurrentDirectory))
     {
-        async foreach (var r in repo.Head.Revisions)
+        await foreach (var r in repo.Head.Revisions)
         {
             Console.WriteLine($"Commit {r.Commit.Id}");
             Console.WriteLine($"Author: {r.Commit.Author?.Name} <{r.Commit.Author?.Email}>");
-            Console.Writeline("");
-            Console.Writeline(r.Commit.Message?.TrimEnd() + "\n");
+            Console.WriteLine("");
+            Console.WriteLine(r.Commit.Message?.TrimEnd() + "\n");
         }
     }
+```
  
 Of course you can also use the non async api if needed. This repository layer is built on top of *Amp.Buckets* via *AmpScm.Buckets.Git*, which could
 be used separately. The IAsyncQueryable<T> support is abstracted via the hopefully temporary *AmpScm.Linq.AsyncQueryable*, until Async LINQ is fully
