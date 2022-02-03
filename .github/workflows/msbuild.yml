@@ -26,13 +26,10 @@ jobs:
         include-prerelease: true
 
     - name: Install dependencies
-      working-directory: src
-      run: dotnet restore
+      run: dotnet restore /v:m
       
     - name: Build
-      working-directory: src
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build /v:m --configuration Release --no-restore
     
     - name: Test
-      working-directory: src
       run: dotnet test --no-restore --verbosity normal

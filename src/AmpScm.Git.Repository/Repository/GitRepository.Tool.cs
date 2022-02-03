@@ -6,20 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Git.Implementation;
+using AmpScm.Git.Repository;
 
 namespace AmpScm.Git
 {
     partial class GitRepository
     {
-        Lazy<string> _gitProgram = new Lazy<string>(FindGitProgram);
-
-        private static string FindGitProgram()
-        {
-            return "git.exe";
-        }
-
-        protected string GitProgram => _gitProgram.Value;
-
         internal protected ValueTask<int> RunPlumbingCommand(string command, params string[] args)
         {
             return RunPlumbingCommand(command, args, stdinText: null, expectedResults: null);
@@ -27,7 +19,7 @@ namespace AmpScm.Git
 
         internal protected async ValueTask<int> RunPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo(GitProgram)
+            ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -72,7 +64,7 @@ namespace AmpScm.Git
 
         internal protected async ValueTask<(int, string)> RunPlumbingCommandOut(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo(GitProgram)
+            ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -117,7 +109,7 @@ namespace AmpScm.Git
 
         internal protected async ValueTask<(int, string, string)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo(GitProgram)
+            ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
                 UseShellExecute = false,
                 CreateNoWindow = true,

@@ -11,20 +11,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{78BFCCE6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9A01C966-5002-4DAE-AEF6-DE08A760DCF9}"
 	ProjectSection(SolutionItems) = preProject
-		..\.editorconfig = ..\.editorconfig
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Buckets", "AmpScm.Buckets\AmpScm.Buckets.csproj", "{7B4C2CA5-108E-42B3-9649-84E6EA2A5530}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Buckets", "src\AmpScm.Buckets\AmpScm.Buckets.csproj", "{7B4C2CA5-108E-42B3-9649-84E6EA2A5530}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Git.Repository", "AmpScm.Git.Repository\AmpScm.Git.Repository.csproj", "{B4930333-636C-4015-B79F-F00AAC189B60}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Git.Repository", "src\AmpScm.Git.Repository\AmpScm.Git.Repository.csproj", "{B4930333-636C-4015-B79F-F00AAC189B60}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Git.Client", "AmpScm.Git.Client\AmpScm.Git.Client.csproj", "{EDA1F64C-24C4-4841-8487-9FBDF530AB08}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Git.Client", "src\AmpScm.Git.Client\AmpScm.Git.Client.csproj", "{EDA1F64C-24C4-4841-8487-9FBDF530AB08}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Linq.AsyncQueryable", "AmpScm.Linq.AsyncQueryable\AmpScm.Linq.AsyncQueryable.csproj", "{44BE25DB-25D5-45EF-97AB-84911CBA8C96}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Linq.AsyncQueryable", "src\AmpScm.Linq.AsyncQueryable\AmpScm.Linq.AsyncQueryable.csproj", "{44BE25DB-25D5-45EF-97AB-84911CBA8C96}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Tests", "AmpScm.Tests\AmpScm.Tests.csproj", "{227D4B78-9017-41B4-86BC-F2C03FA9004F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Tests", "src\AmpScm.Tests\AmpScm.Tests.csproj", "{227D4B78-9017-41B4-86BC-F2C03FA9004F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmpScm.Buckets.Git", "AmpScm.Buckets.Git\AmpScm.Buckets.Git.csproj", "{6A041336-A514-451B-8919-4CC02CF65A8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AmpScm.Buckets.Git", "src\AmpScm.Buckets.Git\AmpScm.Buckets.Git.csproj", "{6A041336-A514-451B-8919-4CC02CF65A8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
