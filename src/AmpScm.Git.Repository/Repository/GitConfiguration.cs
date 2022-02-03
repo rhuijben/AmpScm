@@ -41,7 +41,14 @@ namespace AmpScm.Git.Repository
                 await LoadConfigAsync(path);
             }
 
-            await LoadConfigAsync(Path.Combine(_gitDir, "config"));
+            try
+            {
+                await LoadConfigAsync(Path.Combine(_gitDir, "config"));
+            }
+            catch(Exception e)
+            {
+                throw new GitRepositoryException($"Can't open repository config '{Path.Combine(_gitDir, "config")}', GitDir='{Repository.GitDir}', FullPath='{Repository.FullPath}'", e);
+            }
         }
 
         async ValueTask LoadConfigAsync(string path)

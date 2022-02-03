@@ -40,7 +40,7 @@ namespace AmpScm.Git
             return new GitRepository(rootDir, bareCheck: bareCheck);
         }
 
-        public static string? FindGitRoot(string path)
+        static string? FindGitRoot(string path)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));

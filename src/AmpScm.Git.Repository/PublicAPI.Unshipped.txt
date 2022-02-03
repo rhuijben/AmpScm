@@ -155,7 +155,6 @@ override sealed AmpScm.Git.GitTreeEntry<TEntry, TObject>.GitObject.get -> AmpScm
 static AmpScm.Git.GitObject.operator !=(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitObject.operator ==(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitReference.ValidName(string! name, bool allowSpecialSymbols) -> bool
-static AmpScm.Git.GitRepository.FindGitRoot(string! path) -> string?
 static AmpScm.Git.GitRepository.Init(string! path) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Init(string! path, bool isBare) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Open(string! path) -> AmpScm.Git.GitRepository!
