@@ -25,6 +25,7 @@ AmpScm.Git.GitObject.Id.get -> AmpScm.Git.GitId!
 AmpScm.Git.GitReference
 AmpScm.Git.GitReference.Name.get -> string!
 AmpScm.Git.GitReference.ObjectId.get -> AmpScm.Git.GitId?
+AmpScm.Git.GitReference.Revisions.get -> AmpScm.Git.Sets.GitRevisionSet!
 AmpScm.Git.GitReference.ShortName.get -> string!
 AmpScm.Git.GitRemote
 AmpScm.Git.GitRemote.Name.get -> string!
@@ -109,6 +110,8 @@ AmpScm.Git.Sets.GitNamedSet<T>.this[string! name].get -> T?
 AmpScm.Git.Sets.GitReferencesSet
 AmpScm.Git.Sets.GitReferencesSet.Head.get -> AmpScm.Git.GitReference!
 AmpScm.Git.Sets.GitRemotesSet
+AmpScm.Git.Sets.GitRevisionSet
+AmpScm.Git.Sets.GitRevisionSet.GetEnumerator() -> System.Collections.Generic.IEnumerator<AmpScm.Git.GitRevision!>!
 AmpScm.Git.Sets.GitSet
 AmpScm.Git.Sets.GitSet<T>
 AmpScm.Git.Sets.GitSet<T>.ElementType.get -> System.Type!

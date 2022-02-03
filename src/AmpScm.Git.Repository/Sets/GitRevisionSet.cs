@@ -8,18 +8,26 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Git.Implementation;
+using AmpScm.Git.References;
 
 namespace AmpScm.Git.Sets
 {
     public class GitRevisionSet : GitSet, IGitAsyncQueryable<GitRevision>, IListSource
     {
-        public Type ElementType => typeof(GitRevision);
+        private GitReferenceRepository repository;
 
-        public Expression Expression => throw new NotImplementedException();
+        internal GitRevisionSet(GitReferenceRepository repository)
+        {
+            this.repository = repository;
+        }
 
-        public IQueryProvider Provider => throw new NotImplementedException();
+        Type IQueryable.ElementType => typeof(GitRevision);
 
-        public async IAsyncEnumerator<GitRevision> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        Expression IQueryable.Expression => throw new NotImplementedException();
+
+        IQueryProvider IQueryable.Provider => throw new NotImplementedException();
+
+        async IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
             yield break;
         }
@@ -39,6 +47,18 @@ namespace AmpScm.Git.Sets
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        internal GitRevisionSet AddReference(GitReference gitReference)
+        {
+            //throw new NotImplementedException();
+            return this;
+        }
+
+        internal GitRevisionSet AddCommit(GitCommit gitCommit)
+        {
+            //throw new NotImplementedException();
+            return this;
         }
     }
 }
