@@ -429,8 +429,10 @@ namespace AmpScm.Git.Repository
                 }
             }
 
-            if (UserHomeDir is string home && File.Exists(f = Path.Combine(home, ".gitconfig")))
+            if (UserHomeDir is string home && !string.IsNullOrWhiteSpace(UserHomeDir) && File.Exists(f = Path.Combine(home, ".gitconfig")))
+            {
                 yield return Path.GetFullPath(f);
+            }
             else if (Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) is var localAppData
                 && File.Exists(f = Path.Combine(localAppData, "git", "gitconfig")))
             {
