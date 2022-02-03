@@ -140,6 +140,8 @@ namespace AmpScm.Git
             }
         }
 
+        public GitRevisionSet Revisions => new GitRevisionSet();
+
         static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars().Concat(new [] { '^', '@', '{', '}' }));
 
         public static bool ValidName(string name, bool allowSpecialSymbols)

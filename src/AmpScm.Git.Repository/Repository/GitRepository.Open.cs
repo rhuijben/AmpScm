@@ -40,6 +40,13 @@ namespace AmpScm.Git
             return new GitRepository(rootDir, bareCheck: bareCheck);
         }
 
+        public static ValueTask<GitRepository> OpenAsync(string path)
+        {
+            var g = GitRepository.Open(path);
+
+            return new ValueTask<GitRepository>(g);
+        }
+
         static string? FindGitRoot(string path)
         {
             if (string.IsNullOrEmpty(path))
