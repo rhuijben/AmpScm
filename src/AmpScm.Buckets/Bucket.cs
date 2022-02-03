@@ -31,7 +31,10 @@ namespace AmpScm.Buckets
 
         public abstract ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue);
 
-        public abstract ValueTask<BucketBytes> PeekAsync();
+        public virtual ValueTask<BucketBytes> PeekAsync()
+        {
+            return EmptyTask;
+        }
 
         public virtual ValueTask<int> ReadSkipAsync(int requested)
         {
@@ -86,11 +89,6 @@ namespace AmpScm.Buckets
 
         sealed class EmptyBucket : Bucket
         {
-            public override ValueTask<BucketBytes> PeekAsync()
-            {
-                return EmptyTask;
-            }
-
             public override ValueTask<BucketBytes> ReadAsync(int requested = -1)
             {
                 return EofTask;

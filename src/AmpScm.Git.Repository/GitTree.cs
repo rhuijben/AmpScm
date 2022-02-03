@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Git.Objects;
 using AmpScm.Buckets.Specialized;
 using AmpScm.Git.Implementation;
 using AmpScm.Git.Sets;
@@ -17,7 +18,6 @@ namespace AmpScm.Git
     {
         List<GitTreeEntry> _entries = new List<GitTreeEntry>();
         private GitBucket? _rdr;
-        BucketEolState? _eolState;
 
         internal GitTree(GitRepository repository, GitId id)
             : base(repository, id)
@@ -37,41 +37,32 @@ namespace AmpScm.Git
             if (_rdr == null)
                 return;
 
-            int val;
-            string name;
-            var (bb, eol) = await _rdr.ReadUntilEolFullAsync(BucketEol.Zero, _eolState ??= new BucketEolState());
-
-            if (bb.IsEof)
+            if (!(_rdr is GitTreeReadBucket rdr))
             {
-                var r = _rdr;
+                if (_rdr is Bucket b)
+                    _rdr = rdr = new GitTreeReadBucket(b, Repository.InternalConfig.IdType);
+                else
+                    return;
+            }
+
+            var el = await rdr.ReadTreeElement();
+
+            if (el.IsEof)
+            {
                 _rdr = null;
-                await r.DisposeAsync();
+                await rdr.DisposeAsync();
                 return;
             }
 
-            if (eol == BucketEol.Zero)
-            {
-                string v = bb.ToUTF8String(eol);
-
-                var p = v.Split(new[] { ' ' }, 2);
-
-                val = int.Parse(p[0]);
-                name = p[1];
-            }
-            else
-                throw new GitRepositoryException("Truncated tree");
-
-            bb = await _rdr.ReadFullAsync(GitId.HashLength(Id.Type));
-
-            _entries.Add(NewGitTreeEntry(name, val, new GitId(Id.Type, bb.ToArray())));
+            _entries.Add(NewGitTreeEntry(el.Value));
         }
 
-        private GitTreeEntry NewGitTreeEntry(string name, int val, GitId id)
+        private GitTreeEntry NewGitTreeEntry(GitTreeElement value)
         {
-            if (val == 40000)
-                return new GitDirectoryTreeEntry(this, name, id);
+            if (value.Type == GitTreeElementType.Directory)
+                return new GitDirectoryTreeEntry(this, value.Name, value.Id);
             else
-                return new GitFileTreeEntry(this, name, val, id);
+                return new GitFileTreeEntry(this, value.Name, value.Type, value.Id);
         }
 
         public async IAsyncEnumerator<GitTreeEntry> GetAsyncEnumerator(CancellationToken cancellationToken = default)

@@ -129,13 +129,11 @@ AmpScm.Git.Sets.IGitNamedObject
 AmpScm.Git.Sets.IGitNamedObject.Name.get -> string!
 AmpScm.Git.Sets.IGitObject
 AmpScm.Git.Sets.IGitObject.ReadAsync() -> System.Threading.Tasks.ValueTask
-AmpScm.Git.Sets.IGitOidObject
-AmpScm.Git.Sets.IGitOidObject.Id.get -> AmpScm.Git.GitId!
 const AmpScm.Git.References.GitReferenceRepository.Head = "HEAD" -> string!
 override AmpScm.Git.GitCommit.ReadAsync() -> System.Threading.Tasks.ValueTask
 override AmpScm.Git.GitDirectoryTreeEntry.EntryName.get -> string!
-override AmpScm.Git.GitDirectoryTreeEntry.TypeMask.get -> int
-override AmpScm.Git.GitFileTreeEntry.TypeMask.get -> int
+override AmpScm.Git.GitDirectoryTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
+override AmpScm.Git.GitFileTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 override AmpScm.Git.GitObject.Equals(object? obj) -> bool
 override AmpScm.Git.GitObject.GetHashCode() -> int
 override AmpScm.Git.GitRepository.ToString() -> string!
@@ -164,6 +162,8 @@ static AmpScm.Git.GitRepository.Open(string! path) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Open(string! path, bool findGitRoot) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
 static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
+static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
+static AmpScm.Git.GitTreeEntry.operator ==(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
 static AmpScm.Git.Repository.GitConfiguration.GetGitConfigurationFilePaths(bool includeSystem = true) -> System.Collections.Generic.IEnumerable<string!>!
 static AmpScm.Git.Repository.GitConfiguration.GitProgramPath.get -> string!
 static AmpScm.Git.Repository.GitConfiguration.UserHomeDir.get -> string!
@@ -172,5 +172,5 @@ virtual AmpScm.Git.GitReference.Commit.get -> AmpScm.Git.GitCommit?
 virtual AmpScm.Git.GitReference.Object.get -> AmpScm.Git.GitObject?
 virtual AmpScm.Git.GitReference.ReadAsync() -> System.Threading.Tasks.ValueTask
 virtual AmpScm.Git.GitTreeEntry.EntryName.get -> string!
-virtual AmpScm.Git.GitTreeEntry.TypeMask.get -> int
+virtual AmpScm.Git.GitTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 virtual AmpScm.Git.References.GitReferenceRepository.ResolveByOid(AmpScm.Git.GitId! arg) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>

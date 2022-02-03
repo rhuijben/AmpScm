@@ -35,14 +35,14 @@ namespace AmpScm.Git.Objects
             {
                 var rdr = new GitObjectFileBucket(fileReader);
 
-                await rdr.ReadRemainingBytesAsync();
+                GitObject ob = await GitObject.FromBucket(Repository, rdr, objectId);
 
-                var r = GitObject.FromBucket(Repository, rdr, typeof(TGitObject), objectId) as TGitObject;
+                if (ob is TGitObject tg)
+                    return tg;
 
-                if (r == null)
-                    fileReader.Dispose();
+                await rdr.DisposeAsync();
 
-                return r;
+                return null;
             }
             catch
             {
@@ -55,18 +55,25 @@ namespace AmpScm.Git.Objects
         {
             foreach (string dir in Directory.GetDirectories(objectsDir, "??"))
             {
+                string prefix = Path.GetFileName(dir);
+
                 foreach (var file in Directory.GetFiles(dir))
                 {
-                    string oidString = Path.GetFileName(dir) + Path.GetFileName(file);
+                    string idString = prefix + Path.GetFileName(file);
 
-                    if (!GitId.TryParse(oidString, out var oid))
+                    if (!GitId.TryParse(idString, out var id))
                         continue;
 
-                    var r= (await Get<TGitObject>(oid))!;
+                    var fileReader = FileBucket.OpenRead(file);
 
-                    if (r != null)
-                        yield return r;
-                    // else bad type
+                    var rdr = new GitObjectFileBucket(fileReader);
+
+                    GitObject ob = await GitObject.FromBucket(Repository, rdr, id);
+
+                    if (ob is TGitObject tg)
+                        yield return tg;
+                    else
+                        await rdr.DisposeAsync();
                 }
             }
         }

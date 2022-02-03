@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net5.0;net47;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net5.0;net47;netcoreapp3.1</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\AmpScm.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <RootNamespace>AmpScm.Git</RootNamespace>
+    <RootNamespace>AmpScm.Buckets.Git</RootNamespace>
     <NoWarn>1701;1702;1591;0628</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

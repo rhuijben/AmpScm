@@ -239,6 +239,7 @@ namespace AmpScm.Buckets.Specialized
                 _z.DeflateInit((int)_level);
 
             _eof = _readEof = false;
+            read_buffer = BucketBytes.Empty;
             write_buffer = BucketBytes.Empty;
             _position = 0;
         }

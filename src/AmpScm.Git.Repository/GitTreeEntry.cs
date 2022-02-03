@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Git.Objects;
 using AmpScm.Git.Sets;
 
 namespace AmpScm.Git
@@ -21,7 +22,7 @@ namespace AmpScm.Git
 
         public virtual string EntryName => Name;
 
-        public virtual int TypeMask => 100644;
+        public virtual GitTreeElementType TypeMask => GitTreeElementType.None;
 
         public override bool Equals(object? obj)
         {
@@ -43,6 +44,12 @@ namespace AmpScm.Git
         public abstract GitObject GitObject { get; }
 
         public GitId Id { get; }
+
+        public static bool operator ==(GitTreeEntry e1, GitTreeEntry e2)
+            => e1?.Equals(e2) ?? false;
+
+        public static bool operator !=(GitTreeEntry e1, GitTreeEntry e2)
+            => !(e1?.Equals(e2) ?? false);
     }
 
     public abstract class GitTreeEntry<TEntry, TObject> : GitTreeEntry
@@ -79,12 +86,12 @@ namespace AmpScm.Git
 
     public class GitFileTreeEntry : GitTreeEntry<GitFileTreeEntry, GitBlob>
     {
-        internal GitFileTreeEntry(GitTree tree, string name, int mask, GitId item) : base(tree, name, item)
+        internal GitFileTreeEntry(GitTree tree, string name, GitTreeElementType mask, GitId item) : base(tree, name, item)
         {
             TypeMask = mask;
         }
 
-        public override int TypeMask { get; }
+        public override GitTreeElementType TypeMask { get; }
 
         public GitBlob Blob => Object;
 
@@ -103,6 +110,6 @@ namespace AmpScm.Git
 
         public new GitTree GitObject => Object;
 
-        public override int TypeMask => 40000;
+        public override GitTreeElementType TypeMask => GitTreeElementType.Directory;
     }
 }

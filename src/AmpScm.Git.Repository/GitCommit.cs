@@ -138,8 +138,13 @@ namespace AmpScm.Git
 
         public override async ValueTask ReadAsync()
         {
-            if (_tree is Bucket b)
+            if (_tree is GitObjectBucket b)
             {
+                await b.ReadTypeAsync();
+
+                if (b.Type != GitObjectType.Commit)
+                    throw new InvalidOperationException();
+
                 _tree = "";
                 BucketEolState? _eolState = null;
 

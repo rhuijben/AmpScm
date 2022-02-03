@@ -23,9 +23,19 @@ namespace AmpScm.Git
             Id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
-        internal static GitObject FromBucket(GitRepository repository, GitObjectBucket rdr, Type type, GitId id)
+        internal static async ValueTask<GitObject> FromBucket(GitRepository repository, GitObjectBucket rdr, GitId id, GitObjectType ?type = null)
         {
-            switch (rdr.Type)
+            GitObjectType tp;
+
+            if (type == null)
+            {
+                await rdr.ReadTypeAsync();
+                tp = rdr.Type;
+            }
+            else
+                tp = type.Value;
+
+            switch (tp)
             {
                 case GitObjectType.Commit:
                     return new GitCommit(repository, rdr, id);

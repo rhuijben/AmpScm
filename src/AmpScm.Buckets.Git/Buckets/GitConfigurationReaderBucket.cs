@@ -49,11 +49,6 @@ namespace AmpScm.Buckets.Git
         {
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
-        {
-            return EmptyTask;
-        }
-
         public async ValueTask<GitConfigurationItem?> ReadConfigItem()
         {
             while (true)

@@ -249,36 +249,50 @@ namespace AmpScm.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                if (_fb == null)
-                {
-                    _fb = FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
+                await OpenPackIfNecessary();
 
-                    using var phr = new GitPackHeaderBucket(_fb.NoClose());
-
-                    var bb = await phr.ReadAsync();
-
-                    if (!bb.IsEof)
-                        throw new GitBucketException("Error during reading of pack header");
-                    else if (phr.GitType != "PACK")
-                        throw new GitBucketException($"Error during reading of pack header, type='{phr.GitType}");
-                    else if(phr.Version != 2)
-                        throw new GitBucketException($"Unexpected pack version '{phr.Version}, expected version 2");
-                    else if (phr.ObjectCount != count)
-                        throw new GitBucketException($"Header has {phr.ObjectCount} records, but the index {count}");
-                }
-
-                var rdr = await _fb.DuplicateAsync(true);
+                var rdr = await _fb!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
 
-                await pf.ReadRemainingBytesAsync();
+                GitObject ob = await GitObject.FromBucket(Repository, pf, objectId);
 
-                return GitObject.FromBucket(Repository, pf, typeof(TGitObject), objectId) as TGitObject;
+                if (ob is TGitObject tg)
+                    return tg;
+                else
+                    await pf.DisposeAsync();
             }
             return null;
         }
 
+        private async Task OpenPackIfNecessary()
+        {
+            if (_fb == null)
+            {
+                var fb = FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
+
+                await VerifyPack(fb);
+
+                _fb = fb;
+            }
+        }
+
+        private async ValueTask VerifyPack(FileBucket fb)
+        {
+            using var phr = new GitPackHeaderBucket(fb.NoClose());
+
+            var bb = await phr.ReadAsync();
+
+            if (!bb.IsEof)
+                throw new GitBucketException("Error during reading of pack header");
+            else if (phr.GitType != "PACK")
+                throw new GitBucketException($"Error during reading of pack header, type='{phr.GitType}");
+            else if (phr.Version != 2)
+                throw new GitBucketException($"Unexpected pack version '{phr.Version}, expected version 2");
+            else if (_fanOut != null && phr.ObjectCount != _fanOut[255])
+                throw new GitBucketException($"Header has {phr.ObjectCount} records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
+        }
 
         public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
             where TGitObject : class
@@ -293,24 +307,24 @@ namespace AmpScm.Git.Objects
             byte[] oids = GetOidArray(0, count);
             byte[] offsets = GetOffsetArray(0, count, oids);
 
-            _fb ??= FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
+            await OpenPackIfNecessary();
 
             for (int i = 0; i < count; i++)
             {
                 GitId objectId = GetOid(oids, i);
                 long offset = GetOffset(offsets, i);
 
-                var rdr = await _fb.DuplicateAsync(true);
+                var rdr = await _fb!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
 
-                await pf.ReadRemainingBytesAsync();
+                GitObject ob = await GitObject.FromBucket(Repository, pf, objectId);
 
-                var r = GitObject.FromBucket(Repository, pf, typeof(TGitObject), objectId) as TGitObject;
-
-                if (r != null)
-                    yield return r;
+                if (ob is TGitObject one)
+                    yield return one;
+                else
+                    await pf.DisposeAsync();
             }
         }
     }

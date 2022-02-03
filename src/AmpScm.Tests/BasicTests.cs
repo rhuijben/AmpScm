@@ -104,7 +104,7 @@ namespace AmpScm.Tests
             Assert.IsNotNull(c2.HashResult);
             Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", FormatHash(c2.HashResult));
 
-#if NETCOREAPP
+#if NET5_0_OR_GREATER
             {
                 var rr = MD5.HashData(Encoding.ASCII.GetBytes(string.Join("", strings)));
 
