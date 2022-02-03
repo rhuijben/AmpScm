@@ -118,7 +118,7 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal override ValueTask<GitBucket?> ResolveByOid(GitId arg)
+        internal override ValueTask<GitObjectBucket> ResolveByOid(GitId arg)
         {
             // TODO: Implement
             return base.ResolveByOid(arg);

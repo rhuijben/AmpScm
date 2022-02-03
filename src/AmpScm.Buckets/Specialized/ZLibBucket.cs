@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 using Elskom.Generic.Libs;
 
 namespace AmpScm.Buckets.Specialized
@@ -10,7 +11,7 @@ namespace AmpScm.Buckets.Specialized
         BestSpeed = ZlibConst.ZBESTSPEED,
         Maximum = ZlibConst.ZBESTCOMPRESSION
     }
-    public sealed class ZLibBucket : WrappingBucket
+    public sealed class ZLibBucket : WrappingBucket, IBucketPoll
     {
         readonly ZStream _z;
         bool _eof, _readEof;
@@ -20,10 +21,12 @@ namespace AmpScm.Buckets.Specialized
         long _position;
         int? _windowBits;
         ZLibLevel? _level;
+        readonly IBucketPoll? innerPoll;
 
         public ZLibBucket(Bucket inner)
             : this(inner, 15 /* 15 for zlib. -15 for deflate and 31 for gzip */)
         {
+            innerPoll = inner as IBucketPoll;
         }
 
         private ZLibBucket(Bucket inner, int windowBits)
@@ -56,7 +59,7 @@ namespace AmpScm.Buckets.Specialized
 
                 if (!_readEof && read_buffer.IsEmpty)
                 {
-                    var bb = await Inner.PeekAsync();
+                    var bb = await ((innerPoll is null) ? Inner.PeekAsync() : innerPoll.PollAsync());
 
                     if (bb.IsEmpty)
                     {
@@ -184,6 +187,14 @@ namespace AmpScm.Buckets.Specialized
         {
             if (!_eof && write_buffer.IsEmpty)
                 await Refill(true);
+
+            return write_buffer;
+        }
+
+        async ValueTask<BucketBytes> IBucketPoll.PollAsync(int minSize)
+        {
+            if (!_eof && write_buffer.IsEmpty)
+                await Refill(false);
 
             return write_buffer;
         }

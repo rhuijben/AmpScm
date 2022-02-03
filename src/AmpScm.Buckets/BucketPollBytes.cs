@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AmpScm.Buckets.Specialized
+namespace AmpScm.Buckets
 {
-    public class PollData : IDisposable
+    public class BucketPollBytes : IDisposable
     {
-        public Bucket Bucket { get; }
+        Bucket Bucket { get; }
         public BucketBytes Data { get; private set; }
         public int AlreadyRead { get; private set; }
 
@@ -16,9 +16,9 @@ namespace AmpScm.Buckets.Specialized
 
         public int Length => Data.Length;
 
-        public PollData(Bucket bucket, BucketBytes data, int alreadyRead)
+        public BucketPollBytes(Bucket bucket, BucketBytes data, int alreadyRead)
         {
-            Bucket = bucket;
+            Bucket = bucket ?? throw new ArgumentNullException(nameof(bucket));
             Data = data;
             AlreadyRead = alreadyRead;
         }

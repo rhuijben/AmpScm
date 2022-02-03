@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {
-    public class FileBucket : Bucket
+    public class FileBucket : Bucket, IBucketPoll
     {
         FileHolder _holder;
         byte[] _buffer;
@@ -40,6 +41,23 @@ namespace AmpScm.Buckets
             else
                 return Bucket.EmptyTask;
         }
+
+        async ValueTask<BucketBytes> IBucketPoll.PollAsync(int minRequested /*= 1*/)
+        {
+            if (minRequested <= 0)
+                throw new ArgumentOutOfRangeException(nameof(minRequested));
+
+            if (_pos < _size)
+                return new BucketBytes(_buffer, _pos, _size - _pos);
+
+            await Refill(minRequested);
+
+            if (_pos < _size)
+                return new BucketBytes(_buffer, _pos, _size - _pos);
+            else
+                return BucketBytes.Eof;
+        }
+
         public override bool CanReset => true;
 
         public override ValueTask ResetAsync()
@@ -77,6 +95,22 @@ namespace AmpScm.Buckets
                 return data;
             }
 
+            await Refill(requested);
+
+            if (_pos == _size)
+                return BucketBytes.Eof;
+
+            BucketBytes result = new BucketBytes(_buffer, _pos, Math.Min(requested, _size - _pos));
+            _pos += result.Length;
+            _filePos += result.Length;
+
+            System.Diagnostics.Debug.Assert(result.Length > 0);
+
+            return result;
+        }
+
+        private async Task Refill(int requested)
+        {
             long basePos = _filePos & ~_chunkSizeMinus1; // Current position round back to chunk
             int extra = (int)(_filePos - basePos); // Position in chunk
 
@@ -103,16 +137,7 @@ namespace AmpScm.Buckets
             if (_size == 0 || _pos == _size)
             {
                 _pos = _size;
-                return BucketBytes.Eof;
             }
-
-            BucketBytes result = new BucketBytes(_buffer, _pos, Math.Min(requested, _size - _pos));
-            _pos += result.Length;
-            _filePos += result.Length;
-
-            System.Diagnostics.Debug.Assert(result.Length > 0);
-
-            return result;
         }
 
         public override ValueTask<int> ReadSkipAsync(int requested)

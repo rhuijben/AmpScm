@@ -10,7 +10,7 @@ using System.ComponentModel;
 
 namespace AmpScm.Buckets
 {
-    public static class BucketExtensions
+    public static partial class BucketExtensions
     {
         public static Bucket Append(this Bucket self, Bucket newLast)
         {

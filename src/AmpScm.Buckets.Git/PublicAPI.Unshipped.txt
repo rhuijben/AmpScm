@@ -31,7 +31,7 @@ AmpScm.Buckets.Git.GitObjectFileBucket.GitObjectFileBucket(AmpScm.Buckets.Bucket
 AmpScm.Buckets.Git.GitPackFrameBucket
 AmpScm.Buckets.Git.GitPackFrameBucket.BodySize.get -> long?
 AmpScm.Buckets.Git.GitPackFrameBucket.DeltaCount.get -> int?
-AmpScm.Buckets.Git.GitPackFrameBucket.GitPackFrameBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType oidType, System.Func<AmpScm.Git.GitId!, System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitBucket?>>? resolveOid = null) -> void
+AmpScm.Buckets.Git.GitPackFrameBucket.GitPackFrameBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType oidType, System.Func<AmpScm.Git.GitId!, System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.GitObjectBucket!>>? resolveOid = null) -> void
 AmpScm.Buckets.Git.GitPackFrameBucket.ReadInfoAsync() -> System.Threading.Tasks.ValueTask<bool>
 AmpScm.Buckets.Git.GitPackHeaderBucket
 AmpScm.Buckets.Git.GitPackHeaderBucket.GitPackHeaderBucket(AmpScm.Buckets.Bucket! inner) -> void
