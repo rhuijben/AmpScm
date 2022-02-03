@@ -10,7 +10,7 @@ This library provides zero-copy stream layering over different datasources, mode
 
 ## AmpScm.Git.Repository
 [![latest version](https://img.shields.io/nuget/v/AmpScm.Git.Repository)](https://www.nuget.org/packages/AmpScm.Git.Repository)
-Completely managed Git repository level library, providing access to the repository as both *IQueryable<>* and *IAsyncEnumerable<>* and even custom *IAsyncQueryable<T>* support, to allow extending the repository walk algorithm dynamically.
+Completely managed Git repository level library, providing access to the repository as both *IQueryable<>* and *IAsyncEnumerable<>* and even custom *IAsyncQueryable<>* support, to allow extending the repository walk algorithm dynamically.
   
 Soon walking history should be as easy as something like:
   
