@@ -19,8 +19,9 @@ namespace AmpScm.Tests
             {
                 await foreach (var r in repo.Head.Revisions)
                 {
-                    Console.WriteLine($"Commit: {r.Commit.Id}");
+                    Console.WriteLine($"commit {r.Commit.Id}");
                     Console.WriteLine($"Author: {r.Commit.Author?.Name} <{r.Commit.Author?.Email}>");
+                    Console.WriteLine($"Date:   {r.Commit.Author?.When}");
                     Console.WriteLine("");
                     Console.WriteLine(r.Commit.Message?.TrimEnd() + "\n");
                 }

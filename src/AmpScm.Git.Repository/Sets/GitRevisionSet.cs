@@ -15,6 +15,7 @@ namespace AmpScm.Git.Sets
     public class GitRevisionSet : GitSet, IGitAsyncQueryable<GitRevision>, IListSource
     {
         private GitReferenceRepository repository;
+        GitCommit? _commit;
 
         internal GitRevisionSet(GitReferenceRepository repository)
         {
@@ -29,7 +30,14 @@ namespace AmpScm.Git.Sets
 
         async IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            yield break;
+            GitCommit? c = _commit;
+
+            while (c != null)
+            {
+                yield return new GitRevision(c);
+
+                c = c.Parent;
+            }
         }
 
         public IEnumerator<GitRevision> GetEnumerator()
@@ -51,12 +59,14 @@ namespace AmpScm.Git.Sets
 
         internal GitRevisionSet AddReference(GitReference gitReference)
         {
-            //throw new NotImplementedException();
+            _commit ??= gitReference?.Commit;
+
             return this;
         }
 
         internal GitRevisionSet AddCommit(GitCommit gitCommit)
         {
+            _commit ??= gitCommit;
             //throw new NotImplementedException();
             return this;
         }
