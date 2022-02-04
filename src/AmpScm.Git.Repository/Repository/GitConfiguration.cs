@@ -45,7 +45,7 @@ namespace AmpScm.Git.Repository
             {
                 await LoadConfigAsync(Path.Combine(_gitDir, "config"));
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new GitRepositoryException($"Can't open repository config '{Path.Combine(_gitDir, "config")}', GitDir='{Repository.GitDir}', FullPath='{Repository.FullPath}'", e);
             }
@@ -58,14 +58,31 @@ namespace AmpScm.Git.Repository
 
             while (await cr.ReadConfigItem() is GitConfigurationItem item)
             {
+                _config[(item.Group, item.SubGroup, item.Key)] = item.Value ?? "\xFF";
+
                 if (item.Group == "core" || item.Group == "extension")
                     ParseCore(item);
+                else if (item.Group == "include")
+                    await ParseInclude(path, item);
                 else if (item.Group == "includeif")
                     await ParseIncludeIfAsync(path, item);
-
-                _config[(item.Group, item.SubGroup, item.Key)] = item.Value ?? "\xFF";
             }
             _loaded = true;
+        }
+
+        private async ValueTask ParseInclude(string path, GitConfigurationItem item)
+        {
+            if (!(item.SubGroup is var check) || string.IsNullOrEmpty(check))
+                return;
+            else if (item.Key != "path")
+                return; // No other types documented yet
+
+            string newPath = Path.Combine(Path.GetDirectoryName(path)!, ApplyHomeDir(item.Value!));
+
+            if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
+            {
+                await LoadConfigAsync(Path.GetFullPath(newPath));
+            }
         }
 
         private async ValueTask ParseIncludeIfAsync(string path, GitConfigurationItem item)
