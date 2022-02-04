@@ -14,23 +14,38 @@ namespace AmpScm.Git.Sets
 {
     public class GitRevisionSet : GitSet, IGitAsyncQueryable<GitRevision>, IListSource
     {
-        private GitReferenceRepository repository;
-        GitCommit? _commit;
+        protected GitRepository Repository { get; }
+        GitRevisionSetOptions _options;
 
-        internal GitRevisionSet(GitReferenceRepository repository)
+        internal GitRevisionSet(GitRepository repository)
+            : this(repository, null)
         {
-            this.repository = repository;
+        }
+
+        internal GitRevisionSet(GitRepository repository, GitRevisionSetOptions? options)
+        {
+            Repository = repository;
+            _options = options ?? new GitRevisionSetOptions();
         }
 
         Type IQueryable.ElementType => typeof(GitRevision);
 
-        Expression IQueryable.Expression => throw new NotImplementedException();
+        static System.Reflection.PropertyInfo GetProperty<T>(Expression<Func<T, object>> pr)
+            => (System.Reflection.PropertyInfo)((MemberExpression)pr.Body).Member;
 
-        IQueryProvider IQueryable.Provider => throw new NotImplementedException();
+        static System.Reflection.MethodInfo GetMethod(Expression<Func<GitRevisionSet, object>> pr)
+            => ((MethodCallExpression)pr.Body).Method;
+
+        Expression IQueryable.Expression => Expression.Call(Expression.Property(Expression.Constant(Repository), 
+            GetProperty<GitRepository>(x => x.NoRevisions)), 
+            GetMethod(x=> x.SetOptions(null!)),
+            Expression.Constant(_options));
+
+        IQueryProvider IQueryable.Provider => Repository.SetQueryProvider;
 
         async IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            GitCommit? c = _commit;
+            GitCommit? c = _options.Commits.FirstOrDefault();
 
             while (c != null)
             {
@@ -59,16 +74,20 @@ namespace AmpScm.Git.Sets
 
         internal GitRevisionSet AddReference(GitReference gitReference)
         {
-            _commit ??= gitReference?.Commit;
+            if (gitReference?.Commit is var q)
+                return AddCommit(q);
 
             return this;
         }
 
         internal GitRevisionSet AddCommit(GitCommit gitCommit)
         {
-            _commit ??= gitCommit;
-            //throw new NotImplementedException();
-            return this;
+            return new GitRevisionSet(Repository, _options.AddCommit(gitCommit));
+        }
+
+        internal GitRevisionSet SetOptions(GitRevisionSetOptions options)
+        {
+            return new GitRevisionSet(Repository, options);
         }
     }
 }

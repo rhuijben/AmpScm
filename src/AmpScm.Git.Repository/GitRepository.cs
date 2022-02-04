@@ -34,11 +34,12 @@ namespace AmpScm.Git
             Objects = new GitSet<GitObject>(this, () => this.Objects!);
             Commits = new GitCommitsSet(this, () => this.Commits!);
             Blobs = new GitSet<GitBlob>(this, () => this.Blobs!);
-            Tags = new GitSet<GitTag>(this, () => this.Tags!);
+            TagObjects = new GitSet<GitTag>(this, () => this.TagObjects!);
             Trees = new GitSet<GitTree>(this, () => this.Trees!);
             References = new GitReferencesSet(this, () => this.References!);
             Remotes = new GitRemotesSet(this, () => this.Remotes!);
             _gitConfiguration = new Lazy<GitConfiguration>(LoadConfig);
+            NoRevisions = new GitRevisionSet(this);
 
             ObjectRepository = null!;
             GitDir = null!;
@@ -78,10 +79,12 @@ namespace AmpScm.Git
         public GitCommitsSet Commits { get; }
         public GitSet<GitTree> Trees { get; }
         public GitSet<GitBlob> Blobs { get; }
+        public GitSet<GitTag> TagObjects { get; }
 
-        public GitSet<GitTag> Tags { get; }
         public GitReferencesSet References { get; }
         public GitRemotesSet Remotes { get; }
+
+        internal GitRevisionSet NoRevisions { get; }
 
         public GitConfiguration Configuration => _gitConfiguration.Value;
 
@@ -146,6 +149,11 @@ namespace AmpScm.Git
             return SetQueryProvider.GetAsync<TResult>(id);
         }
 
+        IQueryable<GitRevision> IGitQueryRoot.GetRevisions(GitRevisionSet p)
+        {
+            return SetQueryProvider.GetRevisions(p);
+        }
+
         object? IServiceProvider.GetService(Type serviceType)
         {
             return ((IServiceProvider)_container).GetService(serviceType);
@@ -163,6 +171,6 @@ namespace AmpScm.Git
             where T : class
         {
             return _container.GetService(typeof(T)) as T;
-        }
+        }        
     }
 }

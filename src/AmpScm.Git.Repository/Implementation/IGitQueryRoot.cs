@@ -22,5 +22,6 @@ namespace AmpScm.Git.Implementation
 
         ValueTask<TResult?> GetNamedAsync<TResult>(string name)
             where TResult : class, IGitNamedObject;
+        IQueryable<GitRevision> GetRevisions(GitRevisionSet p);
     }
 }

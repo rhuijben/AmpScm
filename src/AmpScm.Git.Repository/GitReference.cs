@@ -140,7 +140,7 @@ namespace AmpScm.Git
             }
         }
 
-        public GitRevisionSet Revisions => new GitRevisionSet(Repository).AddReference(this);
+        public GitRevisionSet Revisions => new GitRevisionSet(Repository.Repository).AddReference(this);
 
         static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars().Concat(new [] { '^', '@', '{', '}' }));
 

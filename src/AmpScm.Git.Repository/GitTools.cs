@@ -67,6 +67,6 @@ namespace AmpScm.Git
             }
 
             return  string.Join("\n", lines.Take(st));
-        }
+        }        
     }
 }

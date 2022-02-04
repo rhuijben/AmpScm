@@ -91,6 +91,25 @@ namespace System.Linq
             return (IOrderedAsyncQueryable<TSource>)Queryable.ThenBy(source, keySelector, comparer);
         }
 
+        /// <inheritdoc cref="Queryable.TakeWhile{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}})"/>
+        public static IAsyncQueryable<TSource> TakeWhile<TSource>(this IAsyncQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
+        {
+            return (IAsyncQueryable<TSource>)Queryable.TakeWhile(source, predicate);
+        }
+
+        /// <inheritdoc cref="Queryable.TakeWhile{TSource}(IQueryable{TSource}, Expression{Func{TSource, int, bool}})"/>
+        public static IAsyncQueryable<TSource> TakeWhile<TSource>(this IAsyncQueryable<TSource> source, Expression<Func<TSource, int, bool>> predicate)
+        {
+            return (IAsyncQueryable<TSource>)Queryable.TakeWhile(source, predicate);
+        }
+
+        /// <inheritdoc cref="Queryable.Take{TSource}(IQueryable{TSource}, int)"/>
+        public static IAsyncQueryable<TSource> Take<TSource>(this IAsyncQueryable<TSource> source, int count)
+        {
+            return (IAsyncQueryable<TSource>)Queryable.Take(source, count);
+        }
+
+
         /// <summary>
         /// Converts a generic <see cref="IEnumerable{T}"/> to a generic <see cref="IAsyncQueryable{T}"/>
         /// </summary>

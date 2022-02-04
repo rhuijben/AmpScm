@@ -75,7 +75,7 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs);
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -106,6 +106,52 @@ namespace AmpScm.Git
 
             return (p.ExitCode, outputText);
         }
+
+#if NETFRAMEWORK
+        static string EscapeCommandlineArgument(string argument)
+        {
+            if (string.IsNullOrEmpty(argument))
+                return "";
+
+            bool escape = false;
+            for (int i = 0; i < argument.Length; i++)
+            {
+                if (char.IsWhiteSpace(argument, i))
+                {
+                    escape = true;
+                    break;
+                }
+                else if (argument[i] == '\"')
+                {
+                    escape = true;
+                    break;
+                }
+            }
+
+            if (!escape)
+                return argument;
+
+            StringBuilder sb = new StringBuilder(argument.Length + 5);
+
+            sb.Append('\"');
+
+            for (int i = 0; i < argument.Length; i++)
+            {
+                switch (argument[i])
+                {
+                    case '\"':
+                        sb.Append('\"');
+                        break;
+                }
+
+                sb.Append(argument[i]);
+            }
+
+            sb.Append('\"');
+
+            return sb.ToString();
+        }
+#endif
 
         internal protected async ValueTask<(int, string, string)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {

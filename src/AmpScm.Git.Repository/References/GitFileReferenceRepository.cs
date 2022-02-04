@@ -15,7 +15,9 @@ namespace AmpScm.Git.References
         {
         }
 
-        public async override IAsyncEnumerable<GitReference> GetAll()
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public override async IAsyncEnumerable<GitReference> GetAll()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             string baseDir = Path.GetFullPath(GitDir);
 
@@ -30,7 +32,9 @@ namespace AmpScm.Git.References
             }            
         }
 
-        protected internal async override ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        protected internal override async ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             string fileName = Path.Combine(GitDir, name);
 

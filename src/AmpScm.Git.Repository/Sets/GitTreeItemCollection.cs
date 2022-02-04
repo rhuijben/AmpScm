@@ -13,7 +13,7 @@ namespace AmpScm.Git.Sets
     {
         readonly GitTree gitTree;
         readonly bool justFiles;
-        int _count;
+        //int _count;
 
         internal GitTreeItemCollection(GitTree gitTree, bool justFiles)
         {

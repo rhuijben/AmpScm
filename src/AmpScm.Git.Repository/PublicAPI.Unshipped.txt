@@ -46,13 +46,14 @@ AmpScm.Git.GitRepository.Objects.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitObj
 AmpScm.Git.GitRepository.ReferenceRepository.get -> AmpScm.Git.References.GitReferenceRepository!
 AmpScm.Git.GitRepository.References.get -> AmpScm.Git.Sets.GitReferencesSet!
 AmpScm.Git.GitRepository.Remotes.get -> AmpScm.Git.Sets.GitRemotesSet!
-AmpScm.Git.GitRepository.Tags.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTag!>!
+AmpScm.Git.GitRepository.TagObjects.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTag!>!
 AmpScm.Git.GitRepository.Trees.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTree!>!
 AmpScm.Git.GitRepositoryException
 AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message) -> void
 AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message, System.Exception! innerexception) -> void
 AmpScm.Git.GitRepositoryException.GitRepositoryException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 AmpScm.Git.GitRevision
+AmpScm.Git.GitRevision.Commit.get -> AmpScm.Git.GitCommit!
 AmpScm.Git.GitRevision.ReadAsync() -> System.Threading.Tasks.ValueTask
 AmpScm.Git.GitSignature
 AmpScm.Git.GitSignature.Email.get -> string!
@@ -160,7 +161,7 @@ override sealed AmpScm.Git.GitTreeEntry<TEntry, TObject>.GitObject.get -> AmpScm
 static AmpScm.Git.GitObject.operator !=(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitObject.operator ==(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitReference.ValidName(string! name, bool allowSpecialSymbols) -> bool
-static AmpScm.Git.GitRepository.AsyncOpen(string! path) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitRepository!>
+static AmpScm.Git.GitRepository.OpenAsync(string! path) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitRepository!>
 static AmpScm.Git.GitRepository.Init(string! path) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Init(string! path, bool isBare) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Open(string! path) -> AmpScm.Git.GitRepository!

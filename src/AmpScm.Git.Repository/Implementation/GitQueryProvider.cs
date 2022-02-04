@@ -135,5 +135,10 @@ namespace AmpScm.Git.Implementation
 
             return default;
         }
+
+        public IQueryable<GitRevision> GetRevisions(GitRevisionSet p)
+        {
+            return p.ToList().AsQueryable();
+        }
     }
 }

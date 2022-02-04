@@ -16,7 +16,7 @@ namespace AmpScm.Git.Implementation
         {
             return (callExpression.Body as MethodCallExpression)?.Method ?? throw new ArgumentOutOfRangeException(nameof(callExpression));
         }
- 
+
         // Fold all root references to exxactly the same value
         protected override Expression VisitConstant(ConstantExpression node)
         {
@@ -54,6 +54,10 @@ namespace AmpScm.Git.Implementation
 
                         if (typeof(GitObject).IsAssignableFrom(elementType))
                             newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAll<GitObject>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
+                        else if (typeof(GitRevision).IsAssignableFrom(elementType))
+                            newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetRevisions(null!)), newArguments[i]);
+                        else if (typeof(GitRemote).IsAssignableFrom(elementType))
+                            newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAllNamed<GitRemote>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
                         else
                             newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAllNamed<GitReference>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
 

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Git;
@@ -172,7 +174,7 @@ namespace AmpScm.Tests
             await foreach (var c in repo.Commits)
             {
                 Console.WriteLine($"Commit {c.Id:x10} - {GitTools.FirstLine(c.Message)}");
-                Console.WriteLine($"Author: {c?.Author.ToString() ?? "-"}");
+                Console.WriteLine($"Author: {c.Author?.ToString() ?? "-"}");
                 if (c.Parent != null)
                     Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
                 Console.WriteLine($" -tree {c.Tree?.Id}");
@@ -208,9 +210,9 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
-            var treeId = repo.Head.Commit.Tree.Id.ToString();
+            var treeId = repo.Head.Commit!.Tree.Id.ToString();
 
-            var tree = repo.Trees.FirstOrDefault(x => x.Id.ToString() == treeId);
+            var tree = repo.Trees.First(x => x.Id.ToString() == treeId);
 
             foreach (var v in tree)
             {
@@ -222,5 +224,131 @@ namespace AmpScm.Tests
                 Console.WriteLine($"# {v.Path}");
             }
         }
+
+        public void WalkSets_TestSet<TSet, TProp>(IQueryable<TProp> set, PropertyInfo pi, HashSet<Type> walked)
+        {
+            try
+            {
+                foreach (var v in set)
+                {
+                    break;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new AssertFailedException($"foreach on {pi.Name} works", e);
+            }
+
+            try
+            {
+                IEnumerable<TProp> set2 = set;
+
+                set2.Any();
+            }
+            catch (Exception e)
+            {
+                throw new AssertFailedException($"enumerable Any on {typeof(TSet).Name}.{pi.Name} works", e);
+            }
+
+            try
+            {
+                set.Any();
+            }
+            catch (Exception e)
+            {
+                throw new AssertFailedException($"queryable Any on {typeof(TSet).Name}.{pi.Name} works", e);
+            }
+
+            if (set is IAsyncEnumerable<TProp> ae)
+            {
+                try
+                {
+                    ae.AnyAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    throw new AssertFailedException($"async enumerable AnyAsync on {typeof(TSet).Name}.{pi.Name} works", e);
+                }
+            }
+
+            if (set is Linq.AsyncQueryable.IAsyncQueryable<TProp> aq)
+            {
+                try
+                {
+                    aq.Any();
+                }
+                catch (Exception e)
+                {
+                    throw new AssertFailedException($"async queryable Any on {typeof(TSet).Name}.{pi.Name} works", e);
+                }
+
+                try
+                {
+                    aq.AnyAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    throw new AssertFailedException($"async queryable AnyAsync on {typeof(TSet).Name}.{pi.Name} works", e);
+                }
+            }
+
+            try
+            {
+                foreach (var v in set.Where(x => true).Take(2))
+                { }
+            }
+            catch (Exception e)
+            {
+                throw new AssertFailedException($"queryable check on {typeof(TSet).Name}.{pi.Name} works", e);
+            }
+
+
+            WalkSets_TestType(set, walked);
+        }
+
+        public void WalkSets_TestType<T>(T instance, HashSet<Type> walked)
+        {
+            if (walked.Contains(typeof(T)))
+                return;
+
+            walked.Add(typeof(T));
+
+            foreach (var prop in typeof(T).GetProperties().Where(prop => typeof(IQueryable).IsAssignableFrom(prop.PropertyType) && !prop.GetIndexParameters().Any()))
+            {
+                IQueryable v = (IQueryable)prop.GetValue(instance)!;
+                Assert.IsNotNull(v, $"{typeof(T).Name}.{prop.Name} is not null");
+
+                typeof(GitRepositoryTests).GetMethod("WalkSets_TestSet")!.MakeGenericMethod(typeof(T), v.ElementType).Invoke(this, new object[] { v, prop, walked });
+            }
+
+            foreach (var prop in typeof(T).GetProperties().Where(prop => !typeof(IQueryable).IsAssignableFrom(prop.PropertyType) && !prop.GetIndexParameters().Any()))
+            {
+                object? ob;
+                try
+                {
+                    ob = prop.GetValue(instance)!;
+                }
+                catch (Exception e)
+                {
+                    throw new AssertFailedException($"Fetching {typeof(T).Name}.{prop.Name} works", e);
+                }
+
+                if (ob != null)
+                {
+                    typeof(GitRepositoryTests).GetMethod(nameof(WalkSets_TestType))!.MakeGenericMethod(prop.PropertyType).Invoke(this, new object[] { ob, walked });
+                }
+            }
+        }
+
+        [TestMethod]
+        public void WalkSetsEmptyRepository()
+        {
+            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Nothing"));
+            HashSet<Type> walked = new HashSet<Type>();
+
+            WalkSets_TestType(repo, walked);
+        }
+
+
     }
 }

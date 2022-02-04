@@ -25,7 +25,7 @@ namespace AmpScm.Git.Sets
 
         internal GitQueryProvider Provider => Repository.SetQueryProvider;
 
-        public Type ElementType => typeof(GitReference);
+        public Type ElementType => typeof(T);
 
         Expression IQueryable.Expression => RootExpression;
 
