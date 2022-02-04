@@ -430,7 +430,12 @@ namespace AmpScm.Git.Repository
             string f;
             if (includeSystem && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GIT_CONFIG_NOSYSTEM")))
             {
-                if (GitProgramPath != null)
+                if (Environment.GetEnvironmentVariable("GIT_CONFIG_SYSTEM") is var gitConfigSystem
+                    && !string.IsNullOrWhiteSpace(gitConfigSystem) && File.Exists(gitConfigSystem))
+                {
+                    yield return Path.GetFullPath(gitConfigSystem);
+                }
+                else if (GitProgramPath != null)
                 {
                     string dir = Path.GetDirectoryName(GitProgramPath)!;
 
@@ -453,7 +458,12 @@ namespace AmpScm.Git.Repository
                 }
             }
 
-            if (UserHomeDirectory is string home && !string.IsNullOrWhiteSpace(UserHomeDirectory) && File.Exists(f = Path.Combine(home, ".gitconfig")))
+            if (Environment.GetEnvironmentVariable("GIT_CONFIG_GLOBAL") is var gitConfigGlobal
+                    && !string.IsNullOrWhiteSpace(gitConfigGlobal) && File.Exists(gitConfigGlobal))
+            {
+                yield return Path.GetFullPath(gitConfigGlobal);
+            }
+            else if (UserHomeDirectory is string home && !string.IsNullOrWhiteSpace(UserHomeDirectory) && File.Exists(f = Path.Combine(home, ".gitconfig")))
             {
                 yield return Path.GetFullPath(f);
             }

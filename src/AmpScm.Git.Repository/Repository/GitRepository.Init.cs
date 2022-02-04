@@ -46,7 +46,10 @@ namespace AmpScm.Git
                 configText = configText.Replace("\tbare = false", "\tbare = true");
 
             if (Environment.NewLine != "\r\n")
+            {
+                configText = configText.Replace("\tsymlinks = false\n", "");
                 configText = configText.Replace("\tignorecase = true\n", "");
+            }
 
             File.WriteAllText(Path.Combine(gitDir, "config"), configText);
 
@@ -58,6 +61,9 @@ namespace AmpScm.Git
                 + "# *.[oa]\n"
                 + "# *~\n"
             );
+
+            if (!isBare)
+                File.SetAttributes(gitDir, FileAttributes.Hidden | File.GetAttributes(gitDir));
 
             return new GitRepository(path, bareCheck: isBare);
         }
