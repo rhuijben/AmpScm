@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -64,31 +65,82 @@ namespace AmpScm.Git
             }
         }
 
-        public GitCommit? Parent
+        public GitCommit? Parent => GetParent(0, false);
+
+        public GitId? ParentId => GetParentId(0, false);
+
+        public int ParentCount
         {
             get
             {
-                if (_parent is GitCommit parent)
-                    return parent;
-
                 Read();
 
-                if (_parent is string s && GitId.TryParse(s, out var oid))
-                {
-                    _parent = oid;
-
-                    var t = Repository.ObjectRepository.Get<GitCommit>(oid).Result; // BAD async
-
-                    if (t != null)
-                    {
-                        _parent = t;
-                        return t;
-                    }
-                }
-
-                return null;
+                return (_parent as Object[])?.Length ?? (_parent is null ? 0 : 1);
             }
         }
+
+        private GitCommit? GetParent(int index, bool viaIndex = true)
+        {
+            Read();
+            var p = _parent;
+
+            var pp = p as object[];
+            if (index < 0 || index >= (pp?.Length ?? ((pp is null && viaIndex) ? 0 : 1)))
+                throw new IndexOutOfRangeException();
+
+            if (pp is not null)
+                p = pp[index];
+
+            GitId id;
+            if (p is GitCommit c)
+                return c;
+            else if (p is GitId oid)
+                id = oid;
+            else if (p is string ps && GitId.TryParse(ps, out id))
+                SetParent(index, id);
+            else
+                return null;
+
+            return SetParent(index, Repository.ObjectRepository.Get<GitCommit>(id).Result);
+        }
+        private GitId? GetParentId(int index, bool viaIndex = true)
+        {
+            Read();
+            var p = _parent;
+
+            var pp = p as object[];
+            if (index < 0 || index >= (pp?.Length ?? ((pp is null && viaIndex) ? 0 : 1)))
+                throw new IndexOutOfRangeException();
+
+            if (pp is not null)
+                p = pp[index];
+
+            if (p is GitId id)
+                return id;
+            else if (p is GitObject o)
+                return o.Id;
+            else if (p is string ps && GitId.TryParse(ps, out id))
+                return SetParent(index, id);
+            else
+                return null;
+        }
+
+        private T? SetParent<T>(int index, T? value)
+            where T : class
+        {
+            if (value is not null)
+            {
+                if (_parent is object[] pp)
+                    pp[index] = value;
+                else if (index == 0)
+                    _parent = value;
+            }
+            return value;
+        }
+
+        public IReadOnlyList<GitId> ParentIds => new IdList(this);
+
+        public IReadOnlyList<GitCommit?> Parents => new ParentList(this);
 
         public string? Message
         {
@@ -169,10 +221,12 @@ namespace AmpScm.Git
                         case "parent":
                             var id = parts[1];
 
-                            if (_parent is string pp)
-                                id = pp + " " + id;
-
-                            _parent = id;
+                            if (_parent is null)
+                                _parent = id;
+                            else if (_parent is object[] o)
+                                _parent = o.Concat(new[] { id }).ToArray();
+                            else
+                                _parent = new object[] { _parent, id };
                             break;
                         case "author":
                             _author = new GitSignature(parts[1]);
@@ -225,6 +279,63 @@ namespace AmpScm.Git
                     return $"Commit {Id:x12} - {Summary}";
             }
         }
+
+        private sealed class IdList : IReadOnlyList<GitId>
+        {
+            GitCommit Commit {get;}
+
+            public IdList(GitCommit commit)
+            {
+                Commit = commit;
+                Commit.Read();
+            }
+
+            public GitId this[int index] => Commit.GetParentId(index)!;
+
+            public int Count => (Commit._parent == null) ? 0 : (Commit._parent as Object[])?.Length ?? 1;
+
+            public IEnumerator<GitId> GetEnumerator()
+            {
+                var v = Commit.ParentId;
+
+                if (v != null)
+                    yield return v;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
+        private sealed class ParentList : IReadOnlyList<GitCommit?>
+        {
+            GitCommit Commit { get; }
+
+            public ParentList(GitCommit commit)
+            {
+                Commit = commit;
+                Commit.Read();
+            }
+
+            public GitCommit? this[int index] => Commit.GetParent(index);
+
+            public int Count => (Commit._parent == null) ? 0 : (Commit._parent as Object[])?.Length ?? 1;
+
+            public IEnumerator<GitCommit> GetEnumerator()
+            {
+                var v = Commit.Parent;
+
+                if (v != null)
+                    yield return v;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
     }
 
 }

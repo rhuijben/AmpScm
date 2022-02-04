@@ -11,6 +11,10 @@ AmpScm.Git.GitCommit.Author.get -> AmpScm.Git.GitSignature!
 AmpScm.Git.GitCommit.Committer.get -> AmpScm.Git.GitSignature?
 AmpScm.Git.GitCommit.Message.get -> string?
 AmpScm.Git.GitCommit.Parent.get -> AmpScm.Git.GitCommit?
+AmpScm.Git.GitCommit.ParentCount.get -> int
+AmpScm.Git.GitCommit.ParentId.get -> AmpScm.Git.GitId?
+AmpScm.Git.GitCommit.ParentIds.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.GitId!>!
+AmpScm.Git.GitCommit.Parents.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.GitCommit?>!
 AmpScm.Git.GitCommit.Summary.get -> string?
 AmpScm.Git.GitCommit.Tree.get -> AmpScm.Git.GitTree!
 AmpScm.Git.GitDirectoryTreeEntry

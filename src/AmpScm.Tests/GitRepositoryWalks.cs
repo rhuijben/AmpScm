@@ -73,7 +73,8 @@ namespace AmpScm.Tests
             {
                 Console.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }
-        }
 
+            Assert.IsNotNull(repo.Commits.FirstOrDefault(x => x.Parents.Count > 1), "Repository has merges");
+        }
     }
 }
