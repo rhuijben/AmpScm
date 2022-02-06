@@ -24,7 +24,7 @@ namespace AmpScm.Buckets
             _data = data;
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             return _data.Slice(_offset);
         }
@@ -49,7 +49,9 @@ namespace AmpScm.Buckets
 
         public override ValueTask<Bucket> DuplicateAsync(bool reset)
         {
+#pragma warning disable CA2000 // Dispose objects before losing scope
             var mb = new MemoryBucket(_data.Memory);
+#pragma warning restore CA2000 // Dispose objects before losing scope
             if (!reset)
                 mb._offset = _offset;
 
@@ -67,7 +69,9 @@ namespace AmpScm.Buckets
             return new ValueTask();
         }
 
+#pragma warning disable CA1033 // Interface methods should be callable by child types
         Bucket IBucketNoClose.NoClose()
+#pragma warning restore CA1033 // Interface methods should be callable by child types
         {
             return this;
         }

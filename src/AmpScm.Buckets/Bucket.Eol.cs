@@ -8,7 +8,9 @@ using AmpScm.Buckets.Specialized;
 namespace AmpScm.Buckets
 {
     [Flags]
+#pragma warning disable CA2217 // Do not mark enums with FlagsAttribute
     public enum BucketEol
+#pragma warning restore CA2217 // Do not mark enums with FlagsAttribute
     {
         None        = 0x00,
         LF          = 0x01,
@@ -37,14 +39,14 @@ namespace AmpScm.Buckets
             if ((acceptableEols & ~BucketEol.EolMask) != 0)
                 throw new ArgumentOutOfRangeException(nameof(acceptableEols));
 
-            using var pd = await this.PollAsync(1);
+            using var pd = await this.PollReadAsync(1).ConfigureAwait(false);
 
             if (pd.IsEof)
                 return (BucketBytes.Eof, BucketEol.None);
 
             requested = CalculateEolReadLength(acceptableEols, requested, pd.Data.Span, out var single_cr_requested);
 
-            var read = await pd.ReadAsync(requested);
+            var read = await pd.ReadAsync(requested).ConfigureAwait(false);
             var found = GetEolResult(acceptableEols, requested, pd.Length, single_cr_requested, read.Span);
 
             return (read, found);

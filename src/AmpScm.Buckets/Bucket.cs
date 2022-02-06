@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
+[assembly: CLSCompliant(true)]
+
 namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{Name}: Position={Position}")]
@@ -22,7 +24,7 @@ namespace AmpScm.Buckets
             {
                 string name = GetType().Name;
 
-                if (name.Length > 6 && name.EndsWith("Bucket"))
+                if (name.Length > 6 && name.EndsWith("Bucket", StringComparison.OrdinalIgnoreCase))
                     return name.Substring(0, name.Length - 6);
                 else
                     return name;
@@ -31,9 +33,9 @@ namespace AmpScm.Buckets
 
         public abstract ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue);
 
-        public virtual ValueTask<BucketBytes> PeekAsync()
+        public virtual BucketBytes Peek()
         {
-            return EmptyTask;
+            return BucketBytes.Empty;
         }
 
         public virtual ValueTask<int> ReadSkipAsync(int requested)
@@ -46,7 +48,7 @@ namespace AmpScm.Buckets
             int skipped = 0;
             while (requested > 0)
             {
-                var v = await ReadAsync(requested);
+                var v = await ReadAsync(requested).ConfigureAwait(false);
                 if (v.Length == 0)
                     break;
 
@@ -108,7 +110,7 @@ namespace AmpScm.Buckets
 
         public async ValueTask DisposeAsync()
         {
-            await DisposeAsyncCore();
+            await DisposeAsyncCore().ConfigureAwait(false);
             Dispose(false);
             GC.SuppressFinalize(this);
         }
@@ -123,7 +125,9 @@ namespace AmpScm.Buckets
             return Name;
         }
 
+#pragma warning disable CA2225 // Operator overloads have named alternates
         public static Bucket operator +(Bucket first, Bucket second)
+#pragma warning restore CA2225 // Operator overloads have named alternates
         {
             if (first is null)
                 return second;

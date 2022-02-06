@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Buckets
 {
-    public class BucketPollBytes : IDisposable
+    public sealed class BucketPollBytes : IDisposable
     {
         Bucket Bucket { get; }
         public BucketBytes Data { get; private set; }
@@ -36,7 +36,7 @@ namespace AmpScm.Buckets
 
             while (readBytes > 0)
             {
-                var r = await Bucket.ReadAsync(readBytes);
+                var r = await Bucket.ReadAsync(readBytes).ConfigureAwait(false);
 
                 if (r.IsEmpty)
                     throw new BucketException("EOF during poll consume");
@@ -51,7 +51,7 @@ namespace AmpScm.Buckets
             {
                 if (AlreadyRead == 0)
                 {
-                    return await Bucket.ReadAsync(readBytes);
+                    return await Bucket.ReadAsync(readBytes).ConfigureAwait(false);
                 }
                 else if (readBytes <= AlreadyRead)
                 {
@@ -74,7 +74,7 @@ namespace AmpScm.Buckets
                     int copy = AlreadyRead;
                     AlreadyRead = 0; // No errors in Dispose please
 
-                    var bb = await Bucket.ReadAsync(consume);
+                    var bb = await Bucket.ReadAsync(consume).ConfigureAwait(false);
 
                     if (bb.IsEof)
                         return new BucketBytes(returnData, 0, copy);
@@ -116,7 +116,7 @@ namespace AmpScm.Buckets
 
                     BucketBytes slicedDataCopy = Data.Slice(0, Math.Min(readBytes, Data.Length)).ToArray();
 
-                    var bb = await Bucket.ReadAsync(consume);
+                    var bb = await Bucket.ReadAsync(consume).ConfigureAwait(false);
 
                     AlreadyRead = Math.Max(0, AlreadyRead - bb.Length);
 
@@ -137,7 +137,9 @@ namespace AmpScm.Buckets
         public void Dispose()
         {
             if (AlreadyRead > 0)
+#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations
                 throw new BucketException($"{AlreadyRead} polled bytes were not consumed");
+#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
         }
 
         public byte this[int index] => Data[index];

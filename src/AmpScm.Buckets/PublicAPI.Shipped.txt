@@ -5,7 +5,7 @@ AmpScm.Buckets.AggregateBucket.AggregateBucket(params AmpScm.Buckets.Bucket![]! 
 AmpScm.Buckets.AggregateBucket.Append(AmpScm.Buckets.Bucket! bucket) -> AmpScm.Buckets.Bucket!
 AmpScm.Buckets.AggregateBucket.Prepend(AmpScm.Buckets.Bucket! bucket) -> AmpScm.Buckets.Bucket!
 AmpScm.Buckets.Bucket
-virtual AmpScm.Buckets.Bucket.PeekAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+virtual AmpScm.Buckets.Bucket.Peek() -> AmpScm.Buckets.BucketBytes
 abstract AmpScm.Buckets.Bucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 AmpScm.Buckets.Bucket.Bucket() -> void
 AmpScm.Buckets.Bucket.Dispose() -> void

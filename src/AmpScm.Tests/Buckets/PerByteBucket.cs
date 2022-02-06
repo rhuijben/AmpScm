@@ -10,9 +10,9 @@ namespace AmpScm.BucketTests.Buckets
         {
         }
 
-        public override async ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
-            var b = await base.PeekAsync();
+            var b = base.Peek();
 
             if (b.Length > 1)
                 return b.Slice(0, 1);

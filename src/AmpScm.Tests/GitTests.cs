@@ -738,7 +738,7 @@ namespace AmpScm.Tests
                 b.Add(await srcFile.Wrap().Skip(i * 1024).DuplicateAsync(true));
 
             var s = b.Select(b => b.ReadAsync(1024).AsTask()).ToArray();
-            Task.WaitAll(s);
+            await Task.WhenAll(s);
             foreach (var w in s)
             {
                 var r = await w;

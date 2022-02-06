@@ -23,7 +23,7 @@ namespace AmpScm.Tests
 
             BucketBytes bb;
 
-            bb = await mb.PeekAsync();
+            bb = mb.Peek();
             Assert.AreEqual(256, bb.Length);
 
             Assert.AreEqual(256L, await mb.ReadRemainingBytesAsync());
@@ -48,7 +48,7 @@ namespace AmpScm.Tests
 
             BucketBytes bb;
 
-            bb = await mb.PeekAsync();
+            bb = mb.Peek();
             Assert.AreEqual(256, bb.Length);
 
             Assert.AreEqual(512L, await mb.ReadRemainingBytesAsync());
@@ -222,7 +222,7 @@ namespace AmpScm.Tests
 
             b = b.Skip(4).Take(10);
 
-            var p = await b.PeekAsync();
+            var p = b.Peek();
 
             Assert.AreEqual(10, p.Length);
             Assert.AreEqual("EFGHIJKLMN", Encoding.ASCII.GetString(p.ToArray()));

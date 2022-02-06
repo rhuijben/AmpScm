@@ -8,14 +8,15 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Buckets.Wrappers
 {
-    public class BucketStream : Stream
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2012:Use ValueTasks correctly", Justification = "<Pending>")]
+    public sealed class BucketStream : Stream
     {
         bool _gotLength;
         long _length;
 
         public BucketStream(Bucket bucket)
         {
-            Bucket = bucket?? throw new ArgumentNullException(nameof(Bucket));
+            Bucket = bucket?? throw new ArgumentNullException(nameof(bucket));
         }
 
         public Bucket Bucket { get; }
@@ -36,8 +37,8 @@ namespace AmpScm.Buckets.Wrappers
 #if !NETFRAMEWORK
         public override async ValueTask DisposeAsync()
         {
-            await Bucket.DisposeAsync();
-            await base.DisposeAsync();
+            await Bucket.DisposeAsync().ConfigureAwait(false);
+            await base.DisposeAsync().ConfigureAwait(false);
         }
 #endif
 
@@ -94,7 +95,7 @@ namespace AmpScm.Buckets.Wrappers
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            var r = await Bucket.ReadAsync(count);
+            var r = await Bucket.ReadAsync(count).ConfigureAwait(false);
 
             if (r.IsEof)
                 return 0;
@@ -108,7 +109,7 @@ namespace AmpScm.Buckets.Wrappers
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
 #pragma warning restore RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
         {
-            var r = await Bucket.ReadAsync(buffer.Length);
+            var r = await Bucket.ReadAsync(buffer.Length).ConfigureAwait(false);
 
             if (r.IsEof)
                 return 0;

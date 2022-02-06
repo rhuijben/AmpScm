@@ -6,7 +6,7 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {
-    public class FileBucket : Bucket, IBucketPoll
+    public sealed class FileBucket : Bucket, IBucketPoll
     {
         FileHolder _holder;
         byte[] _buffer;
@@ -34,12 +34,12 @@ namespace AmpScm.Buckets
 
         public override long? Position => _filePos;
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             if (_pos < _size)
                 return new BucketBytes(_buffer, _pos, _size - _pos);
             else
-                return Bucket.EmptyTask;
+                return BucketBytes.Empty;
         }
 
         async ValueTask<BucketBytes> IBucketPoll.PollAsync(int minRequested /*= 1*/)
@@ -50,7 +50,7 @@ namespace AmpScm.Buckets
             if (_pos < _size)
                 return new BucketBytes(_buffer, _pos, _size - _pos);
 
-            await Refill(minRequested);
+            await Refill(minRequested).ConfigureAwait(false);
 
             if (_pos < _size)
                 return new BucketBytes(_buffer, _pos, _size - _pos);
@@ -70,7 +70,9 @@ namespace AmpScm.Buckets
 
         public override ValueTask<Bucket> DuplicateAsync(bool reset)
         {
+#pragma warning disable CA2000 // Dispose objects before losing scope
             FileBucket fbNew = new FileBucket(_holder, _buffer.Length, _chunkSizeMinus1 + 1);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             if (reset)
                 fbNew._filePos = 0;
@@ -95,7 +97,7 @@ namespace AmpScm.Buckets
                 return data;
             }
 
-            await Refill(requested);
+            await Refill(requested).ConfigureAwait(false);
 
             if (_pos == _size)
                 return BucketBytes.Eof;
@@ -128,7 +130,7 @@ namespace AmpScm.Buckets
                 }
                 else
                 {
-                    _size = await _holder.ReadAtAsync(basePos, _buffer, readLen);
+                    _size = await _holder.ReadAtAsync(basePos, _buffer, readLen).ConfigureAwait(false);
                     _bufStart = basePos;
                 }
             }
@@ -212,7 +214,9 @@ namespace AmpScm.Buckets
                         if (p.Position != readPos)
                             p.Position = readPos;
 
+#pragma warning disable CA1849 // Call async methods when in an async method
                         int r = p.Read(buffer, 0, readLen);
+#pragma warning restore CA1849 // Call async methods when in an async method
 
                         return new ValueTask<int>(r);
                     }
@@ -230,7 +234,11 @@ namespace AmpScm.Buckets
                         if (p.Position != readPos)
                             p.Position = readPos;
 
-                        var r = await p.ReadAsync(buffer, 0, readLen);
+#if NET5_0_OR_GREATER
+                        var r = await p.ReadAsync(buffer.AsMemory(0, readLen)).ConfigureAwait(false);
+#else
+                        var r = await p.ReadAsync(buffer, 0, readLen).ConfigureAwait(false);
+#endif
                         return r;
                     }
                 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -32,6 +33,14 @@ namespace AmpScm.Buckets
         {
             _data = ReadOnlyMemory<byte>.Empty;
             _eof = eof;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is BucketBytes bb)
+                return Equals(bb);
+
+            return base.Equals(obj);
         }
 
         public bool Equals(BucketBytes other)
@@ -69,22 +78,30 @@ namespace AmpScm.Buckets
             return d;
         }
 
+#pragma warning disable CA2225 // Operator overloads have named alternates
         public static implicit operator BucketBytes(ArraySegment<byte> segment)
+#pragma warning restore CA2225 // Operator overloads have named alternates
         {
             return new BucketBytes(segment);
         }
 
+#pragma warning disable CA2225 // Operator overloads have named alternates
         public static implicit operator BucketBytes(ReadOnlyMemory<byte> segment)
+#pragma warning restore CA2225 // Operator overloads have named alternates
         {
             return new BucketBytes(segment);
         }
 
+#pragma warning disable CA2225 // Operator overloads have named alternates
         public static implicit operator BucketBytes(byte[] array)
+#pragma warning restore CA2225 // Operator overloads have named alternates
         {
             return new BucketBytes(array);
         }
 
+#pragma warning disable CA2225 // Operator overloads have named alternates
         public static implicit operator ValueTask<BucketBytes>(BucketBytes v)
+#pragma warning restore CA2225 // Operator overloads have named alternates
         {
             return new ValueTask<BucketBytes>(v);
         }
@@ -178,6 +195,16 @@ namespace AmpScm.Buckets
             object ob;
             (ob, offset) = MemoryExpander(_data);
             array = ob as byte[];
+        }
+
+        public static bool operator ==(BucketBytes left, BucketBytes right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(BucketBytes left, BucketBytes right)
+        {
+            return !(left == right);
         }
         #endregion
     }

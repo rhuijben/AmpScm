@@ -2,10 +2,11 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Git
 {
-    public class GitDeltaBucket : GitBucket
+    public class GitDeltaBucket : GitBucket, IBucketPoll
     {
         protected Bucket BaseBucket { get; }
         long length;
@@ -148,7 +149,7 @@ namespace AmpScm.Buckets.Git
                     int want;
                     bool peeked = false;
 
-                    data = await Inner.PeekAsync();
+                    data = Inner.Peek();
 
                     if (!data.IsEmpty)
                     {
@@ -376,11 +377,11 @@ namespace AmpScm.Buckets.Git
             return (length - Position);
         }
 
-        public override async ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             if (state == delta_state.base_copy)
             {
-                var data = await BaseBucket.PeekAsync();
+                var data = BaseBucket.Peek();
 
                 if (copy_size < data.Length)
                     data = data.Slice(0, copy_size);
@@ -389,7 +390,7 @@ namespace AmpScm.Buckets.Git
             }
             else if (state == delta_state.src_copy)
             {
-                var data = await Inner.PeekAsync();
+                var data = Inner.Peek();
 
                 if (copy_size < data.Length)
                     data = data.Slice(0, copy_size);
@@ -397,6 +398,30 @@ namespace AmpScm.Buckets.Git
                 return data;
             }
             else 
+                return BucketBytes.Empty;
+        }
+
+        public async ValueTask<BucketBytes> PollAsync(int minRequested = 1)
+        {
+            if (state == delta_state.base_copy)
+            {
+                var data = await BaseBucket.PollAsync();
+
+                if (copy_size < data.Length)
+                    data = data.Slice(0, copy_size);
+
+                return data;
+            }
+            else if (state == delta_state.src_copy)
+            {
+                var data = await Inner.PollAsync();
+
+                if (copy_size < data.Length)
+                    data = data.Slice(0, copy_size);
+
+                return data;
+            }
+            else
                 return BucketBytes.Empty;
         }
 

@@ -10,23 +10,38 @@ namespace AmpScm.Buckets
 {
     partial class BucketExtensions
     {
-        public static async ValueTask<BucketPollBytes> PollAsync(this Bucket self, int minRequested = 1)
+
+        public static ValueTask<BucketBytes> PollAsync(this Bucket self, int minRequested = 1)
         {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
+
+            if (self is IBucketPoll bp)
+                return bp.PollAsync(minRequested);
+            else
+                return new ValueTask<BucketBytes>(self.Peek());
+        }
+
+        public static async ValueTask<BucketPollBytes> PollReadAsync(this Bucket self, int minRequested = 1)
+        {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
+
             BucketBytes data;
             if (self is IBucketPoll bucketPoll)
             {
-                data = await bucketPoll.PollAsync(minRequested);
+                data = await bucketPoll.PollAsync(minRequested).ConfigureAwait(false);
 
                 if (!data.IsEmpty || data.IsEof)
                     return new BucketPollBytes(self, data, 0);
             }
             else
-                data = await self.PeekAsync();
+                data = self.Peek();
 
             if (data.Length >= minRequested)
                 return new BucketPollBytes(self, data, 0); // Nice peek, move along
 
-            data = await self.ReadAsync(minRequested);
+            data = await self.ReadAsync(minRequested).ConfigureAwait(false);
 
             if (data.IsEmpty)
                 return new BucketPollBytes(self, BucketBytes.Eof, 0); // Nothing to optimize
@@ -38,7 +53,7 @@ namespace AmpScm.Buckets
             // Now the special trick, we might just have triggered a much longer read and in
             // that case we want to provide more data
 
-            data = await self.PeekAsync();
+            data = self.Peek();
 
             var (arr, offset) = data;
 

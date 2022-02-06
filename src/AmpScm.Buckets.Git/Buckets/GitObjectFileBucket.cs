@@ -90,12 +90,12 @@ namespace AmpScm.Buckets.Git
                 return null;
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             if (_startOffset == 0)
-                return EmptyTask;
+                return BucketBytes.Empty;
             else
-                return Inner.PeekAsync();
+                return Inner.Peek();
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)

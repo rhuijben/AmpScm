@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
-    public sealed class CreateHashBucket : WrappingBucket
+    public sealed class CreateHashBucket : WrappingBucket, IBucketPoll
     {
         HashAlgorithm? _hasher;
         byte[]? _result;
@@ -25,7 +26,7 @@ namespace AmpScm.Buckets.Specialized
 
         public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            var r = await Inner.ReadAsync(requested);
+            var r = await Inner.ReadAsync(requested).ConfigureAwait(false);
 
             if (r.IsEof)
                 FinishHashing();
@@ -46,9 +47,14 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
-            return Inner.PeekAsync();
+            return Inner.Peek();
+        }
+
+        public ValueTask<BucketBytes> PollAsync(int minRequested = 1)
+        {
+            return Inner.PollAsync(minRequested);
         }
 
         public override ValueTask<int> ReadSkipAsync(int requested)
@@ -66,7 +72,7 @@ namespace AmpScm.Buckets.Specialized
 
         public async override ValueTask ResetAsync()
         {
-            await Inner.ResetAsync();
+            await Inner.ResetAsync().ConfigureAwait(false);
             _hasher?.Initialize();
             _result = null;
         }
@@ -99,7 +105,9 @@ namespace AmpScm.Buckets.Specialized
             return base.DisposeAsyncCore();
         }
 
+#pragma warning disable CA1819 // Properties should not return arrays
         public byte[]? HashResult => _result;
+#pragma warning restore CA1819 // Properties should not return arrays
 
 
         // From https://github.com/damieng/DamienGKit/blob/master/CSharp/DamienG.Library/Security/Cryptography/Crc32.cs

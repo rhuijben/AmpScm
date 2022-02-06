@@ -49,7 +49,7 @@ namespace AmpScm.Buckets.Specialized
 
         public override string Name => "ZLib>" + Inner.Name;
 
-        async ValueTask<bool> Refill(bool forPeek)
+        async ValueTask<bool> Refill(bool forPeek, int requested=int.MaxValue)
         {
             bool retry_refill;
             do
@@ -59,14 +59,14 @@ namespace AmpScm.Buckets.Specialized
 
                 if (!_readEof && read_buffer.IsEmpty)
                 {
-                    var bb = await ((innerPoll is null) ? Inner.PeekAsync() : innerPoll.PollAsync());
+                    var bb = ((innerPoll is null) ? Inner.Peek() : await innerPoll.PollAsync().ConfigureAwait(false));
 
                     if (bb.IsEmpty)
                     {
                         if (forPeek)
                             return false; // Not at EOF, not filled
 
-                        bb = await Inner.ReadAsync(1);
+                        bb = await Inner.ReadAsync(1).ConfigureAwait(false);
 
                         if (bb.Length == 0)
                         {
@@ -83,7 +83,7 @@ namespace AmpScm.Buckets.Specialized
                             // Let's check if this first byte is just that...
 
                             byte bOne = bb[0];
-                            var peek = await Inner.PeekAsync();
+                            var peek = Inner.Peek();
 
                             if (peek.IsEmpty)
                             {
@@ -134,7 +134,7 @@ namespace AmpScm.Buckets.Specialized
 
                 _z.NextOut = write_data;
                 _z.NextOutIndex = 0;
-                _z.AvailOut = write_data.Length;
+                _z.AvailOut = Math.Min(write_data.Length, requested);
 
                 int r = _z.Inflate(_readEof ? ZlibConst.ZFINISH : ZlibConst.ZSYNCFLUSH); // Write as much inflated data as possible
 
@@ -164,16 +164,9 @@ namespace AmpScm.Buckets.Specialized
                     // We peeked more data than what we read
                     read_buffer = BucketBytes.Empty; // Need to re-peek next time
 
-                    var ar = Inner.ReadAsync(to_read);
-                    if (!ar.IsCompleted || ar.Result.Length != to_read)
-                    {
-                        ar.AsTask().Wait(); // Should never happen when peek succeeds.
-
-                        if (ar.Result.Length != to_read)
+                    var now_read = await Inner.ReadAsync(to_read).ConfigureAwait(false);
+                    if (now_read.Length != to_read)
                             throw new InvalidOperationException($"Read on {Inner.Name} did not complete as promissed by peek");
-                        else
-                            System.Diagnostics.Trace.WriteLine($"Peek of {Inner.Name} promised data that read couldn't deliver without waiting");
-                    }
                 }
                 else
                     read_buffer = read_buffer.Slice(_z.NextInIndex - rb_offs);
@@ -183,18 +176,15 @@ namespace AmpScm.Buckets.Specialized
             return _eof && write_buffer.IsEmpty;
         }
 
-        public async override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
-            if (!_eof && write_buffer.IsEmpty)
-                await Refill(true);
-
             return write_buffer;
         }
 
         async ValueTask<BucketBytes> IBucketPoll.PollAsync(int minSize)
         {
             if (!_eof && write_buffer.IsEmpty)
-                await Refill(false);
+                await Refill(false).ConfigureAwait(false);
 
             return write_buffer;
         }
@@ -206,7 +196,7 @@ namespace AmpScm.Buckets.Specialized
 
             if (write_buffer.IsEmpty)
             {
-                if (_eof || await Refill(false))
+                if (_eof || await Refill(false, requested).ConfigureAwait(false))
                     return BucketBytes.Eof;
             }
 
@@ -231,7 +221,7 @@ namespace AmpScm.Buckets.Specialized
             if (!CanReset)
                 throw new InvalidOperationException();
 
-            await Inner.ResetAsync();
+            await Inner.ResetAsync().ConfigureAwait(false);
 
             if (_windowBits is int wb)
                 _z.InflateInit(wb);
@@ -270,7 +260,7 @@ namespace AmpScm.Buckets.Specialized
             if (!reset)
                 throw new InvalidOperationException();
 
-            var b = await Inner.DuplicateAsync(reset);
+            var b = await Inner.DuplicateAsync(reset).ConfigureAwait(false);
 
             if (_windowBits.HasValue)
                 return new ZLibBucket(b, _windowBits.Value);

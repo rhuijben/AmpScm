@@ -9,11 +9,10 @@ namespace AmpScm.Buckets.Wrappers
 {
     public class BucketReader : TextReader
     {
-        readonly byte[] buffer = new byte[16];
         int _next;
         public BucketReader(Bucket bucket, Encoding? textEncoding)
         {
-            Bucket = bucket ?? throw new ArgumentNullException(nameof(Bucket));
+            Bucket = bucket ?? throw new ArgumentNullException(nameof(bucket));
             TextEncoding = textEncoding;
             _next = -1;
         }
@@ -43,9 +42,9 @@ namespace AmpScm.Buckets.Wrappers
                 _next = -1;
                 return _next;
             }
-            var v = Bucket.ReadAsync(1);
-
-            BucketBytes b = v.Result; // BAD async
+#pragma warning disable CA2012 // Use ValueTasks correctly
+            var b = Bucket.ReadAsync(1).Result; // BAD async
+#pragma warning restore CA2012 // Use ValueTasks correctly
 
             if (b.IsEof || b.IsEmpty)
                 return -1;
@@ -54,6 +53,13 @@ namespace AmpScm.Buckets.Wrappers
         }
 
         public override int Peek()
+        {
+#pragma warning disable CA2012 // Use ValueTasks correctly
+            return PeekAsync().Result;
+#pragma warning restore CA2012 // Use ValueTasks correctly
+        }
+
+        internal async ValueTask<int> PeekAsync()
         {
             if (_next >= 0)
             {
@@ -67,16 +73,12 @@ namespace AmpScm.Buckets.Wrappers
                 }
             }
 
-            var v = Bucket.PeekAsync();
-
-            BucketBytes b = v.AsTask().ConfigureAwait(true).GetAwaiter().GetResult(); // BAD async
+            BucketBytes b = Bucket.Peek();
 
             if (!b.IsEmpty)
                 return b[0];
 
-            v = Bucket.ReadAsync(1);
-
-            b = v.Result; // BAD async
+            b = await Bucket.ReadAsync(1).ConfigureAwait(false);
 
             if (b.IsEof || b.IsEmpty)
                 return -1;
@@ -86,9 +88,17 @@ namespace AmpScm.Buckets.Wrappers
 
         public override int Read(char[] buffer, int index, int count)
         {
-            var v = Bucket.PeekAsync();
+#pragma warning disable CA2012 // Use ValueTasks correctly
+            return ReadAsync(buffer, index, count).Result;
+#pragma warning restore CA2012 // Use ValueTasks correctly
+        }
 
-            BucketBytes b = v.Result; // BAD async
+        public override async Task<int> ReadAsync(char[] buffer, int index, int count)
+        {
+            if (buffer is null)
+                throw new ArgumentNullException(nameof(buffer));
+
+            var b = Bucket.Peek();
 
             if (!b.IsEmpty)
             {
@@ -97,16 +107,14 @@ namespace AmpScm.Buckets.Wrappers
                 for (int i = 0; i < count && i < b.Length; i++)
                     buffer[index++] = (char)b[i]; // TODO: Apply encoding!
 
-                v = Bucket.ReadAsync(b.Length);
-
-                b = v.Result; // BAD async
+                b = await Bucket.ReadAsync(b.Length).ConfigureAwait(false);
 
                 return b.Length;
             }
             else
             {
                 // THIS is an ugly hack^2
-                b = Bucket.ReadAsync(count).Result; // BAD async
+                b = await Bucket.ReadAsync(count).ConfigureAwait(false);
 
                 if (b.IsEof)
                     return 0;

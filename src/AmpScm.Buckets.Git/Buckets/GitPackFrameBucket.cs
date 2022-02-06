@@ -2,14 +2,14 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Interfaces;
 using AmpScm.Buckets.Specialized;
 using AmpScm.Git;
 
 namespace AmpScm.Buckets.Git
 {
-    public sealed class GitPackFrameBucket : GitObjectBucket
+    public sealed class GitPackFrameBucket : GitObjectBucket, IBucketPoll
     {
-        Bucket wrapped => Inner;
         Bucket? reader;
         frame_state state;
         long body_size;
@@ -45,12 +45,20 @@ namespace AmpScm.Buckets.Git
             _oidResolver = resolveOid;
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             if (reader == null || state != frame_state.body)
-                return EmptyTask;
+                return BucketBytes.Empty;
 
-            return reader.PeekAsync();
+            return reader.Peek();
+        }
+
+        public async ValueTask<BucketBytes> PollAsync(int minRequested = 1)
+        {
+            if (reader == null || state != frame_state.body)
+                return BucketBytes.Empty;
+
+            return await reader.PollAsync();
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
@@ -99,7 +107,7 @@ namespace AmpScm.Buckets.Git
                 // In the initial state we use position to keep track of our
                 // location withing the compressed length
 
-                var peeked = await Inner.PeekAsync();
+                var peeked = Inner.Peek();
 
                 int rq_len;
 
@@ -188,7 +196,7 @@ namespace AmpScm.Buckets.Git
                     // Body starts with negative offset of the delta base.
                     long max_delta_size_len = 1 + (64 + 6) / 7;
 
-                    var peeked = await Inner.PeekAsync();
+                    var peeked = Inner.Peek();
                     int rq_len;
 
                     if (!peeked.IsEmpty)

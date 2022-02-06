@@ -23,7 +23,7 @@ namespace AmpScm.Buckets.Specialized
 
         public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            var r = await Inner.ReadAsync(requested);
+            var r = await Inner.ReadAsync(requested).ConfigureAwait(false);
 
             if (!r.IsEof && r.Length == 0)
                 throw new InvalidOperationException($"{typeof(TBucket)}.ReadAsync returns 0 length date, which is not EOF");
@@ -39,7 +39,7 @@ namespace AmpScm.Buckets.Specialized
 
         public override async ValueTask<int> ReadSkipAsync(int requested)
         {
-            var r = await Inner.ReadSkipAsync(requested);
+            var r = await Inner.ReadSkipAsync(requested).ConfigureAwait(false);
 
             if (_atEof && r > 0)
                 throw new InvalidOperationException("Reading after EOF");

@@ -84,7 +84,7 @@ namespace AmpScm.Buckets
 
         public static Bucket Wrap(this Bucket self)
         {
-            return new ProxyBucket(self);
+            return new ProxyBucket.Sealed(self);
         }
 
         public static Bucket VerifyBehavior<TBucket>(this TBucket toVerify)
@@ -101,6 +101,7 @@ namespace AmpScm.Buckets
             return new MemoryBucket(bytes!);
         }
 
+        [CLSCompliant(false)]
         public static Bucket AsBucket(this byte[][] bytes)
         {
             return bytes.Select(x => x.AsBucket()).AsBucket();
@@ -151,12 +152,15 @@ namespace AmpScm.Buckets
 
         public static async ValueTask<byte[]> ToArrayAsync(this Bucket self)
         {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
+
             using (MemoryStream ms = new MemoryStream())
             {
                 BucketBytes bb;
-                while (!(bb = await self.ReadAsync()).IsEof)
+                while (!(bb = await self.ReadAsync().ConfigureAwait(false)).IsEof)
                 {
-                    ms.Write(bb.ToArray(), 0, bb.Length);
+                    await ms.WriteAsync(bb.ToArray(), 0, bb.Length).ConfigureAwait(false);
                 }
 
                 return ms.ToArray();
@@ -165,7 +169,9 @@ namespace AmpScm.Buckets
 
         public static byte[] ToArray(this Bucket self)
         {
+#pragma warning disable CA2012 // Use ValueTasks correctly
             return ToArrayAsync(self).ConfigureAwait(true).GetAwaiter().GetResult();
+#pragma warning restore CA2012 // Use ValueTasks correctly
         }
 
         public static Stream AsStream(this Bucket self)
@@ -181,6 +187,9 @@ namespace AmpScm.Buckets
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public static byte[] ReverseInPlace(this byte[] array)
         {
+            if (array is null)
+                throw new ArgumentNullException(nameof(array));
+
             // Use Array.Reverse() ?
             for (int first = array.GetLowerBound(0), last = array.GetUpperBound(0);
                 first < last;

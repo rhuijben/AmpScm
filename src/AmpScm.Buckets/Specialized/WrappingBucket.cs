@@ -8,7 +8,7 @@ namespace AmpScm.Buckets.Specialized
         protected Bucket Inner { get; }
         internal protected bool DontDisposeInner { get; internal set; }
 
-        public WrappingBucket(Bucket inner)
+        protected WrappingBucket(Bucket inner)
         {
             Inner = inner ?? throw new ArgumentNullException(nameof(inner));
         }
@@ -32,9 +32,9 @@ namespace AmpScm.Buckets.Specialized
         protected async override ValueTask DisposeAsyncCore()
         {
             if (!DontDisposeInner)
-                await Inner.DisposeAsync();
+                await Inner.DisposeAsync().ConfigureAwait(false);
 
-            await base.DisposeAsyncCore();
+            await base.DisposeAsyncCore().ConfigureAwait(false);
         }
 
         protected void NoClose()

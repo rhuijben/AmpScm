@@ -28,9 +28,9 @@ namespace AmpScm.Buckets.Specialized
             return this;
         }
 
-        public override async ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
-            var peek = await base.PeekAsync();
+            var peek = Inner.Peek();
 
             if (peek.Length <= 0)
                 return peek;
@@ -41,6 +41,21 @@ namespace AmpScm.Buckets.Specialized
                 return peek.Slice(0, (int)(Limit - pos));
 
             return peek;
+        }
+
+        public override async ValueTask<BucketBytes> PollAsync(int minRequested = 1)
+        {
+            var poll = await Inner.PollAsync().ConfigureAwait(false);
+
+            if (poll.Length <= 0)
+                return poll;
+
+            long pos = Position!.Value;
+
+            if (Limit - pos < poll.Length)
+                return poll.Slice(0, (int)(Limit - pos));
+
+            return poll;
         }
 
         public override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
@@ -76,7 +91,7 @@ namespace AmpScm.Buckets.Specialized
                 return 0L;
 
             var limit = Limit - pos;
-            var l = await base.ReadRemainingBytesAsync();
+            var l = await base.ReadRemainingBytesAsync().ConfigureAwait(false);
 
             if (!l.HasValue)
                 return null;

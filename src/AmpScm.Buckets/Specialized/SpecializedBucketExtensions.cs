@@ -10,7 +10,9 @@ namespace AmpScm.Buckets.Specialized
     {
         public static CreateHashBucket SHA1(this Bucket self, Action<byte[]> created)
         {
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
             return new CreateHashBucket(self, System.Security.Cryptography.SHA1.Create(), created);
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
         }
 
         public static CreateHashBucket SHA256(this Bucket self, Action<byte[]> created)
@@ -20,7 +22,9 @@ namespace AmpScm.Buckets.Specialized
 
         public static CreateHashBucket MD5(this Bucket self, Action<byte[]> created)
         {
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
             return new CreateHashBucket(self, System.Security.Cryptography.MD5.Create(), created);
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
         }
 
         public static CreateHashBucket Crc32(this Bucket self, Action<int> created)
@@ -38,11 +42,14 @@ namespace AmpScm.Buckets.Specialized
 
         public async static ValueTask<BucketBytes> ReadFullAsync(this Bucket self, int requested)
         {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
+
             IEnumerable<byte>? result = null;
 
             while (true)
             {
-                var bb = await self.ReadAsync(requested);
+                var bb = await self.ReadAsync(requested).ConfigureAwait(false);
 
                 if (bb.IsEof)
                     return (result != null) ? result.ToArray() : bb;
@@ -63,6 +70,9 @@ namespace AmpScm.Buckets.Specialized
 
         public async static ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, BucketEolState? eolState, int requested = int.MaxValue)
         {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
+
             IEnumerable<byte>? result = null;
 
             if (eolState?._kept.HasValue ?? false)
@@ -90,7 +100,7 @@ namespace AmpScm.Buckets.Specialized
                 BucketBytes bb;
                 BucketEol eol;
 
-                (bb, eol) = await self.ReadUntilEolAsync(acceptableEols);
+                (bb, eol) = await self.ReadUntilEolAsync(acceptableEols).ConfigureAwait(false);
 
                 if (bb.IsEof)
                     return ((result != null) ? result.ToArray() : bb, eol);
@@ -114,14 +124,14 @@ namespace AmpScm.Buckets.Specialized
                 {
                     // Bad case. We may have a \r that might be a \n
 
-                    var poll = await self.PollAsync(1);
+                    var poll = await self.PollReadAsync(1).ConfigureAwait(false);
 
                     if (!poll.Data.IsEmpty && bb[0] == '\n')
                     {
                         // Phew, we were lucky. We got a \r\n
                         result = result.Concat(new byte[] { bb[0] }).ToArray();
 
-                        await poll.Consume(1);
+                        await poll.Consume(1).ConfigureAwait(false);
 
                         return (result.ToArray(), BucketEol.CRLF);
                     }
@@ -132,12 +142,12 @@ namespace AmpScm.Buckets.Specialized
                         {
                             // Keep the next byte for the next read :(
                             eolState!._kept = bb[0];
-                            await poll.Consume(1);
+                            await poll.Consume(1).ConfigureAwait(false);
                             return (result.ToArray(), BucketEol.CR);
                         }
                         else
                         {
-                            await poll.Consume(1);
+                            await poll.Consume(1).ConfigureAwait(false);
                             result = result.Concat(new byte[] { bb[0] }).ToArray();
                             continue;
                         }
@@ -165,7 +175,7 @@ namespace AmpScm.Buckets.Specialized
 
             while (true)
             {
-                using var poll = await self.PollAsync();
+                using var poll = await self.PollReadAsync().ConfigureAwait(false);
 
                 if (poll.Data.IsEof)
                     return (result != null) ? new BucketBytes(result.ToArray()) : poll.Data;
@@ -180,7 +190,7 @@ namespace AmpScm.Buckets.Specialized
                         else
                             r = result.Concat(poll.Data.Slice(0, i + 1).ToArray()).ToArray();
 
-                        await poll.Consume(i + 1);
+                        await poll.Consume(i + 1).ConfigureAwait(false);
                         return r;
                     }
                 }
@@ -191,7 +201,7 @@ namespace AmpScm.Buckets.Specialized
                 else
                     result = result.Concat(extra);
 
-                await poll.Consume(poll.Length);
+                await poll.Consume(poll.Length).ConfigureAwait(false);
             }
         }
 
@@ -201,6 +211,6 @@ namespace AmpScm.Buckets.Specialized
                 BucketEol.CRLF => 2,
                 BucketEol.None => 0,
                 _ => 1,
-            };        
+            };
     }
 }

@@ -23,6 +23,8 @@ namespace AmpScm.Git
             {
                 gitDir = Path.Combine(path, ".git");
             }
+
+            const string headBranchName = "master";
             
             Directory.CreateDirectory(Path.Combine(gitDir, "hooks"));
             Directory.CreateDirectory(Path.Combine(gitDir, "info"));
@@ -32,23 +34,27 @@ namespace AmpScm.Git
             Directory.CreateDirectory(Path.Combine(gitDir, "refs/tags"));
 
             File.WriteAllText(Path.Combine(gitDir, "description"), "Unnamed repository; edit this file 'description' to name the repository." + Environment.NewLine);
-            File.WriteAllText(Path.Combine(gitDir, "HEAD"), "ref: refs/heads/master\n");
+            File.WriteAllText(Path.Combine(gitDir, "HEAD"), $"ref: refs/heads/{headBranchName}\n");
+
+            const string ignoreCase = "\tignorecase = true\n";
+            const string symLinks = "\tsymlinks = false\n";
+            const string bareFalse = "\tbare = false\n";
             string configText = ""
                 + "[core]\n"
                 + "\trepositoryformatversion = 0\n"
                 + "\tfilemode = false\n"
-                + "\tbare = false\n"
+                + bareFalse
                 + "\tlogallrefupdates = true\n"
-                + "\tsymlinks = false\n"
-                + "\tignorecase = true\n";
+                + symLinks
+                + ignoreCase;
 
             if (isBare)
-                configText = configText.Replace("\tbare = false", "\tbare = true");
+                configText = configText.Replace(bareFalse, bareFalse.Replace("false", "true"));
 
             if (Environment.NewLine != "\r\n")
             {
-                configText = configText.Replace("\tsymlinks = false\n", "");
-                configText = configText.Replace("\tignorecase = true\n", "");
+                configText = configText.Replace(symLinks, "");
+                configText = configText.Replace(ignoreCase, "");
             }
 
             File.WriteAllText(Path.Combine(gitDir, "config"), configText);

@@ -7,7 +7,7 @@ namespace AmpScm.Buckets
     {
         internal async ValueTask<byte?> ReadByteAsync()
         {
-            var r = await ReadAsync(1);
+            var r = await ReadAsync(1).ConfigureAwait(false);
 
             if (r.Length != 1)
                 return null;
@@ -24,7 +24,7 @@ namespace AmpScm.Buckets
 
             while (skip > int.MaxValue)
             {
-                var r = await ReadSkipAsync(int.MaxValue);
+                var r = await ReadSkipAsync(int.MaxValue).ConfigureAwait(false);
 
                 skip -= r;
                 totalSkip += r;
@@ -35,7 +35,7 @@ namespace AmpScm.Buckets
 
             while (skip > 0)
             {
-                var r = await ReadSkipAsync((int)skip);
+                var r = await ReadSkipAsync((int)skip).ConfigureAwait(false);
 
                 skip -= r;
                 totalSkip += r;

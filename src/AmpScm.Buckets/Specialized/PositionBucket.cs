@@ -2,7 +2,7 @@
 
 namespace AmpScm.Buckets.Specialized
 {
-    internal class PositionBucket : ProxyBucket<PositionBucket>
+    internal class PositionBucket : ProxyBucket<PositionBucket>.WithPoll
     {
         long _position;
 
@@ -13,7 +13,7 @@ namespace AmpScm.Buckets.Specialized
 
         public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            var v = await Inner.ReadAsync(requested);
+            var v = await Inner.ReadAsync(requested).ConfigureAwait(false);
 
             _position += v.Length;
             return v;
@@ -21,7 +21,7 @@ namespace AmpScm.Buckets.Specialized
 
         public async override ValueTask<int> ReadSkipAsync(int requested)
         {
-            var v = await Inner.ReadSkipAsync(requested);
+            var v = await Inner.ReadSkipAsync(requested).ConfigureAwait(false);
 
             _position += v;
             return v;
@@ -29,7 +29,7 @@ namespace AmpScm.Buckets.Specialized
 
         public async override ValueTask ResetAsync()
         {
-            await base.ResetAsync();
+            await base.ResetAsync().ConfigureAwait(false);
             _position = 0;
         }
 

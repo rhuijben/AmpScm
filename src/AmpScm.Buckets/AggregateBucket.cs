@@ -71,7 +71,7 @@ namespace AmpScm.Buckets
 
             while (_n >= 0)
             {
-                await _buckets[_n]!.ResetAsync();
+                await _buckets[_n]!.ResetAsync().ConfigureAwait(false);
                 _n--;
             }
             _n = 0;
@@ -82,7 +82,7 @@ namespace AmpScm.Buckets
         {
             while (_n < _buckets.Length)
             {
-                var r = await _buckets[_n]!.ReadAsync(requested);
+                var r = await _buckets[_n]!.ReadAsync(requested).ConfigureAwait(false);
 
                 if (!r.IsEof)
                 {
@@ -96,7 +96,7 @@ namespace AmpScm.Buckets
 
                 if (!_keepOpen)
                 {
-                    await _buckets[_n]!.DisposeAsync();
+                    await _buckets[_n]!.DisposeAsync().ConfigureAwait(false);
                     _buckets[_n] = null;
                 }
 
@@ -122,7 +122,7 @@ namespace AmpScm.Buckets
 
             while (n < _buckets.Length)
             {
-                var r = await _buckets[n]!.ReadRemainingBytesAsync();
+                var r = await _buckets[n]!.ReadRemainingBytesAsync().ConfigureAwait(false);
 
                 if (!r.HasValue)
                     return null;
@@ -133,20 +133,20 @@ namespace AmpScm.Buckets
             return remaining;
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             int n = _n;
             while (n < _buckets.Length)
             {
-                var v = _buckets[n]!.PeekAsync();
+                var v = _buckets[n]!.Peek();
 
-                if (!v.IsCompleted || !v.Result.IsEof)
+                if (!v.IsEof)
                     return v;
 
                 n++; // Peek next bucket, but do not dispose. We can do that in the next read
             }
 
-            return EofTask;
+            return BucketBytes.Eof;
         }
 
         protected override async ValueTask DisposeAsyncCore()
@@ -155,7 +155,7 @@ namespace AmpScm.Buckets
             {
                 if (_buckets[_n] != null)
                 {
-                    await _buckets[_n]!.DisposeAsync();
+                    await _buckets[_n]!.DisposeAsync().ConfigureAwait(false);
                 }
                 _buckets[_n++] = null;
             }
@@ -195,7 +195,7 @@ namespace AmpScm.Buckets
             var newBuckets = new List<Bucket>();
 
             foreach (var v in _buckets)
-                newBuckets.Add(await v!.DuplicateAsync(reset));
+                newBuckets.Add(await v!.DuplicateAsync(reset).ConfigureAwait(false));
 
             var ab = new AggregateBucket(true, newBuckets.ToArray());
             if (!reset)

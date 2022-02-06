@@ -14,7 +14,7 @@ namespace AmpScm.Buckets.Git
         {
         }
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             return BucketBytes.Empty;
         }

@@ -32,17 +32,32 @@ namespace AmpScm.Buckets.Specialized
 
         public override long? Position => Math.Max(0L, base.Position!.Value - FirstPosition);
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
             if (base.Position >= FirstPosition)
-                return Inner.PeekAsync();
+                return Inner.Peek();
+
+            var b = Inner.Peek();
+
+            if (b.Length > 0)
+            {
+                long skip = FirstPosition - base.Position!.Value;
+
+                if (skip < b.Length)
+                    return b.Slice((int)skip);
+                else
+                    return BucketBytes.Empty;
+            }
             else
-                return SkipPeekAsync();
+                return BucketBytes.Empty;
         }
 
-        private async ValueTask<BucketBytes> SkipPeekAsync()
+        public override async ValueTask<BucketBytes> PollAsync(int minRequested = 1)
         {
-            var b = await Inner.PeekAsync();
+            if (base.Position >= FirstPosition)
+                return await Inner.PollAsync(minRequested).ConfigureAwait(false);
+
+            var b = await Inner.PollAsync(minRequested).ConfigureAwait(false);
 
             if (b.Length > 0)
             {
@@ -74,12 +89,12 @@ namespace AmpScm.Buckets.Specialized
         {
             long skip = FirstPosition - base.Position!.Value;
 
-            skip -= await ReadSkipAsync(skip);
+            skip -= await ReadSkipAsync(skip).ConfigureAwait(false);
 
             if (skip > 0)
                 return BucketBytes.Eof;
 
-            return await base.ReadAsync(requested);
+            return await base.ReadAsync(requested).ConfigureAwait(false);
         }
 
         internal static Bucket SeekOnReset(Bucket bucket)

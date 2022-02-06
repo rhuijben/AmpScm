@@ -23,9 +23,9 @@ namespace AmpScm.Buckets.Specialized
 
         public override bool CanReset => Inner.CanReset;
 
-        public override ValueTask<BucketBytes> PeekAsync()
+        public override BucketBytes Peek()
         {
-            return Inner.PeekAsync();
+            return Inner.Peek();
         }
 
         public override ValueTask<long?> ReadRemainingBytesAsync()
@@ -47,7 +47,7 @@ namespace AmpScm.Buckets.Specialized
 
         public override async ValueTask<Bucket> DuplicateAsync(bool reset)
         {
-            var r = await Inner.DuplicateAsync(reset);
+            var r = await Inner.DuplicateAsync(reset).ConfigureAwait(false);
             return WrapDuplicate(r, reset) ?? r;
         }
 
@@ -72,6 +72,22 @@ namespace AmpScm.Buckets.Specialized
             base.NoClose();
             return this;
         }
+
+        internal abstract class WithPoll : ProxyBucket<TBucket>, IBucketPoll
+        {
+            protected WithPoll(Bucket inner) : base(inner)
+            {
+            }
+
+            protected WithPoll(Bucket inner, bool noDispose) : base(inner, noDispose)
+            {
+            }
+
+            public virtual ValueTask<BucketBytes> PollAsync(int minRequested = 1)
+            {
+                return Inner.PollAsync(minRequested);
+            }
+        }
     }
 
     public class ProxyBucket : ProxyBucket<ProxyBucket>
@@ -87,6 +103,21 @@ namespace AmpScm.Buckets.Specialized
 
         internal ProxyBucket(Bucket inner, bool noDispose) : base(inner, noDispose)
         {
+        }
+
+
+        internal sealed class Sealed : ProxyBucket, IBucketPoll
+        {
+            public Sealed(Bucket inner) : base(inner)
+            {
+            }
+
+            public override string Name => "Proxy>" + Inner.Name;
+
+            public ValueTask<BucketBytes> PollAsync(int minRequested = 1)
+            {
+                return Inner.PollAsync(minRequested);
+            }
         }
     }
 }
