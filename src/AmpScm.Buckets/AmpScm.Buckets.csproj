@@ -10,6 +10,7 @@
     <IsPackable>true</IsPackable>
     <NoWarn>1701;1702;1591</NoWarn>
     <WarningLevel>5</WarningLevel>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <PropertyGroup>

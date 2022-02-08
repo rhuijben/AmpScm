@@ -138,14 +138,20 @@ namespace AmpScm.Git
             return BitConverter.ToInt32(_bytes, _offset) ^ BitConverter.ToInt32(_bytes, _offset + 16);
         }
 
+        const string hexChars = "0123456789abcdef";
         public override string ToString()
         {
             int byteCount = HashLength(Type);
-            var sb = new StringBuilder(2 * byteCount);
-            for (int i = 0; i < byteCount; i++)
-                sb.Append(_bytes[_offset + i].ToString("x2"));
+            var chars = new char[byteCount * 2];
 
-            return sb.ToString();
+            for (int i = 0; i < byteCount; i++)
+            {
+                var b = _bytes[_offset + i];
+                chars[2 * i] = hexChars[b >> 4];
+                chars[2 * i + 1] = hexChars[b & 0xF];
+            }
+
+            return new string(chars);
         }
 
         public static int HashLength(GitIdType type)

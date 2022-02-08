@@ -1,22 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Wrappers
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2012:Use ValueTasks correctly", Justification = "<Pending>")]
-    public sealed class BucketStream : Stream
+    internal partial class BucketStream : Stream
     {
         bool _gotLength;
         long _length;
 
         public BucketStream(Bucket bucket)
         {
-            Bucket = bucket?? throw new ArgumentNullException(nameof(bucket));
+            Bucket = bucket ?? throw new ArgumentNullException(nameof(bucket));
         }
 
         public Bucket Bucket { get; }
@@ -79,7 +81,18 @@ namespace AmpScm.Buckets.Wrappers
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var v = Bucket.ReadAsync(count);
+            return Read(new Span<byte>(buffer, offset, count));
+        }
+
+
+#if !NETFRAMEWORK
+        public override int Read(Span<byte> buffer)
+#else
+        internal virtual int Read(Span<byte> buffer)
+#endif
+
+        {
+            var v = Bucket.ReadAsync(buffer.Length);
 
             if (!v.IsCompleted)
                 v.AsTask().Wait();
@@ -89,7 +102,7 @@ namespace AmpScm.Buckets.Wrappers
             if (r.IsEof)
                 return 0;
 
-            r.CopyTo(new Memory<byte>(buffer, offset, count));
+            r.Span.CopyTo(buffer);
             return r.Length;
         }
 
@@ -118,6 +131,34 @@ namespace AmpScm.Buckets.Wrappers
             return r.Length;
         }
 #endif
+
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+        {
+            Debug.WriteLine("BeginRead");
+            var task = ReadAsync(buffer, offset, count);
+
+            var tcs = new TaskCompletionSource<int>(state);
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    tcs.TrySetException(t.Exception!.InnerExceptions);
+                else if (t.IsCanceled)
+                    tcs.TrySetCanceled();
+                else
+                    tcs.TrySetResult(t.Result);
+
+                if (callback != null)
+                    callback(tcs.Task);
+            }, TaskScheduler.Default);
+
+            return tcs.Task;
+        }
+
+        public override int EndRead(IAsyncResult asyncResult)
+        {
+            Debug.WriteLine("EndRead");
+            return ((Task<int>)asyncResult).Result;
+        }
 
         public override long Seek(long offset, SeekOrigin origin)
         {

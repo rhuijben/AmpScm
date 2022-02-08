@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-[assembly: CLSCompliant(true)]
+[assembly:CLSCompliant(true)]
 
 namespace AmpScm.Buckets
 {

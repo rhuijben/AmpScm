@@ -234,7 +234,7 @@ namespace AmpScm.Buckets
                         if (p.Position != readPos)
                             p.Position = readPos;
 
-#if NET5_0_OR_GREATER
+#if !NETFRAMEWORK
                         var r = await p.ReadAsync(buffer.AsMemory(0, readLen)).ConfigureAwait(false);
 #else
                         var r = await p.ReadAsync(buffer, 0, readLen).ConfigureAwait(false);
@@ -281,7 +281,9 @@ namespace AmpScm.Buckets
 #if NET6_0_OR_GREATER
                         if (_primary.IsAsync) // All file instances share the same handle
                         {
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
                             GC.SuppressFinalize(f);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
                         }
                         else
 #endif

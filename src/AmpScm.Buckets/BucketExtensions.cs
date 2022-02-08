@@ -16,6 +16,8 @@ namespace AmpScm.Buckets
         {
             if (self is IBucketAggregation col)
                 return col.Append(newLast);
+            else if (newLast is IBucketAggregation nl)
+                return nl.Prepend(self);
             else
             {
                 return new AggregateBucket(self, newLast);
@@ -26,6 +28,8 @@ namespace AmpScm.Buckets
         {
             if (self is IBucketAggregation col)
                 return col.Prepend(newFirst);
+            else if (newFirst is IBucketAggregation nf)
+                return nf.Append(self);
             else
             {
                 return new AggregateBucket(newFirst, self);
@@ -101,12 +105,39 @@ namespace AmpScm.Buckets
             return new MemoryBucket(bytes!);
         }
 
+        public static Bucket AsBucket(this byte[] bytes, bool copy)
+        {
+            if ((bytes?.Length ?? 0) == 0)
+                return Bucket.Empty;
+
+            if (copy)
+            {
+                var data = new byte[bytes!.Length];
+                Array.Copy(bytes, data, bytes.Length);
+                bytes = data;
+            }
+
+            return new MemoryBucket(bytes!);
+        }
+
+        public static Bucket AsBucket(ReadOnlySpan<byte> bytes)
+        {
+            return new MemoryBucket(bytes.ToArray());
+        }
+
+        public static TlsBucket WithTlsClientFor<TBucket>(this TBucket bucket, string targetHost)
+            where TBucket : Bucket, IBucketWriter
+        {
+            return new TlsBucket(bucket, bucket, targetHost);
+        }
+
         [CLSCompliant(false)]
         public static Bucket AsBucket(this byte[][] bytes)
         {
             return bytes.Select(x => x.AsBucket()).AsBucket();
         }
 
+        [CLSCompliant(false)]
         public static Bucket AsBucket(this byte[][] bytes, bool keepOpen)
         {
             return bytes.Select(x => x.AsBucket()).AsBucket(keepOpen);
@@ -160,7 +191,11 @@ namespace AmpScm.Buckets
                 BucketBytes bb;
                 while (!(bb = await self.ReadAsync().ConfigureAwait(false)).IsEof)
                 {
+#if NETFRAMEWORK
                     await ms.WriteAsync(bb.ToArray(), 0, bb.Length).ConfigureAwait(false);
+#else
+                    await ms.WriteAsync(bb.Memory).ConfigureAwait(false);
+#endif
                 }
 
                 return ms.ToArray();
@@ -179,9 +214,20 @@ namespace AmpScm.Buckets
             return new Wrappers.BucketStream(self);
         }
 
+        /// <summary>
+        /// Wraps <paramref name="self"/> as writable stream, writing to <paramref name="writer"/>
+        /// </summary>
+        /// <param name="self"></param>
+        /// <param name="writer"></param>
+        /// <returns></returns>
+        public static Stream AsStream(this Bucket self, IBucketWriter writer)
+        {
+            return new Wrappers.BucketStream.WithWriter(self, writer);
+        }
+
         public static TextReader AsReader(this Bucket self)
         {
-            return new Wrappers.BucketReader(self, null);
+            return new StreamReader(self.AsStream());
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]

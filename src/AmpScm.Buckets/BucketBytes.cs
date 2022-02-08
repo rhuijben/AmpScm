@@ -156,16 +156,58 @@ namespace AmpScm.Buckets
         }
 
         #region ZLib optimization. Our ZLib doesn't use Span<> and Memory<> yet, but let's reuse byte[] directly instead of copying
-        static Func<ReadOnlyMemory<byte>, (object, int)> MemoryExpander { get; } = FindExpander();
+        static Func<ReadOnlyMemory<byte>, (object, int)> ReadOnlyMemoryExpander { get; } = FindReadOnlyMemoryExpander();
 
-        static Func<ReadOnlyMemory<byte>, (object, int)> FindExpander()
+        static Func<ReadOnlyMemory<byte>, (object, int)> FindReadOnlyMemoryExpander()
         {
             ParameterExpression p = Expression.Parameter(typeof(ReadOnlyMemory<byte>), "x");
 
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
             var c = Expression.New(typeof((object, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
                        Expression.Field(p, "_object"),
                        Expression.Field(p, "_index"));
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
             return Expression.Lambda<Func<ReadOnlyMemory<byte>, (object, int)>>(c, p).Compile();
+        }
+
+        static Func<Memory<byte>, (object, int)> MemoryExpander { get; } = FindMemoryExpander();
+
+        static Func<Memory<byte>, (object, int)> FindMemoryExpander()
+        {
+            ParameterExpression p = Expression.Parameter(typeof(Memory<byte>), "x");
+
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+            var c = Expression.New(typeof((object, int)).GetConstructors().OrderByDescending(x => x.GetParameters().Length).First(),
+                       Expression.Field(p, "_object"),
+                       Expression.Field(p, "_index"));
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+            return Expression.Lambda<Func<Memory<byte>, (object, int)>>(c, p).Compile();
+        }
+
+        internal static (byte[]?, int) ExpandToArray(Memory<byte> _data)
+        {
+            if (_data.Length == 0)
+                return (Array.Empty<byte>(), 0);
+
+            var (ob, index) = MemoryExpander(_data);
+
+            if (ob is byte[] arr)
+                return (arr, index);
+            else
+                return (null, -1);
+        }
+
+        internal static (byte[]?, int) ExpandToArray(ReadOnlyMemory<byte> _data)
+        {
+            if (_data.Length == 0)
+                return (Array.Empty<byte>(), 0);
+
+            var (ob, index) = ReadOnlyMemoryExpander(_data);
+
+            if (ob is byte[] arr)
+                return (arr, index);
+            else
+                return (null, -1);
         }
 
         internal (byte[]?, int) ExpandToArray()
@@ -173,7 +215,7 @@ namespace AmpScm.Buckets
             if (_data.Length == 0)
                 return (Array.Empty<byte>(), 0);
 
-            var (ob, index) = MemoryExpander(_data);
+            var (ob, index) = ReadOnlyMemoryExpander(_data);
 
             if (ob is byte[] arr)
                 return (arr, index);
@@ -193,7 +235,7 @@ namespace AmpScm.Buckets
             }
 
             object ob;
-            (ob, offset) = MemoryExpander(_data);
+            (ob, offset) = ReadOnlyMemoryExpander(_data);
             array = ob as byte[];
         }
 

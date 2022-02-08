@@ -7,7 +7,7 @@ namespace AmpScm.Buckets.Specialized
 {
     internal class CompressionBucket : WrappingBucket
     {
-        private protected SrcStream Src { get; }
+        private protected Stream Src { get; }
         protected Stream Processed { get; }
         byte[]? buffer;
         int _valid, _offset;
@@ -15,7 +15,7 @@ namespace AmpScm.Buckets.Specialized
 
         public CompressionBucket(Bucket inner, Func<Stream, Stream> compressor) : base(inner)
         {
-            Src = new SrcStream(this);
+            Src = Inner.AsStream();
             Processed = compressor(Src);
         }
 
@@ -73,84 +73,5 @@ namespace AmpScm.Buckets.Specialized
                 }
             }
         }
-
-        internal sealed class SrcStream : Stream
-        {
-            private CompressionBucket compressionBucket;
-            ReadOnlyMemory<byte> remaining;
-
-            public SrcStream(CompressionBucket compressionBucket)
-            {
-                this.compressionBucket = compressionBucket;
-            }
-
-            public override bool CanRead => true;
-
-            public override bool CanSeek => false;
-
-            public override bool CanWrite => false;
-
-            public override long Length => throw new NotImplementedException();
-
-            public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-            public override void Flush()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                return ReadAsync(buffer, offset, count).Result;
-            }
-
-            public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            {
-                if (remaining.IsEmpty)
-                {
-                    BucketBytes bb = await compressionBucket.Inner.ReadAsync(count).ConfigureAwait(false);
-
-                    if (bb.IsEof)
-                    {
-                        compressionBucket._eof = true;
-                        return 0;
-                    }
-
-                    remaining = bb.Memory;
-                }
-
-                if (remaining.IsEmpty)
-                    return 0; // EOF
-
-                if (count >= remaining.Length)
-                {
-                    remaining.Span.CopyTo(new Span<byte>(buffer, offset, remaining.Length));
-                    int l = remaining.Length;
-                    remaining = default;
-                    return l;
-                }
-                else
-                {
-                    remaining.Span.CopyTo(new Span<byte>(buffer, offset, count));
-                    remaining = remaining.Slice(count);
-                    return count;
-                }
-            }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void SetLength(long value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                throw new NotImplementedException();
-            }
-        }    
     }
 }
