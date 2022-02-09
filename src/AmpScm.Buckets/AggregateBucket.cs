@@ -15,6 +15,8 @@ namespace AmpScm.Buckets
         bool _keepOpen;
         long _position;
 
+        object LockOn => this;
+
         public AggregateBucket(params Bucket[] items)
         {
             _buckets = items ?? Array.Empty<Bucket>();
@@ -31,13 +33,25 @@ namespace AmpScm.Buckets
             if (bucket is null)
                 throw new ArgumentNullException(nameof(bucket));
 
-            int nShrink = _keepOpen ? 0 : _n;
+            lock (LockOn)
+            {
+                if (_n >= _buckets.Length && !_keepOpen)
+                {
+                    _buckets = new[] { bucket };
+                    _n = 0;
+                }
+                else
+                {
+                    int nShrink = _keepOpen ? 0 : _n;
 
-            var newBuckets = new Bucket[_buckets.Length - nShrink + 1];
-            Array.Copy(_buckets, _n, newBuckets, 0, _buckets.Length - nShrink);
-            _buckets = newBuckets;
-            newBuckets[newBuckets.Length - 1] = bucket;
-            _n -= nShrink;
+                    var newBuckets = new Bucket[_buckets.Length - nShrink + 1];
+                    if (_buckets.Length > nShrink)
+                        Array.Copy(_buckets, _n, newBuckets, 0, _buckets.Length - nShrink);
+                    _buckets = newBuckets;
+                    newBuckets[newBuckets.Length - 1] = bucket;
+                    _n -= nShrink;
+                }
+            }
 
             return this;
         }
@@ -78,11 +92,25 @@ namespace AmpScm.Buckets
             _position = 0;
         }
 
+        Bucket? CurrentBucket
+        {
+            get
+            {
+                lock (LockOn)
+                {
+                    if (_n < _buckets.Length)
+                        return _buckets[_n];
+                    else
+                        return null;
+                }
+            }
+        }
+
         public override async ValueTask<BucketBytes> ReadAsync(int requested = -1)
         {
-            while (_n < _buckets.Length)
+            while (CurrentBucket is Bucket cur)
             {
-                var r = await _buckets[_n]!.ReadAsync(requested).ConfigureAwait(false);
+                var r = await cur.ReadAsync(requested).ConfigureAwait(false);
 
                 if (!r.IsEof)
                 {
@@ -94,13 +122,7 @@ namespace AmpScm.Buckets
                     return r;
                 }
 
-                if (!_keepOpen)
-                {
-                    await _buckets[_n]!.DisposeAsync().ConfigureAwait(false);
-                    _buckets[_n] = null;
-                }
-
-                _n++;
+                await MoveNext().ConfigureAwait(false);
             }
             if (!_keepOpen)
             {
@@ -108,6 +130,28 @@ namespace AmpScm.Buckets
                 _n = 0;
             }
             return BucketBytes.Eof;
+        }
+
+        private async ValueTask MoveNext()
+        {
+            Bucket? del;
+            lock (LockOn)
+            {
+                del = CurrentBucket;
+
+                if (del == null)
+                    return;
+
+                if (!_keepOpen)
+                    _buckets[_n] = null;
+                else
+                    del = null;
+
+                _n++;
+            }
+
+            if (del != null)
+                await del.DisposeAsync().ConfigureAwait(false);
         }
 
         public override ValueTask<int> ReadSkipAsync(int requested)
@@ -135,15 +179,27 @@ namespace AmpScm.Buckets
 
         public override BucketBytes Peek()
         {
-            int n = _n;
-            while (n < _buckets.Length)
+            if (CurrentBucket is Bucket cur)
             {
-                var v = _buckets[n]!.Peek();
+                var v = cur.Peek();
 
                 if (!v.IsEof)
                     return v;
 
-                n++; // Peek next bucket, but do not dispose. We can do that in the next read
+            }
+
+            lock (LockOn)
+            {
+                int n = _n + 1;
+                while (n < _buckets.Length)
+                {
+                    var v = _buckets[n]!.Peek();
+
+                    if (!v.IsEof)
+                        return v;
+
+                    n++; // Peek next bucket, but do not dispose. We can do that in the next read
+                }
             }
 
             return BucketBytes.Eof;
@@ -205,7 +261,6 @@ namespace AmpScm.Buckets
 
         #region DEBUG INFO
         int BucketCount => _buckets.Length - _n;
-        Bucket? CurrentBucket => _buckets[_n];
         #endregion
     }
 }
