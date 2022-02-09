@@ -9,9 +9,9 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Wrappers
 {
-    internal partial class BucketStream
+    partial class BucketStream
     {
-        public class WithWriter : BucketStream
+        public sealed class WithWriter : BucketStream
         {
             IBucketWriter InnerWriter { get; }
             public WithWriter(Bucket bucket, IBucketWriter writer) 
@@ -22,44 +22,29 @@ namespace AmpScm.Buckets.Wrappers
 
             void DoWriteBucket(Bucket bucket)
             {
-                Debug.WriteLine("Writing");
                 InnerWriter.Write(bucket);
             }
 
             public override void Write(byte[] buffer, int offset, int count)
             {
-                var data = new byte[count];
-                Array.Copy(buffer, offset, data, 0, count);
-
-#pragma warning disable CA2000 // Dispose objects before losing scope
-                InnerWriter.Write(data.AsBucket());
-#pragma warning restore CA2000 // Dispose objects before losing scope
+                Write(new ReadOnlySpan<byte>(buffer, offset, count));
             }
 
 #if !NETFRAMEWORK
             public override void Write(ReadOnlySpan<byte> buffer)
 #else
-            internal virtual void Write(ReadOnlySpan<byte> buffer)
+            internal void Write(ReadOnlySpan<byte> buffer)
 #endif
             {
-                var data = new byte[buffer.Length];
-                buffer.CopyTo(data);
-
 #pragma warning disable CA2000 // Dispose objects before losing scope
-                DoWriteBucket(data.AsBucket());
+                DoWriteBucket(buffer.ToArray().AsBucket());
 #pragma warning restore CA2000 // Dispose objects before losing scope
             }
 
 
-
             public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                var data = new byte[count];
-                Array.Copy(buffer, offset, data, 0, count);
-
-#pragma warning disable CA2000 // Dispose objects before losing scope
-                DoWriteBucket(data.AsBucket());
-#pragma warning restore CA2000 // Dispose objects before losing scope
+                Write(new ReadOnlySpan<byte>(buffer, offset, count));
 
                 return Task.CompletedTask;
             }
@@ -67,29 +52,22 @@ namespace AmpScm.Buckets.Wrappers
 #if !NETFRAMEWORK
             public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
 #else
-            internal virtual ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            internal ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
 #endif
 
             {
-#pragma warning disable CA2000 // Dispose objects before losing scope
-                DoWriteBucket(buffer.ToArray().AsBucket());
-#pragma warning restore CA2000 // Dispose objects before losing scope
+                Write(buffer.Span);
 
                 return default;
             }
 
             public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
             {
-                Span<byte> bufferSpan = new Span<byte>(buffer, offset, count);
+                Write(new ReadOnlySpan<byte>(buffer, offset, count));
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
-                DoWriteBucket(bufferSpan.ToArray().AsBucket());
-#pragma warning restore CA2000 // Dispose objects before losing scope
+                var done = new SyncDone { AsyncState = state };
 
-                IAsyncResult done = new WriteDone { AsyncState = state };
-
-                //if (callback != null)
-                //    callback(done);
+                callback?.Invoke(done);
 
                 return done;
             }
@@ -107,18 +85,7 @@ namespace AmpScm.Buckets.Wrappers
                 return Task.CompletedTask;
             }
 
-            public override bool CanWrite => (InnerWriter != null);
-
-            sealed class WriteDone : IAsyncResult
-            {
-                public object? AsyncState { get; set; }
-
-                public WaitHandle AsyncWaitHandle => throw new InvalidOperationException();
-
-                public bool CompletedSynchronously => true;
-
-                public bool IsCompleted => true;
-            }
+            public override bool CanWrite => true;
         }
     }
 }

@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Interfaces;
 using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Buckets
 {
-    public class SocketBucket : Bucket, IBucketWriter
+    public class SocketBucket : Bucket, IBucketWriter, IBucketWriterStats
     {
         byte[] _inputBuffer;
         BucketBytes _unread;
         bool _readEof, _writeEof;
         Task? _writing;
+        long _bytesRead;
         private protected Socket Socket { get; }
 
         internal WaitForDataBucket WriteBucket { get; } = new WaitForDataBucket();
@@ -41,6 +45,16 @@ namespace AmpScm.Buckets
             Socket.Dispose();
         }
 
+        public async ValueTask ConnectAsync(string host, int port, CancellationToken cancellationToken=default)
+        {
+#if !NET6_0_OR_GREATER
+            await Socket.ConnectAsync(host, port).ConfigureAwait(false);
+            
+#else
+            await Socket.ConnectAsync(host, port, cancellationToken: cancellationToken).ConfigureAwait(false);
+#endif
+        }
+
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             Task<BucketBytes> reading = DoRead(requested);
@@ -59,6 +73,7 @@ namespace AmpScm.Buckets
             }
             while (ready != reading);
 
+            // Task already don, but just do it properly
             return await reading.ConfigureAwait(false);
         }
 
@@ -78,11 +93,11 @@ namespace AmpScm.Buckets
             else if (_readEof)
                 return BucketBytes.Eof;
 
-            Memory<byte> buffer = new Memory<byte>(_inputBuffer);
             int len = await Socket.ReceiveAsync(new ArraySegment<byte>(_inputBuffer), SocketFlags.None).ConfigureAwait(false);
 
             if (len > 0)
             {
+                _bytesRead += len;
                 if (len > requested)
                 {
                     _unread = new BucketBytes(_inputBuffer, requested, len - requested);
@@ -99,6 +114,13 @@ namespace AmpScm.Buckets
                 return BucketBytes.Eof;
             }
         }
+
+        public override long? Position => _bytesRead - _unread.Length;
+
+#pragma warning disable CA1033 // Interface methods should be callable by child types
+        long IBucketWriterStats.BytesWritten => BytesWritten;
+#pragma warning restore CA1033 // Interface methods should be callable by child types
+        internal long BytesWritten { get; private set; }
 
         async Task HandleWriting()
         {
@@ -117,12 +139,19 @@ namespace AmpScm.Buckets
 
                 while(bb.Length > 0)
                 {
+#if NET6_0_OR_GREATER
+                    int written = await Socket.SendAsync(bb.Memory, SocketFlags.None).ConfigureAwait(false);
+#else
                     var (arr, offs) = bb.ExpandToArray();
 
                     int written = await Socket.SendAsync(new ArraySegment<byte>(arr!, offs, bb.Length), SocketFlags.None).ConfigureAwait(false);
+#endif
 
                     if (written > 0)
+                    {
+                        BytesWritten += written;
                         bb = bb.Slice(written);
+                    }
                     else
                         return;
                 }

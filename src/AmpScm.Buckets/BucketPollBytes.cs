@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace AmpScm.Buckets
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public sealed class BucketPollBytes : IDisposable
     {
         Bucket Bucket { get; }
@@ -146,5 +148,16 @@ namespace AmpScm.Buckets
 
         public bool IsEmpty => Data.IsEmpty;
         public bool IsEof => Data.IsEof;
+
+        string DebuggerDisplay
+        {
+            get
+            {
+                if (IsEof)
+                    return "<EOF>";
+                else
+                    return $"Length={Length}-{AlreadyRead}, Data='{Data.ToASCIIString(0, Math.Min(Length, 100))}'";
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net5.0;net47;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net6.0;net5.0;net47;net48;netcoreapp3.1</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
@@ -26,7 +26,7 @@
     <AnalysisLevel>latest-all</AnalysisLevel>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net47' or '$(TargetFramework)' == 'net48' ">
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />

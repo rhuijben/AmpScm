@@ -375,6 +375,23 @@ namespace AmpScm.Tests
 
             Assert.AreEqual("|a[CRSplit]",
                             total.Replace("\r", "/r/"));
+
+
+            r = MakeBucket("H", "T", "T", "P", "/", "1", ".", "1", "\r", "\n", "a");
+
+            total = "";
+            while (true)
+            {
+                (bb, eol) = await r.ReadUntilEolAsync(BucketEol.AnyEol);
+
+                if (bb.IsEof)
+                    break;
+
+                total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
+            }
+
+            Assert.AreEqual("|H[None]|TT[None]|P/[None]|1.[None]|1[CRSplit]|[LF]|a[None]",
+                            total.Replace("\r", "/r/"));
         }
 
         [TestMethod]
@@ -445,7 +462,7 @@ namespace AmpScm.Tests
                 total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
             }
 
-            Assert.AreEqual("|a[CRLF]|b[CR]|cd[CR]|cefg[CR]|hi[CRLF]|j[CR]|jk[None]",
+            Assert.AreEqual("|a[CRLF]|b[CR]|cd[CRLF]|efg[CR]|hi[CRLF]|j[CR]|[CR]|k[None]",
                             total.Replace("\r", "/r/"));
 
             r = MakeBucket("a\r");
@@ -462,6 +479,24 @@ namespace AmpScm.Tests
             }
 
             Assert.AreEqual("|a[CR]",
+                            total.Replace("\r", "/r/"));
+
+
+            r = MakeBucket("H", "T", "T", "P", "/", "1", ".", "1", "\r", "\n", "a");
+
+            total = "";
+            state = new BucketEolState();
+            while (true)
+            {
+                (bb, eol) = await r.ReadUntilEolFullAsync(BucketEol.AnyEol, state);
+
+                if (bb.IsEof)
+                    break;
+
+                total += "|" + bb.ToASCIIString(eol) + $"[{eol}]";
+            }
+
+            Assert.AreEqual("|HTTP/1.1[CRLF]|a[None]",
                             total.Replace("\r", "/r/"));
         }
 

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
-using AmpScm.Buckets.Specialized;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AmpScm.Tests
@@ -13,46 +14,51 @@ namespace AmpScm.Tests
     [TestClass]
     public class HttpTests
     {
+        public TestContext TestContext { get; set; } = null!;
+
+ 
+
         [TestMethod]
-        public async Task BasicGet()
+        public async Task GetGitHubHome()
         {
-            Uri uri = new Uri("http://qqn.nl");
+            using var br = BucketWebRequest.Create("https://github.com/get-404");
 
-            Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            await s.ConnectAsync(uri.Host, uri.Port);
-
-            using var bucket = new SocketBucket(s);
-
-            bucket.Write(Encoding.UTF8.GetBytes($"GET / HTTP/1.0\r\nHost: {uri.Host}\r\nConnection: close\r\n\r\n").AsBucket());
-
+            br.Headers[HttpRequestHeader.Connection] = "close";
+            br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
+            var result = await br.GetResponseAsync();
 
             BucketBytes bb;
-            
-            while(!(bb= await bucket.ReadAsync()).IsEof)
+            string total = "";
+            int len = 0;
+
+            while (!(bb = await result.ReadAsync()).IsEof)
             {
-                Console.WriteLine(bb.ToUTF8String());
+                var t = bb.ToUTF8String();
+                len += bb.Length;
+                Console.WriteLine(t);
+                total += t;
             }
         }
 
-
         [TestMethod]
-        public async Task BasicGetHttps()
+        public async Task GetGitHubHomeInsecure()
         {
-            Uri uri = new Uri("https://qqn.nl");
+            using var br = BucketWebRequest.Create("http://github.com/get-404");
 
-            Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            await s.ConnectAsync(uri.Host, uri.Port);
-
-            using var bucket = new SocketBucket(s).WithTlsClientFor(uri.Host);
-
-            bucket.Write(Encoding.UTF8.GetBytes($"GET / HTTP/1.0\r\nHost: {uri.Host}\r\nConnection: close\r\n\r\n").AsBucket());
-
+            br.Headers[HttpRequestHeader.Connection] = "close";
+            br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
+            var result = await br.GetResponseAsync();
 
             BucketBytes bb;
+            string total = "";
+            int len = 0;
 
-            while (!(bb = await bucket.ReadAsync()).IsEof)
+            while (!(bb = await result.ReadAsync()).IsEof)
             {
-                Console.WriteLine(bb.ToUTF8String());
+                var t = bb.ToUTF8String();
+                len += bb.Length;
+                Console.WriteLine(t);
+                total += t;
             }
         }
     }

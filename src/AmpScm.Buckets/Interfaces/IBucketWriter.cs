@@ -12,4 +12,10 @@ namespace AmpScm.Buckets.Interfaces
 
         ValueTask ShutdownAsync();
     }
+
+
+    public interface IBucketWriterStats : IBucketWriter
+    {
+        public long BytesWritten { get; }
+    }
 }

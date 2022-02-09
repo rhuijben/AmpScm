@@ -117,7 +117,7 @@ namespace AmpScm.Buckets
 
         protected virtual ValueTask DisposeAsyncCore()
         {
-            return new ValueTask();
+            return default;
         }
 
         public override string ToString()

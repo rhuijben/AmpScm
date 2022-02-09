@@ -81,46 +81,16 @@ namespace AmpScm.Buckets.Wrappers
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return Read(new Span<byte>(buffer, offset, count));
+            return ReadAsync(buffer, offset, count).Result;
         }
 
-
-#if !NETFRAMEWORK
-        public override int Read(Span<byte> buffer)
-#else
-        internal virtual int Read(Span<byte> buffer)
-#endif
-
-        {
-            var v = Bucket.ReadAsync(buffer.Length);
-
-            if (!v.IsCompleted)
-                v.AsTask().Wait();
-
-            var r = v.Result;
-
-            if (r.IsEof)
-                return 0;
-
-            r.Span.CopyTo(buffer);
-            return r.Length;
-        }
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            var r = await Bucket.ReadAsync(count).ConfigureAwait(false);
-
-            if (r.IsEof)
-                return 0;
-
-            r.CopyTo(new Memory<byte>(buffer, offset, r.Length));
-            return r.Length;
+            return await DoReadAsync(new Memory<byte>(buffer, offset, count)).ConfigureAwait(false);
         }
 
-#if !NETFRAMEWORK
-#pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
-        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-#pragma warning restore RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
+        async ValueTask<int> DoReadAsync(Memory<byte> buffer)
         {
             var r = await Bucket.ReadAsync(buffer.Length).ConfigureAwait(false);
 
@@ -130,34 +100,66 @@ namespace AmpScm.Buckets.Wrappers
             r.CopyTo(buffer);
             return r.Length;
         }
+
+#if !NETFRAMEWORK
+#pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+#pragma warning restore RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
+        {
+            return DoReadAsync(buffer);
+        }
 #endif
 
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
         {
-            Debug.WriteLine("BeginRead");
-            var task = ReadAsync(buffer, offset, count);
+            var valuetask = DoReadAsync(new Memory<byte>(buffer, offset, count));
 
-            var tcs = new TaskCompletionSource<int>(state);
-            task.ContinueWith(t =>
+            if (valuetask.IsCompletedSuccessfully)
             {
-                if (t.IsFaulted)
-                    tcs.TrySetException(t.Exception!.InnerExceptions);
-                else if (t.IsCanceled)
-                    tcs.TrySetCanceled();
-                else
-                    tcs.TrySetResult(t.Result);
+                var r = new SyncDone { AsyncState = state, Result = valuetask.Result };
 
-                if (callback != null)
-                    callback(tcs.Task);
-            }, TaskScheduler.Default);
+                callback?.Invoke(r);
+                return r;
+            }
+            else
+            {
+                var task = valuetask.AsTask();
+                var tcs = new TaskCompletionSource<int>(state);                
 
-            return tcs.Task;
+                task.ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                        tcs.TrySetException(t.Exception!.InnerExceptions);
+                    else if (t.IsCanceled)
+                        tcs.TrySetCanceled();
+                    else
+                    {
+                        tcs.TrySetResult(t.Result);
+                    }
+
+                    callback?.Invoke(tcs.Task);
+                }, TaskScheduler.Default);
+
+                return tcs.Task;
+            }
+        }
+
+        sealed class SyncDone : IAsyncResult
+        {
+            public object? AsyncState { get; set; }
+
+            public WaitHandle AsyncWaitHandle => null!;
+
+            public bool CompletedSynchronously => true;
+
+            public bool IsCompleted => true;
+
+            public int Result;
         }
 
         public override int EndRead(IAsyncResult asyncResult)
         {
-            Debug.WriteLine("EndRead");
-            return ((Task<int>)asyncResult).Result;
+            return (asyncResult as SyncDone)?.Result ?? ((Task<int>)asyncResult).Result;
         }
 
         public override long Seek(long offset, SeekOrigin origin)

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
-    public class TlsBucket : WrappingBucket, IBucketWriter
+    public class TlsBucket : WrappingBucket, IBucketWriter, IBucketWriterStats
     {
         byte[] _inputBuffer;
         BucketBytes _unread;
@@ -19,10 +21,11 @@ namespace AmpScm.Buckets.Specialized
         Task? _writing;
         bool _authenticated;
         string _targetHost;
+        long _bytesRead;
 
         IBucketWriter InnerWriter { get; }
         int BufferSize { get; }
-        internal WaitForDataBucket WriteBucket { get; } = new WaitForDataBucket();
+        WaitForDataBucket WriteBucket { get; } = new WaitForDataBucket();
 
         public TlsBucket(Bucket reader, IBucketWriter writer, string targetHost, int bufferSize = 16384)
             : base(reader)
@@ -40,11 +43,22 @@ namespace AmpScm.Buckets.Specialized
                 await _stream.ShutdownAsync().ConfigureAwait(false);
         }
 
+        public override BucketBytes Peek()
+        {
+            return _unread;
+        }
+
         public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (!_authenticated)
             {
+#if !NETFRAMEWORK
                 await _stream.AuthenticateAsClientAsync(_targetHost).ConfigureAwait(false);
+#else
+                await _stream.AuthenticateAsClientAsync(_targetHost, clientCertificates: null, 
+                        SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12, 
+                        false).ConfigureAwait(false);
+#endif
 
                 _authenticated = true;
             }
@@ -69,8 +83,8 @@ namespace AmpScm.Buckets.Specialized
         }
 
         async Task<BucketBytes> DoRead(int requested)
-        {            
-            if(_unread.Length > 0)
+        {
+            if (_unread.Length > 0)
             {
                 var bb = _unread.Slice(0, Math.Min(requested, _unread.Length));
                 _unread = _unread.Slice(bb.Length);
@@ -87,6 +101,7 @@ namespace AmpScm.Buckets.Specialized
 
             if (len > 0)
             {
+                _bytesRead += len;
                 if (len > requested)
                 {
                     _unread = new BucketBytes(_inputBuffer, requested, len - requested);
@@ -104,6 +119,14 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
+        public override long? Position => _bytesRead - _unread.Length;
+
+#pragma warning disable CA1033 // Interface methods should be callable by child types
+        long IBucketWriterStats.BytesWritten => BytesWritten;
+#pragma warning restore CA1033 // Interface methods should be callable by child types
+
+        long BytesWritten { get; set; }
+
         async Task HandleWriting()
         {
             while (true)
@@ -118,7 +141,7 @@ namespace AmpScm.Buckets.Specialized
                     }
                 }
 
-                while (bb.Length > 0)
+                if (bb.Length > 0)
                 {
 #if NETFRAMEWORK
                     var (arr, offs) = bb.ExpandToArray();
@@ -127,6 +150,7 @@ namespace AmpScm.Buckets.Specialized
 #else
                     await _stream.WriteAsync(bb.Memory).ConfigureAwait(false);
 #endif
+                    BytesWritten += bb.Length;
                 }
             }
         }

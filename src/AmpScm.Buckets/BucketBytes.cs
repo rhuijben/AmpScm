@@ -63,6 +63,8 @@ namespace AmpScm.Buckets
 
         public BucketBytes Slice(int start)
         {
+            if (start == Length)
+                return default;
             return new BucketBytes(_data.Slice(start));
         }
 
@@ -73,9 +75,7 @@ namespace AmpScm.Buckets
 
         public byte[] ToArray()
         {
-            var d = _data.ToArray();
-            _data = d;
-            return d;
+            return _data.ToArray();
         }
 
 #pragma warning disable CA2225 // Operator overloads have named alternates

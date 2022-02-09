@@ -126,7 +126,7 @@ namespace AmpScm.Buckets.Specialized
 
                     var poll = await self.PollReadAsync(1).ConfigureAwait(false);
 
-                    if (!poll.Data.IsEmpty && bb[0] == '\n')
+                    if (!poll.Data.IsEmpty && poll[0] == '\n')
                     {
                         // Phew, we were lucky. We got a \r\n
                         result = result.Concat(new byte[] { bb[0] }).ToArray();
@@ -141,14 +141,14 @@ namespace AmpScm.Buckets.Specialized
                         if (0 != (acceptableEols & BucketEol.CR))
                         {
                             // Keep the next byte for the next read :(
-                            eolState!._kept = bb[0];
+                            eolState!._kept = poll[0];
                             await poll.Consume(1).ConfigureAwait(false);
                             return (result.ToArray(), BucketEol.CR);
                         }
                         else
                         {
                             await poll.Consume(1).ConfigureAwait(false);
-                            result = result.Concat(new byte[] { bb[0] }).ToArray();
+                            result = result.Concat(new byte[] { poll[0] }).ToArray();
                             continue;
                         }
                     }
