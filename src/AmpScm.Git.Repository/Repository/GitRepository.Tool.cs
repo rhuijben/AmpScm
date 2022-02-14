@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Git.Implementation;
 using AmpScm.Git.Repository;
@@ -41,11 +43,11 @@ namespace AmpScm.Git
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
-            string? outputText = null;
-            string? errorText = null;
+            StringBuilder? outputText = null;
+            StringBuilder? errorText = null;
 
-            p.OutputDataReceived += (sender, e) => outputText += e.Data + '\n';
-            p.ErrorDataReceived += (sender, e) => errorText += e.Data + '\n';
+            p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
+            p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
 
             if (!string.IsNullOrEmpty(stdinText))
                 p.StandardInput.Write(stdinText);
@@ -62,7 +64,7 @@ namespace AmpScm.Git
             return p.ExitCode;
         }
 
-        internal protected async ValueTask<(int, string)> RunPlumbingCommandOut(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        internal protected async ValueTask<(int ExitCode, string OutputText)> RunPlumbingCommandOut(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
@@ -86,11 +88,11 @@ namespace AmpScm.Git
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
-            string outputText = "";
-            string errorText = "";
+            StringBuilder? outputText = null;
+            StringBuilder? errorText = null;
 
-            p.OutputDataReceived += (sender, e) => outputText += e.Data + '\n';
-            p.ErrorDataReceived += (sender, e) => errorText += e.Data + '\n';
+            p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
+            p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
 
             if (!string.IsNullOrEmpty(stdinText))
                 p.StandardInput.Write(stdinText);
@@ -104,7 +106,106 @@ namespace AmpScm.Git
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");
 
-            return (p.ExitCode, outputText);
+            return (p.ExitCode, outputText?.ToString() ?? "");
+        }
+
+        internal protected IAsyncEnumerable<string> WalkPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = this.FullPath,
+                RedirectStandardInput = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+            IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
+#if NETFRAMEWORK
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+#else
+            foreach (var v in allArgs)
+                startInfo.ArgumentList.Add(v);
+#endif
+
+            var p = Process.Start(startInfo);
+
+            if (p == null)
+                throw new GitExecCommandException($"Unable to start 'git {command}' operation");
+
+            if (!string.IsNullOrEmpty(stdinText))
+                p.StandardInput.Write(stdinText);
+
+            p.StandardInput.Close();
+
+            return new StdOutputWalker(p, expectedResults);
+        }
+
+        sealed class StdOutputWalker : IAsyncEnumerable<string>, IAsyncEnumerator<string>
+        {
+            readonly Process _p;
+            readonly StreamReader _reader;
+            bool _eof;
+            string? _current;
+            StringBuilder? _errText;
+            int[]? _expectedResults;
+
+            public StdOutputWalker(Process p, int[]? expectedResults)
+            {
+                if (p is null)
+                    throw new ArgumentNullException(nameof(p));
+
+                _p = p;
+                _expectedResults = expectedResults;
+                _reader = p.StandardOutput;
+                _p.ErrorDataReceived += P_ErrorDataReceived;
+            }
+
+            public string Current => _current!;
+
+            public ValueTask DisposeAsync()
+            {
+                _p.Dispose();
+                return default;
+            }
+
+            public IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+            {
+                return this;
+            }
+
+            public async ValueTask<bool> MoveNextAsync()
+            {
+                if (_errText is not null)
+                    throw new GitExecCommandException(_errText.ToString());
+                if (_eof)
+                    return false;
+
+                _current = await _reader.ReadLineAsync();
+
+                if (_current is null)
+                {
+                    _eof = true;
+                    await _p.WaitForExitAsync();
+
+                    if (_expectedResults != null ? !_expectedResults.Contains(_p.ExitCode) : _p.ExitCode != 0)
+                        throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation");
+
+                    _p.Dispose();
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            private void P_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                if (e.Data is not null)
+                {
+                    (_errText ??= new StringBuilder()).AppendLine(e.Data);
+                }
+            }
         }
 
 #if NETFRAMEWORK
@@ -153,7 +254,7 @@ namespace AmpScm.Git
         }
 #endif
 
-        internal protected async ValueTask<(int, string, string)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        internal protected async ValueTask<(int ExitCode, string OutputText, string ErrorText)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
@@ -173,11 +274,11 @@ namespace AmpScm.Git
 #endif
 
             using var p = Process.Start(startInfo);
-            string outputText = "";
-            string errorText = "";
+            StringBuilder? outputText = null;
+            StringBuilder? errorText = null;
 
-            p.OutputDataReceived += (sender, e) => outputText += e.Data + '\n';
-            p.ErrorDataReceived += (sender, e) => errorText += e.Data + '\n';
+            p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
+            p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
 
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
@@ -194,7 +295,7 @@ namespace AmpScm.Git
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");
 
-            return (p.ExitCode, outputText, errorText);
+            return (p.ExitCode, outputText?.ToString() ?? "", errorText?.ToString() ?? "");
         }
     }
 }

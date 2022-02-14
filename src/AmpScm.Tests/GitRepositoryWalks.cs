@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Git;
+using AmpScm.Git.Client;
+using AmpScm.Git.Client.Plumbing;
 using AmpScm.Git.References;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -75,6 +77,38 @@ namespace AmpScm.Tests
             }
 
             Assert.IsNotNull(repo.Commits.FirstOrDefault(x => x.Parents.Count > 1), "Repository has merges");
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(TestRepositoryArgs))]
+        public async Task WalkHistory(string path)
+        {
+            using var repo = GitRepository.Open(path);
+
+            if (repo.IsShallow || repo.IsLazy)
+                return;
+
+            var r = await repo.GetPlumbing().RevisionList(new GitRevisionListArgs { MaxCount = 32, FirstParentOnly = true }).ToListAsync();
+
+            Assert.AreEqual(32, r.Count);
+            Assert.AreEqual(32, r.Count(x => x != null));
+            Assert.AreEqual(32, r.Distinct().Count());
+
+            var revs = repo.Head.Revisions.Take(32).Select(x => x.Commit.Id).ToList();
+
+            if (!r.SequenceEqual(revs))
+            {
+                int? nDiff = null;
+                for (int i = 0; i < Math.Min(revs.Count, r.Count); i++)
+                {
+                    Console.WriteLine($"{i:00} {r[i]} - {revs[i]}");
+
+                    if (!nDiff.HasValue && r[i] != revs[i])
+                        nDiff = i;
+                }
+                Assert.Fail($"Different list at {nDiff}");
+            }
+
         }
     }
 }

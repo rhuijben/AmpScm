@@ -309,12 +309,14 @@ namespace AmpScm.Git.Repository
         {
             GitConfiguration Configuration { get; }
             Lazy<bool> _repositoryIsLazy;
+            Lazy<bool> _repositoryIsShallow;
 
             public GitLazyConfig(GitConfiguration config)
             {
                 Configuration = config ?? throw new ArgumentNullException(nameof(config));
 
                 _repositoryIsLazy = new Lazy<bool>(GetRepositoryIsLazy);
+                _repositoryIsShallow = new Lazy<bool>(GetRepositoryIsShallow);
             }
 
             bool GetRepositoryIsLazy()
@@ -331,8 +333,16 @@ namespace AmpScm.Git.Repository
                 return false;
             }
 
-            public bool RepositoryIsLazy => _repositoryIsLazy.Value;
+            bool GetRepositoryIsShallow()
+            {
+                if (Configuration._loaded && Configuration._repositoryFormatVersion == 0)
+                    return false;
 
+                return File.Exists(Path.Combine(Configuration.Repository.GitDir, "shallow"));
+            }
+
+            public bool RepositoryIsLazy => _repositoryIsLazy.Value;
+            public bool RepositoryIsShallow => _repositoryIsShallow.Value;
         }
 
         Lazy<GitLazyConfig> _lazy;

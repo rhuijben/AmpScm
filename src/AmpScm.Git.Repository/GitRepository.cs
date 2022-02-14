@@ -21,6 +21,7 @@ namespace AmpScm.Git
         public string FullPath { get; }
         public bool IsBare { get; }
         public bool IsLazy => Configuration.Lazy.RepositoryIsLazy;
+        public bool IsShallow => Configuration.Lazy.RepositoryIsShallow;
         readonly Lazy<GitConfiguration> _gitConfiguration;
 
         internal protected string GitDir { get; }

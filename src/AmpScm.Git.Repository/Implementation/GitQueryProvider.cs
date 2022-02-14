@@ -138,7 +138,13 @@ namespace AmpScm.Git.Implementation
 
         public IQueryable<GitRevision> GetRevisions(GitRevisionSet p)
         {
-            return p.ToList().AsQueryable();
+            return WrapEnumerable(p).AsQueryable();
+        }
+
+        static IEnumerable<T> WrapEnumerable<T>(IEnumerable<T> r)
+        {
+            foreach(var v in r)
+                yield return v;
         }
     }
 }

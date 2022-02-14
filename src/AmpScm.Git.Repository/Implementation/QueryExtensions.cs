@@ -76,5 +76,21 @@ namespace AmpScm.Git.Implementation
             return process.HasExited ? Task.CompletedTask : tcs.Task;
         }
 #endif
+
+#if NETFRAMEWORK
+        public static bool TryDequeue<TResult>(this Queue<TResult> queue, out TResult value)
+        {
+            if (queue?.Count > 0)
+            {
+                value = queue.Dequeue();
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
         }
+#endif
+    }
 }

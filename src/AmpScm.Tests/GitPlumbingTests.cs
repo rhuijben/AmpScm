@@ -35,7 +35,7 @@ namespace AmpScm.Tests
                 string? group = null;
                 foreach (string command in commandList.Split('\n'))
                 {
-                    if (string.IsNullOrEmpty(command))
+                    if (string.IsNullOrWhiteSpace(command))
                         group = null;
                     else if (char.IsLetterOrDigit(command, 1))
                         group = command;
@@ -45,7 +45,7 @@ namespace AmpScm.Tests
                         if ((group.StartsWith("Low-level") && !group.Contains("Internal") && !group.Contains("Syncing Repositories"))
                             || implementedCommands.Contains(cmd))
                         {
-                            
+
 
                             if (ignored.Contains(cmd))
                                 continue;
@@ -55,7 +55,7 @@ namespace AmpScm.Tests
                             if (parts[0].StartsWith("mk"))
                                 parts = new string[] { "make", parts[0].Substring(2) }.Concat(parts.Skip(1)).ToArray();
 
-                            for(int i = 0; i < parts.Length; i++)
+                            for (int i = 0; i < parts.Length; i++)
                             {
                                 if (parts[i] == "ref")
                                     parts[i] = "reference";

@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AmpScm.Git.Repository\AmpScm.Git.Repository.csproj" />
+    <ProjectReference Include="..\AmpScm.Linq.AsyncQueryable\AmpScm.Linq.AsyncQueryable.csproj" />
   </ItemGroup>
 
 </Project>

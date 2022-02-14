@@ -9,7 +9,7 @@ namespace AmpScm.Git.Sets
         {
             if (Commits.Contains(gitCommit))
                 return this;
-            
+
             var c = new GitRevisionSetOptions(this);
             c.Commits.Add(gitCommit);
 

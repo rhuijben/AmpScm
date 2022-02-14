@@ -296,10 +296,27 @@ namespace AmpScm.Git
 
             public IEnumerator<GitId> GetEnumerator()
             {
-                var v = Commit.ParentId;
+                object[]? parents = Commit._parent as object[];
 
-                if (v != null)
-                    yield return v;
+                if (parents != null)
+                {
+                    for (int i = 0; i < parents.Length; i++)
+                    {
+                        if (parents[i] is GitId id)
+                            yield return id;
+                        else if (parents[i] is GitObject ob)
+                            yield return ob.Id;
+                        else
+                            yield return Commit.GetParentId(i)!;
+                    }
+                }
+                else
+                {
+                    var v = Commit.ParentId;
+
+                    if (v != null)
+                        yield return v;
+                }
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -320,14 +337,29 @@ namespace AmpScm.Git
 
             public GitCommit? this[int index] => Commit.GetParent(index);
 
-            public int Count => (Commit._parent == null) ? 0 : (Commit._parent as Object[])?.Length ?? 1;
+            public int Count => Commit.ParentCount;
 
             public IEnumerator<GitCommit> GetEnumerator()
             {
-                var v = Commit.Parent;
+                object[]? parents = Commit._parent as object[];
 
-                if (v != null)
-                    yield return v;
+                if (parents != null)
+                {
+                    for (int i = 0; i < parents.Length; i++)
+                    {
+                        if (parents[i] is GitCommit c)
+                            yield return c;
+                        else
+                            yield return Commit.GetParent(i)!;
+                    }
+                }
+                else
+                {
+                    var v = Commit.Parent;
+
+                    if (v != null)
+                        yield return v;
+                }
             }
 
             IEnumerator IEnumerable.GetEnumerator()
