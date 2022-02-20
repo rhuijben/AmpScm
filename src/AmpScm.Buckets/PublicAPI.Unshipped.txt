@@ -53,6 +53,7 @@ AmpScm.Buckets.Specialized.ProxyBucket<TBucket>
 AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ProxyBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Specialized.SpecializedBucketExtensions
 AmpScm.Buckets.Specialized.TlsBucket
+AmpScm.Buckets.Specialized.TlsBucket.BytesWritten.get -> long
 AmpScm.Buckets.Specialized.TlsBucket.ShutdownAsync() -> System.Threading.Tasks.ValueTask
 AmpScm.Buckets.Specialized.TlsBucket.TlsBucket(AmpScm.Buckets.Bucket! reader, AmpScm.Buckets.Interfaces.IBucketWriter! writer, string! targetHost, int bufferSize = 16384) -> void
 AmpScm.Buckets.Specialized.TlsBucket.Write(AmpScm.Buckets.Bucket! bucket) -> void
@@ -128,6 +129,10 @@ override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadRemainingBytesAsync
 override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
 override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ReadUntilEolAsync(AmpScm.Buckets.BucketEol acceptableEols, int requested = 2147483647) -> System.Threading.Tasks.ValueTask<(AmpScm.Buckets.BucketBytes, AmpScm.Buckets.BucketEol)>
 override AmpScm.Buckets.Specialized.ProxyBucket<TBucket>.ResetAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Specialized.TlsBucket.CanReset.get -> bool
+override AmpScm.Buckets.Specialized.TlsBucket.Dispose(bool disposing) -> void
+override AmpScm.Buckets.Specialized.TlsBucket.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+override AmpScm.Buckets.Specialized.TlsBucket.Name.get -> string!
 override AmpScm.Buckets.Specialized.TlsBucket.Peek() -> AmpScm.Buckets.BucketBytes
 override AmpScm.Buckets.Specialized.TlsBucket.Position.get -> long?
 override AmpScm.Buckets.Specialized.TlsBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>

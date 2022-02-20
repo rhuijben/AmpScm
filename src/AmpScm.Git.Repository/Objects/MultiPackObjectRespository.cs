@@ -13,7 +13,7 @@ namespace AmpScm.Git.Objects
         {
         }
 
-        public override ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
+        public override ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
             where TGitObject : class
         {
             return default;

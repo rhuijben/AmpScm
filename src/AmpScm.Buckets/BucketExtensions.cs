@@ -172,8 +172,8 @@ namespace AmpScm.Buckets
                     return new ZLibBucket(self);
                 case BucketCompressionAlgorithm.Deflate:
                     return new CompressionBucket(self, (inner) => new DeflateStream(inner, CompressionMode.Decompress));
-#if NETCOREAPP
                 case BucketCompressionAlgorithm.Brotli:
+#if NETCOREAPP
                     return new CompressionBucket(self, (inner) => new BrotliStream(inner, CompressionMode.Decompress));
 #endif
                 default:

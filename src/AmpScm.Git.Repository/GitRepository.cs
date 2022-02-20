@@ -132,10 +132,10 @@ namespace AmpScm.Git
             return SetQueryProvider.GetAllNamed<TResult>();
         }
 
-        ValueTask<TResult?> IGitQueryRoot.GetAsync<TResult>(GitId objectId)
+        ValueTask<TResult?> IGitQueryRoot.GetAsync<TResult>(GitId oid)
             where TResult : class
         {
-            return SetQueryProvider.GetAsync<TResult>(objectId);
+            return SetQueryProvider.GetAsync<TResult>(oid);
         }
 
         ValueTask<TResult?> IGitQueryRoot.GetNamedAsync<TResult>(string name)

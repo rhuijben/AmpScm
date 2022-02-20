@@ -16,7 +16,7 @@ namespace AmpScm.Buckets.Specialized
     {
         byte[] _inputBuffer;
         BucketBytes _unread;
-        SslStream _stream;
+        readonly SslStream _stream;
         bool _writeEof, _readEof;
         Task? _writing;
         bool _authenticated;
@@ -35,6 +35,30 @@ namespace AmpScm.Buckets.Specialized
             _inputBuffer = new byte[BufferSize];
             _stream = new SslStream(Inner.AsStream(InnerWriter));
             _targetHost = targetHost;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (disposing)
+                    _stream.Dispose();
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }
+        }
+
+        protected override async ValueTask DisposeAsyncCore()
+        {
+#if NETFRAMEWORK
+            _stream.Dispose();
+#else
+            await _stream.DisposeAsync().ConfigureAwait(false);
+#endif
+
+            await base.DisposeAsyncCore().ConfigureAwait(false);
         }
 
         public async ValueTask ShutdownAsync()
@@ -56,7 +80,7 @@ namespace AmpScm.Buckets.Specialized
                 await _stream.AuthenticateAsClientAsync(_targetHost).ConfigureAwait(false);
 #else
                 await _stream.AuthenticateAsClientAsync(_targetHost, clientCertificates: null, 
-                        SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12, 
+                        SslProtocols.Tls11 | SslProtocols.Tls12,
                         false).ConfigureAwait(false);
 #endif
 
@@ -121,11 +145,7 @@ namespace AmpScm.Buckets.Specialized
 
         public override long? Position => _bytesRead - _unread.Length;
 
-#pragma warning disable CA1033 // Interface methods should be callable by child types
-        long IBucketWriterStats.BytesWritten => BytesWritten;
-#pragma warning restore CA1033 // Interface methods should be callable by child types
-
-        long BytesWritten { get; set; }
+        public long BytesWritten { get; private set; }
 
         async Task HandleWriting()
         {
@@ -159,5 +179,9 @@ namespace AmpScm.Buckets.Specialized
         {
             WriteBucket.Write(bucket);
         }
+
+        public override bool CanReset => false;
+
+        public override string Name => $"TLS[{_stream.SslProtocol}]>{Inner.Name}";
     }
 }

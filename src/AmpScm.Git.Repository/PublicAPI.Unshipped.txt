@@ -1,7 +1,7 @@
 ﻿abstract AmpScm.Git.GitObject.Type.get -> AmpScm.Git.GitObjectType
 abstract AmpScm.Git.GitTreeEntry.GitObject.get -> AmpScm.Git.GitObject!
 abstract AmpScm.Git.GitTreeEntry.ReadAsync() -> System.Threading.Tasks.ValueTask
-abstract AmpScm.Git.Objects.GitObjectRepository.Get<TGitObject>(AmpScm.Git.GitId! objectId) -> System.Threading.Tasks.ValueTask<TGitObject?>
+abstract AmpScm.Git.Objects.GitObjectRepository.Get<TGitObject>(AmpScm.Git.GitId! oid) -> System.Threading.Tasks.ValueTask<TGitObject?>
 abstract AmpScm.Git.Objects.GitObjectRepository.GetAll<TGitObject>() -> System.Collections.Generic.IAsyncEnumerable<TGitObject!>!
 abstract AmpScm.Git.References.GitReferenceRepository.GetAll() -> System.Collections.Generic.IAsyncEnumerable<AmpScm.Git.GitReference!>!
 abstract AmpScm.Git.References.GitReferenceRepository.GetUnsafeAsync(string! name, bool findSymbolic) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
@@ -45,6 +45,7 @@ AmpScm.Git.GitRepository.FullPath.get -> string!
 AmpScm.Git.GitRepository.Head.get -> AmpScm.Git.GitReference!
 AmpScm.Git.GitRepository.IsBare.get -> bool
 AmpScm.Git.GitRepository.IsLazy.get -> bool
+AmpScm.Git.GitRepository.IsShallow.get -> bool
 AmpScm.Git.GitRepository.ObjectRepository.get -> AmpScm.Git.Objects.GitObjectRepository!
 AmpScm.Git.GitRepository.Objects.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitObject!>!
 AmpScm.Git.GitRepository.ReferenceRepository.get -> AmpScm.Git.References.GitReferenceRepository!

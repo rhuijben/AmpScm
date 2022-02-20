@@ -87,7 +87,7 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        private bool TryFindOid(byte[] oids, GitId objectId, out uint index)
+        private bool TryFindOid(byte[] oids, GitId oid, out uint index)
         {
             int sz;
 
@@ -116,7 +116,7 @@ namespace AmpScm.Git.Objects
 
                 var check = GitId.FromByteArrayOffset(_idType, oids, sz * mid);
 
-                int n = objectId.HashCompare(check);
+                int n = oid.HashCompare(check);
 
                 if (n == 0)
                 {
@@ -138,7 +138,7 @@ namespace AmpScm.Git.Objects
             var check2 = GitId.FromByteArrayOffset(_idType, oids, sz * first);
             index = (uint)first;
 
-            return objectId.HashCompare(check2) == 0;
+            return oid.HashCompare(check2) == 0;
         }
 
         private byte[] GetOidArray(uint start, uint count)
@@ -229,7 +229,7 @@ namespace AmpScm.Git.Objects
             throw new GitRepositoryException("Unsupported pack version");
         }
 
-        public async override ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
+        public async override ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
             where TGitObject : class
         {
             Init();
@@ -237,14 +237,14 @@ namespace AmpScm.Git.Objects
             if (_fanOut is null)
                 return null;
 
-            byte byte0 = objectId[0];
+            byte byte0 = oid[0];
 
             uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
             uint count = _fanOut![byte0] - start;
 
             byte[] oids = GetOidArray(start, count);
 
-            if (TryFindOid(oids, objectId, out var index))
+            if (TryFindOid(oids, oid, out var index))
             {
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
@@ -254,9 +254,9 @@ namespace AmpScm.Git.Objects
                 var rdr = await _fb!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-                GitObject ob = await GitObject.FromBucket(Repository, pf, objectId);
+                GitObject ob = await GitObject.FromBucket(Repository, pf, oid);
 
                 if (ob is TGitObject tg)
                     return tg;
@@ -326,6 +326,37 @@ namespace AmpScm.Git.Objects
                 else
                     await pf.DisposeAsync();
             }
+        }
+
+        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        {
+            Init();
+
+            if (_fanOut is null)
+                return null!;
+
+            byte byte0 = oid[0];
+
+            uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
+            uint count = _fanOut![byte0] - start;
+
+            byte[] oids = GetOidArray(start, count);
+
+            if (TryFindOid(oids, oid, out var index))
+            {
+                var r = GetOffsetArray(index + start, 1, oids);
+                var offset = GetOffset(r, 0);
+
+                await OpenPackIfNecessary();
+
+                var rdr = await _fb!.DuplicateAsync(true);
+                await rdr.ReadSkipAsync(offset);
+
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
+
+                return pf;
+            }
+            return null!;
         }
     }
 }

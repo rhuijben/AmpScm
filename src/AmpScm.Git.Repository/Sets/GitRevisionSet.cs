@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Git.Implementation;
 using AmpScm.Git.References;
+using AmpScm.Git.Sets.Walker;
 
 namespace AmpScm.Git.Sets
 {
@@ -45,13 +46,11 @@ namespace AmpScm.Git.Sets
 
         async IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            GitCommit? c = _options.Commits.FirstOrDefault();
+            var w = new GitRevisionWalker(_options);
 
-            while (c != null)
+            await foreach (var v in w)
             {
-                yield return new GitRevision(c);
-
-                c = c.Parent;
+                yield return v;
             }
         }
 

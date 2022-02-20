@@ -274,6 +274,10 @@ namespace AmpScm.Git
 #endif
 
             using var p = Process.Start(startInfo);
+
+            if (p == null)
+                throw new GitExecCommandException($"Unable to start 'git {command}' operation");
+
             StringBuilder? outputText = null;
             StringBuilder? errorText = null;
 

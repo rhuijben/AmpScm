@@ -104,9 +104,9 @@ namespace AmpScm.Git.Implementation
             return GetEnumerable<TResult>().AsQueryable();
         }
 
-        public async ValueTask<TResult?> GetAsync<TResult>(GitId objectId) where TResult : GitObject
+        public async ValueTask<TResult?> GetAsync<TResult>(GitId oid) where TResult : GitObject
         {
-            return await Repository.ObjectRepository.Get<TResult>(objectId);
+            return await Repository.ObjectRepository.Get<TResult>(oid);
         }
 
         internal static Type? GetElementType(Type type)

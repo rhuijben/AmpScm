@@ -4,8 +4,6 @@
     {
         Deflate,
         ZLib,
-#if NETCOREAPP
         Brotli
-#endif
     }
 }

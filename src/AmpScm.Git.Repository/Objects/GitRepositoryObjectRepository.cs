@@ -80,6 +80,32 @@ namespace AmpScm.Git.Objects
             }
 
             yield return new FileObjectRepository(Repository, ObjectsDir);
+
+            var alternatesFile = Path.Combine(ObjectsDir, "info/alternates");
+            if (File.Exists(alternatesFile))
+            {
+                foreach(var line in File.ReadAllLines(alternatesFile))
+                {
+                    var l = line.Trim();
+                    if (string.IsNullOrWhiteSpace(l))
+                        continue;
+                    else if (l[0] == '#' || l[0] == ';')
+                        continue;
+
+                    string? dir = null;
+                    try
+                    {
+                        var p = Path.Combine(ObjectsDir, l);
+
+                        if (Directory.Exists(p))
+                            dir = p;
+                    }
+                    catch { }
+
+                    if (dir != null)
+                        yield return new GitRepositoryObjectRepository(Repository, dir);
+                }
+            }
         }
 
         public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
@@ -101,15 +127,15 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId objectId)
+        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
             where TGitObject : class
         {
-            if (objectId == null)
-                throw new ArgumentNullException(nameof(objectId));
+            if (oid == null)
+                throw new ArgumentNullException(nameof(oid));
 
             foreach (var p in Sources)
             {
-                var r = await p.Get<TGitObject>(objectId);
+                var r = await p.Get<TGitObject>(oid);
 
                 if (r != null)
                     return r;
@@ -118,10 +144,21 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal override ValueTask<GitObjectBucket> ResolveByOid(GitId arg)
+        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
         {
             // TODO: Implement
-            return base.ResolveByOid(arg);
+            if (oid == null)
+                throw new ArgumentNullException(nameof(oid));
+
+            foreach (var p in Sources)
+            {
+                var r = await p.ResolveByOid(oid);
+
+                if (r != null)
+                    return r;
+            }
+
+            return null;
         }
 
         protected GitObjectRepository[] Sources => _repositories.Value;

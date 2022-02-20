@@ -10,11 +10,11 @@ namespace AmpScm.Git
     [DebuggerDisplay("{EntryName} - {Id}")]
     public abstract class GitTreeEntry : IEquatable<GitTreeEntry>, IGitObject
     {
-        internal GitTreeEntry(GitTree tree, string name, GitId objectId)
+        internal GitTreeEntry(GitTree tree, string name, GitId oid)
         {
             InTree = tree ?? throw new ArgumentNullException(nameof(tree));
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            Id = objectId ?? throw new ArgumentNullException(nameof(objectId));
+            Id = oid ?? throw new ArgumentNullException(nameof(oid));
         }
 
         protected GitTree InTree { get; }
