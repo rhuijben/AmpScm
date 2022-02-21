@@ -89,6 +89,12 @@ AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string? message, System.Exception? innerException) -> void
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 AmpScm.Git.Implementation.IGitAsyncQueryable<T>
+AmpScm.Git.Objects.GitCommitChainValue
+AmpScm.Git.Objects.GitCommitChainValue.CorrectedTime.get -> System.DateTimeOffset
+AmpScm.Git.Objects.GitCommitChainValue.Generation.get -> int
+AmpScm.Git.Objects.GitCommitChainValue.GitCommitChainValue() -> void
+AmpScm.Git.Objects.GitCommitChainValue.GitCommitChainValue(int generation, System.DateTimeOffset stamp) -> void
+AmpScm.Git.Objects.GitCommitChainValue.Value.get -> ulong
 AmpScm.Git.Objects.GitObjectRepository
 AmpScm.Git.Objects.GitObjectRepository.GitObjectRepository(AmpScm.Git.GitRepository! repository) -> void
 AmpScm.Git.Objects.GitObjectRepository.Repository.get -> AmpScm.Git.GitRepository!
@@ -175,6 +181,7 @@ static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
 static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
 static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
 static AmpScm.Git.GitTreeEntry.operator ==(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
+static AmpScm.Git.Objects.GitCommitChainValue.FromValue(ulong value) -> AmpScm.Git.Objects.GitCommitChainValue
 static AmpScm.Git.Repository.GitConfiguration.GetGitConfigurationFilePaths(bool includeSystem = true) -> System.Collections.Generic.IEnumerable<string!>!
 static AmpScm.Git.Repository.GitConfiguration.GitProgramPath.get -> string!
 static AmpScm.Git.Repository.GitConfiguration.UserHomeDirectory.get -> string!
