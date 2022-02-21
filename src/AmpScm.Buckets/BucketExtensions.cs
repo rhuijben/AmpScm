@@ -254,6 +254,15 @@ namespace AmpScm.Buckets
             return BitConverter.IsLittleEndian ? ReverseInPlace(array) : array;
         }
 
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public static byte[] GetBytesReversedIfLittleEndian(this byte[] array, int index, int length)
+        {
+            var bytes = new byte[length];
+            Array.Copy(array, index, bytes, 0, length);
+
+            return bytes.ReverseInPlaceIfLittleEndian();
+        }
+
 #if NETFRAMEWORK
         internal static string GetString(this System.Text.Encoding encoding, ReadOnlySpan<byte> bytes)
         {

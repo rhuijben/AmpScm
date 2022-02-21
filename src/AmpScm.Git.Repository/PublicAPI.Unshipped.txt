@@ -1,8 +1,6 @@
 ﻿abstract AmpScm.Git.GitObject.Type.get -> AmpScm.Git.GitObjectType
 abstract AmpScm.Git.GitTreeEntry.GitObject.get -> AmpScm.Git.GitObject!
 abstract AmpScm.Git.GitTreeEntry.ReadAsync() -> System.Threading.Tasks.ValueTask
-abstract AmpScm.Git.Objects.GitObjectRepository.Get<TGitObject>(AmpScm.Git.GitId! oid) -> System.Threading.Tasks.ValueTask<TGitObject?>
-abstract AmpScm.Git.Objects.GitObjectRepository.GetAll<TGitObject>() -> System.Collections.Generic.IAsyncEnumerable<TGitObject!>!
 abstract AmpScm.Git.References.GitReferenceRepository.GetAll() -> System.Collections.Generic.IAsyncEnumerable<AmpScm.Git.GitReference!>!
 abstract AmpScm.Git.References.GitReferenceRepository.GetUnsafeAsync(string! name, bool findSymbolic) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 AmpScm.Git.GitBlob
@@ -89,12 +87,15 @@ AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string? message, System.Exception? innerException) -> void
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 AmpScm.Git.Implementation.IGitAsyncQueryable<T>
-AmpScm.Git.Objects.GitCommitChainValue
-AmpScm.Git.Objects.GitCommitChainValue.CorrectedTime.get -> System.DateTimeOffset
-AmpScm.Git.Objects.GitCommitChainValue.Generation.get -> int
-AmpScm.Git.Objects.GitCommitChainValue.GitCommitChainValue() -> void
-AmpScm.Git.Objects.GitCommitChainValue.GitCommitChainValue(int generation, System.DateTimeOffset stamp) -> void
-AmpScm.Git.Objects.GitCommitChainValue.Value.get -> ulong
+AmpScm.Git.Objects.GitCommitGenerationValue
+AmpScm.Git.Objects.GitCommitGenerationValue.CorrectedTime.get -> System.DateTimeOffset
+AmpScm.Git.Objects.GitCommitGenerationValue.CorrectedTimeValue.get -> long
+AmpScm.Git.Objects.GitCommitGenerationValue.Generation.get -> int
+AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue() -> void
+AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue(int generation, long timeValue) -> void
+AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue(int generation, System.DateTimeOffset timeStamp) -> void
+AmpScm.Git.Objects.GitCommitGenerationValue.HasValue.get -> bool
+AmpScm.Git.Objects.GitCommitGenerationValue.Value.get -> ulong
 AmpScm.Git.Objects.GitObjectRepository
 AmpScm.Git.Objects.GitObjectRepository.GitObjectRepository(AmpScm.Git.GitRepository! repository) -> void
 AmpScm.Git.Objects.GitObjectRepository.Repository.get -> AmpScm.Git.GitRepository!
@@ -106,8 +107,7 @@ AmpScm.Git.References.GitReferenceRepository.Repository.get -> AmpScm.Git.GitRep
 AmpScm.Git.References.GitSymbolicReference
 AmpScm.Git.References.GitSymbolicReference.Reference.get -> AmpScm.Git.GitReference?
 AmpScm.Git.Repository.GitConfiguration
-AmpScm.Git.Repository.GitConfiguration.GetBool(string! group, string! key, bool defaultValue) -> bool
-AmpScm.Git.Repository.GitConfiguration.GetBoolAsync(string! group, string! key, bool defaultValue) -> System.Threading.Tasks.ValueTask<bool>
+AmpScm.Git.Repository.GitConfiguration.GetBoolAsync(string! group, string! key) -> System.Threading.Tasks.ValueTask<bool?>
 AmpScm.Git.Repository.GitConfiguration.GetIntAsync(string! group, string! key) -> System.Threading.Tasks.ValueTask<int?>
 AmpScm.Git.Repository.GitConfiguration.GetStringAsync(string! group, string! key) -> System.Threading.Tasks.ValueTask<string?>
 AmpScm.Git.Repository.GitConfiguration.GetSubGroups(string! group) -> System.Collections.Generic.IEnumerable<string!>!
@@ -181,7 +181,7 @@ static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
 static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
 static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
 static AmpScm.Git.GitTreeEntry.operator ==(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
-static AmpScm.Git.Objects.GitCommitChainValue.FromValue(ulong value) -> AmpScm.Git.Objects.GitCommitChainValue
+static AmpScm.Git.Objects.GitCommitGenerationValue.FromValue(ulong value) -> AmpScm.Git.Objects.GitCommitGenerationValue
 static AmpScm.Git.Repository.GitConfiguration.GetGitConfigurationFilePaths(bool includeSystem = true) -> System.Collections.Generic.IEnumerable<string!>!
 static AmpScm.Git.Repository.GitConfiguration.GitProgramPath.get -> string!
 static AmpScm.Git.Repository.GitConfiguration.UserHomeDirectory.get -> string!
@@ -191,4 +191,6 @@ virtual AmpScm.Git.GitReference.Object.get -> AmpScm.Git.GitObject?
 virtual AmpScm.Git.GitReference.ReadAsync() -> System.Threading.Tasks.ValueTask
 virtual AmpScm.Git.GitTreeEntry.EntryName.get -> string!
 virtual AmpScm.Git.GitTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
+virtual AmpScm.Git.Objects.GitObjectRepository.Get<TGitObject>(AmpScm.Git.GitId! oid) -> System.Threading.Tasks.ValueTask<TGitObject?>
+virtual AmpScm.Git.Objects.GitObjectRepository.GetAll<TGitObject>() -> System.Collections.Generic.IAsyncEnumerable<TGitObject!>!
 virtual AmpScm.Git.References.GitReferenceRepository.ResolveByOid(AmpScm.Git.GitId! arg) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>

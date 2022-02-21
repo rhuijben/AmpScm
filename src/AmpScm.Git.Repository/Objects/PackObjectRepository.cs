@@ -317,7 +317,7 @@ namespace AmpScm.Git.Objects
                 var rdr = await _fb!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
                 GitObject ob = await GitObject.FromBucket(Repository, pf, objectId);
 
@@ -352,7 +352,7 @@ namespace AmpScm.Git.Objects
                 var rdr = await _fb!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
                 return pf;
             }

@@ -58,7 +58,7 @@ namespace AmpScm.Git
             {
                 GitDir = FullPath;
 
-                if (!(Configuration?.GetBool("core", "bare", false) ?? false))
+                if (!(Configuration?.GetBool("core", "bare") ?? false))
                 {
                     bareCheck = false;
                     FullPath = Path.GetDirectoryName(FullPath) ?? throw new InvalidOperationException();
@@ -172,6 +172,6 @@ namespace AmpScm.Git
             where T : class
         {
             return _container.GetService(typeof(T)) as T;
-        }        
+        }
     }
 }

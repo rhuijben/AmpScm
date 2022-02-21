@@ -11,22 +11,22 @@ namespace AmpScm.Git.Sets.Walker
     {
         private GitRevisionSetOptions options;
         HashSet<GitCommitInfo> Commits { get; } = new HashSet<GitCommitInfo>();
-        Queue<GitCommitInfo> ToWalk { get; } = new Queue<GitCommitInfo>();
+        GitRepository Repository {get;}
 
         public GitRevisionWalker(GitRevisionSetOptions options)
         {
             this.options = options;
+            Repository = options.Commits.Select(x => x.Repository).First();
         }
 
         public async IAsyncEnumerator<GitRevision> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             GitCommit? c = null;
 
-            await Task.Run(() =>
-            {
-                AddCommits(options.Commits);
-                c = options.Commits.FirstOrDefault();
-            });
+            AddCommits(options.Commits);
+            c = options.Commits.FirstOrDefault();
+
+            await EnsureInfo();
 
             while (c != null)
             {
@@ -36,38 +36,90 @@ namespace AmpScm.Git.Sets.Walker
             }
         }
 
-        private void AddCommits(IEnumerable<GitCommit> commits)
+        private async ValueTask EnsureInfo()
         {
-            foreach(var v in commits)
+            Stack<GitCommitInfo> stack = new Stack<GitCommitInfo>();
+
+            foreach(var v in Commits.ToList())
             {
-                DoAddCommit(v);
+                stack.Push(v);
             }
 
-            AddParents();
-        }
-
-        void DoAddCommit(GitCommit commit)
-        {
-            if (commit == null)
-                return;
-
-            GitCommitInfo info = new GitCommitInfo(commit);
-
-            if (Commits.Contains(info))
-                return;
-
-            Commits.Add(info);
-            ToWalk.Enqueue(info);
-        }
-
-        void AddParents()
-        { 
-            while(ToWalk.Count > 0)
+            while(stack.TryPeek(out var c))
             {
-                var c = ToWalk.Dequeue();
+                if (c.ChainInfo.HasValue)
+                {
+                    c = stack.Pop();
+                    continue;
+                }
 
-                AddCommits(c.Parents);
+                bool gotall = true;
+                List<GitCommitInfo>? parents = null;
+                foreach(var p in c.ParentIds)
+                {
+                    var pc = EnsureCommit(p);
+
+                    if (!pc.ChainInfo.HasValue)
+                    {
+                        gotall = false;
+                        stack.Push(pc);
+                    }
+                    else if (gotall)
+                    {
+                        parents ??= new List<GitCommitInfo>();
+                        parents.Add(pc);
+                    }
+                }
+
+                if (gotall)
+                {
+                    c = stack.Pop();
+
+                    if (!c.ChainInfo.HasValue)
+                    {
+                        int generation;
+                        long correctedTimestamp;
+                        if (parents?.Count > 0)
+                        {
+                            generation = parents.Max(p => p.ChainInfo.Generation) + 1;
+                            correctedTimestamp = Math.Max(parents.Max(p => p.ChainInfo.CorrectedTimeValue) + 1, await c.GetCommitTimeValue());
+                        }
+                        else
+                        {
+                            generation = 1;
+                            correctedTimestamp = await c.GetCommitTimeValue();
+                        }
+
+                        c.SetChainInfo(new Objects.GitCommitGenerationValue(generation, correctedTimestamp));
+                    }
+                }
             }            
+        }
+
+        GitCommitInfo EnsureCommit(GitId id)
+        {
+            var tst = new GitCommitInfo(id, Repository);
+            if (!Commits.TryGetValue(tst, out var v))
+            {
+                Commits.Add(v = tst);
+            }
+            return v;
+        }
+
+        private void AddCommits(IEnumerable<GitCommit> commits)
+        {
+            foreach (var v in commits)
+            {
+                if (v == null)
+                    return;
+
+                GitCommitInfo info = new GitCommitInfo(v);
+
+                if (Commits.Contains(info))
+                    return;
+
+                Commits.Add(info);
+            }
         }
     }
 }

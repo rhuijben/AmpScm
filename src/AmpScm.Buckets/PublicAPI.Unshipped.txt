@@ -167,6 +167,7 @@ static AmpScm.Buckets.BucketExtensions.AsReader(this AmpScm.Buckets.Bucket! self
 static AmpScm.Buckets.BucketExtensions.AsStream(this AmpScm.Buckets.Bucket! self) -> System.IO.Stream!
 static AmpScm.Buckets.BucketExtensions.AsStream(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Interfaces.IBucketWriter! writer) -> System.IO.Stream!
 static AmpScm.Buckets.BucketExtensions.Decompress(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Specialized.BucketCompressionAlgorithm algorithm) -> AmpScm.Buckets.Bucket!
+static AmpScm.Buckets.BucketExtensions.GetBytesReversedIfLittleEndian(this byte[]! array, int index, int length) -> byte[]!
 static AmpScm.Buckets.BucketExtensions.NoClose(this AmpScm.Buckets.Bucket! bucket, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
 static AmpScm.Buckets.BucketExtensions.PollAsync(this AmpScm.Buckets.Bucket! self, int minRequested = 1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 static AmpScm.Buckets.BucketExtensions.PollReadAsync(this AmpScm.Buckets.Bucket! self, int minRequested = 1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketPollBytes!>

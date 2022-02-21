@@ -255,7 +255,7 @@ namespace AmpScm.Git.Repository
         }
 
 
-        public async ValueTask<bool> GetBoolAsync(string group, string key, bool defaultValue)
+        public async ValueTask<bool?> GetBoolAsync(string group, string key)
         {
             await LoadAsync();
 
@@ -293,16 +293,13 @@ namespace AmpScm.Git.Repository
 
                 else if (string.Equals(vResult, "0", StringComparison.OrdinalIgnoreCase))
                     return false;
-
-                return defaultValue;
             }
-            else
-                return defaultValue;
+            return null;
         }
 
-        public bool GetBool(string group, string key, bool defaultValue)
+        public bool? GetBool(string group, string key)
         {
-            return GetBoolAsync(group, key, defaultValue).Result;
+            return GetBoolAsync(group, key).Result;
         }
 
         internal class GitLazyConfig
@@ -310,6 +307,7 @@ namespace AmpScm.Git.Repository
             GitConfiguration Configuration { get; }
             Lazy<bool> _repositoryIsLazy;
             Lazy<bool> _repositoryIsShallow;
+            Lazy<bool> _repositoryCommitGraph;
 
             public GitLazyConfig(GitConfiguration config)
             {
@@ -317,6 +315,7 @@ namespace AmpScm.Git.Repository
 
                 _repositoryIsLazy = new Lazy<bool>(GetRepositoryIsLazy);
                 _repositoryIsShallow = new Lazy<bool>(GetRepositoryIsShallow);
+                _repositoryCommitGraph = new Lazy<bool>(GetRepositoryCommitGraph);
             }
 
             bool GetRepositoryIsLazy()
@@ -326,7 +325,7 @@ namespace AmpScm.Git.Repository
 
                 foreach (var v in Configuration.GetSubGroups("remote"))
                 {
-                    if (Configuration.GetBool("remote." + v, "promisor", false))
+                    if (Configuration.GetBool("remote." + v, "promisor") ?? false)
                         return true;
                 }
 
@@ -335,14 +334,18 @@ namespace AmpScm.Git.Repository
 
             bool GetRepositoryIsShallow()
             {
-                if (Configuration._loaded && Configuration._repositoryFormatVersion == 0)
-                    return false;
-
                 return File.Exists(Path.Combine(Configuration.Repository.GitDir, "shallow"));
+            }
+
+            bool GetRepositoryCommitGraph()
+            {
+                return Configuration.GetBool("core", "commitGraph") ?? true; // By default enabled in git current
             }
 
             public bool RepositoryIsLazy => _repositoryIsLazy.Value;
             public bool RepositoryIsShallow => _repositoryIsShallow.Value;
+
+            public bool CommitGraph => _repositoryCommitGraph.Value;
         }
 
         Lazy<GitLazyConfig> _lazy;
@@ -434,6 +437,8 @@ namespace AmpScm.Git.Repository
                 return new GitSignature(username, email, DateTime.Now);
             }
         }
+
+        internal bool CommitChainSupport => Lazy.CommitGraph;
 
         public static IEnumerable<string> GetGitConfigurationFilePaths(bool includeSystem = true)
         {

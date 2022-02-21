@@ -70,14 +70,22 @@ namespace AmpScm.Git.Objects
                 throw new GitException($"Found unsupported repository format {format} for {Repository.FullPath}");
             }
 
-            // TODO: Check for multipack
-            // TODO: Check for commitgraph
+            // Check for commit chain first, to allow cheap access to commit type
+            string chain = Path.Combine(ObjectsDir, "info", "commit-graph");
+            if (File.Exists(chain) && Repository.Configuration.CommitChainSupport)
+            {
+                yield return new CommitGraphRepository(Repository, chain);
+            }
+            else if (Directory.Exists(chain += "s") && File.Exists(Path.Combine(chain, "commit-graph-chain")) && Repository.Configuration.CommitChainSupport)
+            {
+                yield return new CommitGraphChainRepository(Repository, chain);
+            }
 
-            foreach(var pack in Directory.GetFiles(Path.Combine(ObjectsDir, "pack"), "pack-*.pack"))
+            foreach (var pack in Directory.GetFiles(Path.Combine(ObjectsDir, "pack"), "pack-*.pack"))
             {
                 // TODO: Check if length matches hashtype?
                 yield return new PackObjectRepository(Repository, pack, _idType);
-            }
+            }            
 
             yield return new FileObjectRepository(Repository, ObjectsDir);
 
@@ -146,13 +154,28 @@ namespace AmpScm.Git.Objects
 
         internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
         {
-            // TODO: Implement
             if (oid == null)
                 throw new ArgumentNullException(nameof(oid));
 
             foreach (var p in Sources)
             {
                 var r = await p.ResolveByOid(oid);
+
+                if (r != null)
+                    return r;
+            }
+
+            return null;
+        }
+
+        internal override async ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
+        {
+            if (oid == null)
+                throw new ArgumentNullException(nameof(oid));
+
+            foreach (var p in Sources)
+            {
+                var r = await p.GetCommitInfo(oid);
 
                 if (r != null)
                     return r;

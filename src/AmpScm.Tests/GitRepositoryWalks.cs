@@ -76,7 +76,8 @@ namespace AmpScm.Tests
                 Console.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }
 
-            Assert.IsNotNull(repo.Commits.FirstOrDefault(x => x.Parents.Count > 1), "Repository has merges");
+            if (!repo.IsShallow)
+                Assert.IsNotNull(repo.Commits.FirstOrDefault(x => x.Parents.Count > 1), "Repository has merges");
         }
 
         [TestMethod]
@@ -85,7 +86,7 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(path);
 
-            if (repo.IsShallow || repo.IsLazy)
+            if (repo.IsShallow)
                 return;
 
             var r = await repo.GetPlumbing().RevisionList(new GitRevisionListArgs { MaxCount = 32, FirstParentOnly = true }).ToListAsync();

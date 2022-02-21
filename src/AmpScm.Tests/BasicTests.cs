@@ -552,23 +552,23 @@ namespace AmpScm.Tests
         {
             for (int i = 0; i < 10; i++)
             {
-                GitCommitChainValue cv = new GitCommitChainValue(i, DateTime.Now);
+                GitCommitGenerationValue cv = new GitCommitGenerationValue(i, DateTime.Now);
 
                 Assert.AreEqual(i, cv.Generation);
-                cv = GitCommitChainValue.FromValue(cv.Value);
+                cv = GitCommitGenerationValue.FromValue(cv.Value);
 
                 Assert.AreEqual(i, cv.Generation);
             }
 
             for (int i = 1970; i < 2100; i++)
             {
-                GitCommitChainValue cv = new GitCommitChainValue(i, new DateTime(i, 2, 2, 0, 0, 0, DateTimeKind.Utc));
+                GitCommitGenerationValue cv = new GitCommitGenerationValue(i, new DateTime(i, 2, 2, 0, 0, 0, DateTimeKind.Utc));
 
                 Assert.AreEqual(i, cv.Generation);
                 Assert.AreEqual(new DateTimeOffset(i, 2, 2, 0, 0, 0, TimeSpan.Zero), cv.CorrectedTime);
 
                 // Values are together stored in an ulong, so recreate from there and test again
-                cv = GitCommitChainValue.FromValue(cv.Value);
+                cv = GitCommitGenerationValue.FromValue(cv.Value);
 
                 Assert.AreEqual(i, cv.Generation);
                 Assert.AreEqual(new DateTimeOffset(i, 2, 2, 0, 0, 0, TimeSpan.Zero), cv.CorrectedTime);

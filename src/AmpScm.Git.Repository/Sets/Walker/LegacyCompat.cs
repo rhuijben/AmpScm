@@ -24,6 +24,18 @@ namespace AmpScm.Git.Sets.Walker
             existingValue = default!;
             return false;
         }
+
+        public static bool TryPeek<T>(this Stack<T> stack, /* [MaybeNullWhen(false)] */ out T value)
+        {
+            if (stack.Count > 0)
+            {
+                value = stack.Peek();
+                return true;
+            }
+
+            value = default!;
+            return false;
+        }
 #endif
     }
 }

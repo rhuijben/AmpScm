@@ -20,14 +20,25 @@ namespace AmpScm.Git.Objects
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        public abstract IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
-            where TGitObject : GitObject;
+        public virtual IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+            where TGitObject : GitObject
+        {
+            return AsyncEnumerable.Empty<TGitObject>();
+        }
 
 
-        public abstract ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
-            where TGitObject : GitObject;
+        public virtual ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+            where TGitObject : GitObject
+        {
+            return default;
+        }
 
         internal virtual ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        {
+            return default;
+        }
+
+        internal virtual ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
         {
             return default;
         }

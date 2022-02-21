@@ -36,7 +36,7 @@ namespace AmpScm.Tests
 
                 Assert.IsNotNull(items.Length);
 
-                Assert.AreEqual(false, repo.Configuration.GetBool("core", "bare", false));
+                Assert.AreEqual(false, repo.Configuration.GetBool("core", "bare") ?? false);
 
                 Assert.IsNotNull(repo.Head);
                 Assert.IsNull(repo.Head.Commit);
@@ -65,7 +65,7 @@ namespace AmpScm.Tests
 
                 Assert.IsNotNull(items.Length);
 
-                Assert.AreEqual(true, repo.Configuration.GetBool("core", "bare", false));
+                Assert.AreEqual(true, repo.Configuration.GetBool("core", "bare") ?? false);
             }
         }
 
