@@ -308,6 +308,7 @@ namespace AmpScm.Git.Repository
             Lazy<bool> _repositoryIsLazy;
             Lazy<bool> _repositoryIsShallow;
             Lazy<bool> _repositoryCommitGraph;
+            Lazy<int> _autoGCBlobs;
 
             public GitLazyConfig(GitConfiguration config)
             {
@@ -316,6 +317,7 @@ namespace AmpScm.Git.Repository
                 _repositoryIsLazy = new Lazy<bool>(GetRepositoryIsLazy);
                 _repositoryIsShallow = new Lazy<bool>(GetRepositoryIsShallow);
                 _repositoryCommitGraph = new Lazy<bool>(GetRepositoryCommitGraph);
+                _autoGCBlobs = new Lazy<int>(GetAutGCBlobs);
             }
 
             bool GetRepositoryIsLazy()
@@ -342,10 +344,17 @@ namespace AmpScm.Git.Repository
                 return Configuration.GetBool("core", "commitGraph") ?? true; // By default enabled in git current
             }
 
+            int GetAutGCBlobs()
+            {
+                return Configuration.GetInt("gc", "auto") ?? 6700;
+            }
+
             public bool RepositoryIsLazy => _repositoryIsLazy.Value;
             public bool RepositoryIsShallow => _repositoryIsShallow.Value;
 
             public bool CommitGraph => _repositoryCommitGraph.Value;
+
+            public int AutoGCBlobs => _autoGCBlobs.Value;
         }
 
         Lazy<GitLazyConfig> _lazy;
@@ -437,8 +446,6 @@ namespace AmpScm.Git.Repository
                 return new GitSignature(username, email, DateTime.Now);
             }
         }
-
-        internal bool CommitChainSupport => Lazy.CommitGraph;
 
         public static IEnumerable<string> GetGitConfigurationFilePaths(bool includeSystem = true)
         {

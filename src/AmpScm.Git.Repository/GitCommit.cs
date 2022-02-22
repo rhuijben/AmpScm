@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Specialized;
+using AmpScm.Git.Sets;
 
 namespace AmpScm.Git
 {
@@ -267,6 +268,8 @@ namespace AmpScm.Git
                 }
             }
         }
+
+        public GitRevisionSet Revisions => new GitRevisionSet(Repository).AddCommit(this);
 
         [DebuggerHidden]
         private string DebuggerDisplay

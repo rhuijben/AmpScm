@@ -154,14 +154,14 @@ namespace AmpScm.Tests
 
             await foreach (var c in repo.ObjectRepository.GetAll<GitCommit>())
             {
-                Console.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
+                TestContext.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
                 if (c.Parent != null)
-                    Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
-                Console.WriteLine($" -tree {c.Tree?.Id}");
+                    TestContext.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
+                TestContext.WriteLine($" -tree {c.Tree?.Id}");
 
                 foreach (var v in c.Tree!)
                 {
-                    Console.WriteLine($"   - {v.Name}");
+                    TestContext.WriteLine($"   - {v.Name}");
                 }
             }
         }
@@ -173,15 +173,15 @@ namespace AmpScm.Tests
 
             await foreach (var c in repo.Commits)
             {
-                Console.WriteLine($"Commit {c.Id:x10} - {GitTools.FirstLine(c.Message)}");
-                Console.WriteLine($"Author: {c.Author?.ToString() ?? "-"}");
+                TestContext.WriteLine($"Commit {c.Id:x10} - {GitTools.FirstLine(c.Message)}");
+                TestContext.WriteLine($"Author: {c.Author?.ToString() ?? "-"}");
                 if (c.Parent != null)
-                    Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
-                Console.WriteLine($" -tree {c.Tree?.Id}");
+                    TestContext.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
+                TestContext.WriteLine($" -tree {c.Tree?.Id}");
 
                 foreach (var v in c.Tree)
                 {
-                    Console.WriteLine($"   - {v.Name}");
+                    TestContext.WriteLine($"   - {v.Name}");
                 }
             }
         }
@@ -193,14 +193,14 @@ namespace AmpScm.Tests
 
             foreach (var c in repo.Commits)
             {
-                Console.WriteLine($"Commit {c.Id:x8} - {GitTools.FirstLine(c.Message)}");
+                TestContext.WriteLine($"Commit {c.Id:x8} - {GitTools.FirstLine(c.Message)}");
                 if (c.Parent != null)
-                    Console.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
-                Console.WriteLine($" -tree {c.Tree?.Id}");
+                    TestContext.WriteLine($" -parent {c.Parent?.Id} - {GitTools.FirstLine(c.Parent?.Message)}");
+                TestContext.WriteLine($" -tree {c.Tree?.Id}");
 
                 foreach (var v in c.Tree!)
                 {
-                    Console.WriteLine($"   - {v.Name}");
+                    TestContext.WriteLine($"   - {v.Name}");
                 }
             }
         }
@@ -216,12 +216,12 @@ namespace AmpScm.Tests
 
             foreach (var v in tree)
             {
-                Console.WriteLine($"   - {v.Name} - {v.Id}");
+                TestContext.WriteLine($"   - {v.Name} - {v.Id}");
             }
 
             foreach (var v in tree.AllItems)
             {
-                Console.WriteLine($"# {v.Path}");
+                TestContext.WriteLine($"# {v.Path}");
             }
         }
 

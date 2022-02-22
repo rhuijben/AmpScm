@@ -10,7 +10,7 @@ using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Git.Objects
 {
-    internal class FileObjectRepository : GitObjectRepository
+    internal sealed class FileObjectRepository : GitObjectRepository
     {
         private string objectsDir;
 
@@ -90,5 +90,7 @@ namespace AmpScm.Git.Objects
                 }
             }
         }
+
+        internal override bool ProvidesCommitInfo => false;
     }
 }

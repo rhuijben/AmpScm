@@ -72,11 +72,11 @@ namespace AmpScm.Git.Objects
 
             // Check for commit chain first, to allow cheap access to commit type
             string chain = Path.Combine(ObjectsDir, "info", "commit-graph");
-            if (File.Exists(chain) && Repository.Configuration.CommitChainSupport)
+            if (File.Exists(chain) && Repository.Configuration.Lazy.CommitGraph)
             {
                 yield return new CommitGraphRepository(Repository, chain);
             }
-            else if (Directory.Exists(chain += "s") && File.Exists(Path.Combine(chain, "commit-graph-chain")) && Repository.Configuration.CommitChainSupport)
+            else if (Directory.Exists(chain += "s") && File.Exists(Path.Combine(chain, "commit-graph-chain")) && Repository.Configuration.Lazy.CommitGraph)
             {
                 yield return new CommitGraphChainRepository(Repository, chain);
             }
@@ -143,10 +143,13 @@ namespace AmpScm.Git.Objects
 
             foreach (var p in Sources)
             {
-                var r = await p.Get<TGitObject>(oid);
+                if (p.ProvidesGetObject)
+                {
+                    var r = await p.Get<TGitObject>(oid);
 
-                if (r != null)
-                    return r;
+                    if (r != null)
+                        return r;
+                }
             }
 
             return null;
@@ -175,10 +178,13 @@ namespace AmpScm.Git.Objects
 
             foreach (var p in Sources)
             {
-                var r = await p.GetCommitInfo(oid);
+                if (p.ProvidesCommitInfo)
+                {
+                    var r = await p.GetCommitInfo(oid);
 
-                if (r != null)
-                    return r;
+                    if (r != null)
+                        return r;
+                }
             }
 
             return null;

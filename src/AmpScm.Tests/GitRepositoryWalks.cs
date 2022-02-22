@@ -46,14 +46,14 @@ namespace AmpScm.Tests
         public async Task CanOpenRepository(string path)
         {
             using var repo = GitRepository.Open(path);
-            Console.WriteLine($"Looking at {repo}");
-            Console.Write($" from {repo.Remotes["origin"]?.Url}");
+            TestContext.WriteLine($"Looking at {repo}");
+            TestContext.Write($" from {repo.Remotes["origin"]?.Url}");
 
             if (repo.IsBare)
-                Console.Write($" [bare]");
+                TestContext.Write($" [bare]");
             if (repo.IsLazy)
-                Console.Write($" [lazy-loaded]");
-            Console.WriteLine();
+                TestContext.Write($" [lazy-loaded]");
+            TestContext.WriteLine();
 
             Assert.IsTrue(repo.Remotes.Any(), "Has remotes");
             Assert.IsTrue(repo.Remotes.Any(x => x.Name == "origin"), "Has origin remote");
@@ -69,11 +69,11 @@ namespace AmpScm.Tests
             Assert.IsNotNull(repo.Head, "Repository has an HEAD");
             Assert.IsTrue(repo.Head is GitSymbolicReference, "HEAD is an Symbolic reference");
             Assert.IsNotNull(repo.Head?.Commit, "Head can be resolved");
-            Console.WriteLine($"Last change: {repo.Head.Commit.Author}");
+            TestContext.WriteLine($"Last change: {repo.Head.Commit.Author}");
 
             await foreach (var r in repo.References)
             {
-                Console.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
+                TestContext.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }
 
             if (!repo.IsShallow)
@@ -102,7 +102,7 @@ namespace AmpScm.Tests
                 int? nDiff = null;
                 for (int i = 0; i < Math.Min(revs.Count, r.Count); i++)
                 {
-                    Console.WriteLine($"{i:00} {r[i]} - {revs[i]}");
+                    TestContext.WriteLine($"{i:00} {r[i]} - {revs[i]}");
 
                     if (!nDiff.HasValue && r[i] != revs[i])
                         nDiff = i;
@@ -110,6 +110,14 @@ namespace AmpScm.Tests
                 Assert.Fail($"Different list at {nDiff}");
             }
 
+
+            if (repo.Commits[GitId.Parse("b71c6c3b64bc002731bc2d6c49080a4855d2c169")] is GitCommit manyParents)
+            {
+                TestContext.WriteLine($"Found commit {manyParents}, so we triggered the many parent handling");
+                manyParents.Revisions.Take(3).ToList();
+
+                Assert.IsTrue(manyParents.Parent!.ParentCount > 3);
+            }
         }
     }
 }

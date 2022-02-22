@@ -9,7 +9,7 @@ using AmpScm.Buckets.Git;
 
 namespace AmpScm.Git.Objects
 {
-    internal class PackObjectRepository : GitObjectRepository
+    internal sealed class PackObjectRepository : GitObjectRepository
     {
         readonly string _packFile;
         readonly GitIdType _idType;
@@ -358,5 +358,7 @@ namespace AmpScm.Git.Objects
             }
             return null!;
         }
+
+        internal override bool ProvidesCommitInfo => false;
     }
 }

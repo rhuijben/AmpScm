@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git.Objects
 {
-    internal class CommitGraphChainRepository : GitObjectRepository
+    internal sealed class CommitGraphChainRepository : GitObjectRepository
     {
         private string chain;
         List<CommitGraphRepository>? Graphs;
@@ -72,5 +72,7 @@ namespace AmpScm.Git.Objects
             }
             return null;
         }
+
+        internal override bool ProvidesGetObject => false;
     }
 }

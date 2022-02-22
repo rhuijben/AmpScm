@@ -12,6 +12,7 @@ namespace AmpScm.Tests
     [TestClass]
     public class GitClientTests
     {
+        public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
         public void HaveShellClient()
@@ -22,7 +23,7 @@ namespace AmpScm.Tests
 
             foreach(var v in GitConfiguration.GetGitConfigurationFilePaths(true))
             {
-                Console.WriteLine(v);
+                TestContext.WriteLine(v);
             }
         }
     }

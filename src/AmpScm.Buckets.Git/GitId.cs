@@ -99,16 +99,16 @@ namespace AmpScm.Git
             return 0;
         }
 
-        public static bool TryParse(string s, out GitId oid)
+        public static bool TryParse(string oidString, out GitId oid)
         {
-            if (s.Length == 40)
+            if (oidString?.Length == 40)
             {
-                oid = new GitId(GitIdType.Sha1, StringToByteArray(s));
+                oid = new GitId(GitIdType.Sha1, StringToByteArray(oidString));
                 return true;
             }
-            else if (s.Length == 64)
+            else if (oidString?.Length == 64)
             {
-                oid = new GitId(GitIdType.Sha256, StringToByteArray(s));
+                oid = new GitId(GitIdType.Sha256, StringToByteArray(oidString));
                 return true;
             }
             else
@@ -116,6 +116,14 @@ namespace AmpScm.Git
                 oid = null!;
                 return false;
             }
+        }
+
+        public static GitId Parse(string oidString)
+        {
+            if (TryParse(oidString, out var v))
+                return v;
+            else
+                throw new ArgumentOutOfRangeException(nameof(oidString));
         }
 
         public static byte[] StringToByteArray(string hex)

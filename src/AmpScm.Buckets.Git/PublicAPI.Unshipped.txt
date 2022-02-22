@@ -120,5 +120,6 @@ static AmpScm.Git.GitId.FromByteArrayOffset(AmpScm.Git.GitIdType type, byte[]! h
 static AmpScm.Git.GitId.HashLength(AmpScm.Git.GitIdType type) -> int
 static AmpScm.Git.GitId.operator !=(AmpScm.Git.GitId? one, AmpScm.Git.GitId? other) -> bool
 static AmpScm.Git.GitId.operator ==(AmpScm.Git.GitId? one, AmpScm.Git.GitId? other) -> bool
+static AmpScm.Git.GitId.Parse(string! oidString) -> AmpScm.Git.GitId!
 static AmpScm.Git.GitId.StringToByteArray(string! hex) -> byte[]!
-static AmpScm.Git.GitId.TryParse(string! s, out AmpScm.Git.GitId! oid) -> bool
+static AmpScm.Git.GitId.TryParse(string! oidString, out AmpScm.Git.GitId! oid) -> bool

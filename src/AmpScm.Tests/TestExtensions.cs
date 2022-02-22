@@ -66,11 +66,16 @@ namespace AmpScm.Tests
                 Assert.AreEqual(l1[0], r1[0], $"Expected bytes equal at position {p}");
                 p++;
 
-                //Console.Write($"{l1[0]:x2} ");
+                //TestContext.Write($"{l1[0]:x2} ");
                 //
                 //if (p % 16 == 0)
-                //    Console.WriteLine();
+                //    TestContext.WriteLine();
             }
+        }
+
+        public static void WriteLine(this TestContext TestContext)
+        {
+            TestContext.WriteLine("");
         }
     }
 }

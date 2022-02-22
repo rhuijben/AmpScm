@@ -35,7 +35,7 @@ namespace AmpScm.Tests
             {
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                Console.WriteLine(t);
+                TestContext.WriteLine(t);
                 total += t;
             }
         }
@@ -57,7 +57,7 @@ namespace AmpScm.Tests
             {
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                Console.WriteLine(t);
+                TestContext.WriteLine(t);
                 total += t;
             }
         }

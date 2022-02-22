@@ -15,6 +15,8 @@ namespace AmpScm.Tests
     [TestClass]
     public class GitTests
     {
+        public TestContext TestContext { get; set; } = null!;
+
         [TestMethod]
         public async Task BasicReadPack()
         {
@@ -36,12 +38,12 @@ namespace AmpScm.Tests
 
                 await pf.ReadInfoAsync();
 
-                Console.Write($"Object {i}: type={pf.Type}, offset={offset}");
+                TestContext.Write($"Object {i}: type={pf.Type}, offset={offset}");
                 if (pf.DeltaCount > 0)
-                    Console.Write($", deltas={pf.DeltaCount}");
+                    TestContext.Write($", deltas={pf.DeltaCount}");
 
                 var len = await pf.ReadRemainingBytesAsync();
-                Console.Write($", length={len}");
+                TestContext.Write($", length={len}");
 
                 Assert.AreEqual(0L, pf.Position);
 
@@ -50,7 +52,7 @@ namespace AmpScm.Tests
                 Assert.AreEqual((long)data.Length, pf.Position);
                 Assert.AreEqual((long)data.Length, len.Value);
 
-                Console.WriteLine();
+                TestContext.WriteLine("");
             }
         }
 
@@ -617,7 +619,7 @@ namespace AmpScm.Tests
             Assert.AreEqual("PACK", gh.GitType);
             Assert.AreEqual(2, gh.Version);
             //Assert.AreEqual(70, gh.ObjectCount);
-            Console.WriteLine("sha1 type body-length entry-length offset [delta-count]");
+            TestContext.WriteLine("sha1 type body-length entry-length offset [delta-count]");
 
             var hashes = new SortedList<byte[], (long, int)>(new MyComparer<byte[]>((x, y) => x!.Zip(y!, (v1, v2) => v1 - v2).FirstOrDefault(x => x != 0)));
             for (int i = 0; i < gh.ObjectCount; i++)
@@ -643,17 +645,17 @@ namespace AmpScm.Tests
                 var data = await csum.ReadToEnd();
 
 
-                Console.Write(FormatHash(checksum!));
+                TestContext.Write(FormatHash(checksum!));
 
-                Console.Write($" {pf.Type.ToString().ToLowerInvariant(),-6} {pf.BodySize} {b.Position - offset} {offset}");
+                TestContext.Write($" {pf.Type.ToString().ToLowerInvariant(),-6} {pf.BodySize} {b.Position - offset} {offset}");
                 if (pf.DeltaCount > 0)
-                    Console.Write($" {pf.DeltaCount} delta (body={len})");
+                    TestContext.Write($" {pf.DeltaCount} delta (body={len})");
 
                 Assert.AreEqual(len.Value + hdrLen, data.Length, "Can read provided length bytes");
                 Assert.AreEqual(len.Value, pf.Position, "Expected end position");
 
 
-                Console.WriteLine();
+                TestContext.WriteLine();
 
                 hashes.Add(checksum!, (offset!.Value, crc));
             }
@@ -684,7 +686,7 @@ namespace AmpScm.Tests
             // Hashes
             index += new AggregateBucket(hashes.Keys.SelectMany(x => x).ToArray().AsBucket());
 
-            Console.WriteLine($"CRCs start at {await index.ReadRemainingBytesAsync()}");
+            TestContext.WriteLine($"CRCs start at {await index.ReadRemainingBytesAsync()}");
             // CRC32 values of packed data
             index += new AggregateBucket(hashes.Values.Select(x => BitConverter.GetBytes(x.Item2).ReverseIfLittleEndian().ToArray().AsBucket()).ToArray());
             // File offsets

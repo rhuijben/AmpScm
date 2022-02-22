@@ -9,7 +9,7 @@ using AmpScm.Buckets;
 
 namespace AmpScm.Git.Objects
 {
-    internal class CommitGraphRepository : GitObjectRepository
+    internal sealed class CommitGraphRepository : GitObjectRepository
     {
         readonly string _fileName;
         GitIdType _idType;
@@ -29,7 +29,7 @@ namespace AmpScm.Git.Objects
 
             await Init();
 
-            for(uint i = 0; i < (_fanOut?[255] ?? 0); i++)
+            for (uint i = 0; i < (_fanOut?[255] ?? 0); i++)
             {
                 var oid = GetOid(i);
 
@@ -42,7 +42,7 @@ namespace AmpScm.Git.Objects
             int hashLength = GitId.HashLength(_idType);
             byte[] oidData = new byte[hashLength];
 
-            if (ReadFromChunk(_chunks!.FirstOrDefault(x => x.Name == "OIDL"), i * hashLength, oidData, 0, hashLength) != hashLength)
+            if (ReadFromChunk("OIDL", i * hashLength, oidData) != hashLength)
                 throw new InvalidOperationException();
 
             return new GitId(_idType, oidData);
@@ -89,29 +89,45 @@ namespace AmpScm.Git.Objects
                 Position = BitConverter.ToInt64(chunkTable.GetBytesReversedIfLittleEndian(12 * i + 4, sizeof(long)), 0)
             }).ToArray();
 
-            for(int i = 0; i < chunkCount; i++)
+            for (int i = 0; i < chunkCount; i++)
             {
-                _chunks[i].Length = _chunks[i+1].Position - _chunks[i].Position;
+                _chunks[i].Length = _chunks[i + 1].Position - _chunks[i].Position;
             }
-
-            var fanoutChunk = _chunks.FirstOrDefault(x => x.Name == "OIDF");
-
-            if (fanoutChunk.Name == null || fanoutChunk.Length != 1024)
-                return;
 
             byte[] fanOut = new byte[256 * sizeof(int)];
 
-            if (ReadFromChunk(fanoutChunk, 0, fanOut, 0, fanOut.Length) != fanOut.Length)
+            if (ReadFromChunk("OIDF", 0, fanOut) != fanOut.Length)
                 return;
 
             _fanOut = Enumerable.Range(0, 256).Select(i => BitConverter.ToUInt32(fanOut.GetBytesReversedIfLittleEndian(sizeof(int) * i, sizeof(int)), 0)).ToArray();
         }
 
-        private int ReadFromChunk(Chunk fanoutChunk, long position, byte[] fanOut, int offset, int length)
-        {
-            _fs.Seek(fanoutChunk.Position + position, SeekOrigin.Begin);
 
-            int requested = (int)Math.Min(length, fanoutChunk.Length - position);
+        private int ReadFromChunk(string chunkType, long position, byte[] buffer)
+        {
+            return ReadFromChunk(chunkType, position, buffer, 0, buffer.Length);
+        }
+
+        private int ReadFromChunk(string chunkType, long position, byte[] fanOut, int offset, int length)
+        {
+            if (_chunks == null || _fs == null)
+                return 0;
+
+            Chunk? ch = null;
+            foreach (var c in _chunks)
+            {
+                if (c.Name == chunkType)
+                {
+                    ch = c;
+                    break;
+                }
+            }
+            if (ch == null)
+                return 0;
+
+            _fs.Seek(ch.Value.Position + position, SeekOrigin.Begin);
+
+            int requested = (int)Math.Min(length, ch.Value.Length - position);
 
             return _fs.Read(fanOut, offset, requested);
         }
@@ -123,16 +139,16 @@ namespace AmpScm.Git.Objects
             if (TryFindId(oid, out var index))
             {
                 int hashLength = GitId.HashLength(_idType);
-                int commitDataSz =  hashLength + 2 * sizeof(uint) + sizeof(ulong);
+                int commitDataSz = hashLength + 2 * sizeof(uint) + sizeof(ulong);
                 byte[] commitData = new byte[commitDataSz];
 
-                if (ReadFromChunk(_chunks.FirstOrDefault(x => x.Name == "CDAT"), index * commitDataSz, commitData, 0, commitData.Length) != commitDataSz)
+                if (ReadFromChunk("CDAT", index * commitDataSz, commitData) != commitDataSz)
                     return null;
 
                 // commitData now contains the root hash, 2 parent indexes and the topological level
                 uint parent0 = BitConverter.ToUInt32(commitData.GetBytesReversedIfLittleEndian(hashLength, sizeof(uint)), 0);
                 uint parent1 = BitConverter.ToUInt32(commitData.GetBytesReversedIfLittleEndian(hashLength + sizeof(uint), sizeof(uint)), 0);
-                ulong chainLevel = BitConverter.ToUInt64(commitData.GetBytesReversedIfLittleEndian(hashLength + 2*sizeof(uint), sizeof(ulong)), 0);
+                ulong chainLevel = BitConverter.ToUInt64(commitData.GetBytesReversedIfLittleEndian(hashLength + 2 * sizeof(uint), sizeof(ulong)), 0);
 
                 GitId[] parents;
 
@@ -142,9 +158,18 @@ namespace AmpScm.Git.Objects
                     parents = new[] { GetOid(parent0) };
                 else if (parent1 >= 0x80000000)
                 {
-                    // More than 2 parents
-                    return null; // Easy out. Handle as if not exists in chain. Will be filled via children.
-                    // TODO: Read "EDGE" chunk and obtain info there
+                    var extraParents = new byte[sizeof(uint) * 256];
+                    int len = ReadFromChunk("EDGE", 4 * (parent1 & 0x7FFFFFFF), extraParents) / 4;
+
+                    if (len == 0 || len >= 256)
+                        return null; // Handle as if not exists in chain. Should never happen
+
+                    int? stopAfter = null;
+                    parents = new[] { parent0 }.Concat(
+                        Enumerable.Range(0, len)
+                            .Select(i => BitConverter.ToUInt32(extraParents.GetBytesReversedIfLittleEndian(i * sizeof(uint), sizeof(uint)), 0))
+                            .TakeWhile((v, i) => { if (i > stopAfter) return false; else if ((v & 0x80000000) != 0) { stopAfter = i; }; return true; }))
+                            .Select(v => GetOid(v & 0x7FFFFFFF)).ToArray();
                 }
                 else
                     parents = new[] { GetOid(parent0), GetOid(parent1) };
@@ -163,7 +188,7 @@ namespace AmpScm.Git.Objects
                 return false;
             }
 
-            uint first = (oid[0] == 0) ? 0 : _fanOut[oid[0]-1];
+            uint first = (oid[0] == 0) ? 0 : _fanOut[oid[0] - 1];
             uint count = _fanOut[oid[0]];
 
             uint c = count;
@@ -198,5 +223,7 @@ namespace AmpScm.Git.Objects
 
             return oid.HashCompare(check2) == 0;
         }
+
+        internal override bool ProvidesGetObject => false;
     }
 }
