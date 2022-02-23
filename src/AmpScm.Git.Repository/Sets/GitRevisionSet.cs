@@ -37,16 +37,21 @@ namespace AmpScm.Git.Sets
         static System.Reflection.MethodInfo GetMethod(Expression<Func<GitRevisionSet, object>> pr)
             => ((MethodCallExpression)pr.Body).Method;
 
-        Expression IQueryable.Expression => Expression.Call(Expression.Property(Expression.Constant(Repository), 
-            GetProperty<GitRepository>(x => x.NoRevisions)), 
-            GetMethod(x=> x.SetOptions(null!)),
+        Expression IQueryable.Expression => Expression.Call(Expression.Property(Expression.Constant(Repository),
+            GetProperty<GitRepository>(x => x.NoRevisions)),
+            GetMethod(x => x.SetOptions(null!)),
             Expression.Constant(_options));
 
         IQueryProvider IQueryable.Provider => Repository.SetQueryProvider;
 
-        async IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
+        IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            var w = new GitRevisionWalker(_options);
+            return GetAsyncEnumerator(cancellationToken);
+        }
+
+        protected virtual async IAsyncEnumerator<GitRevision> GetAsyncEnumerator(CancellationToken cancellationToken)
+        {
+            var w = new GitRevisionWalker(_options, Repository);
 
             await foreach (var v in w)
             {

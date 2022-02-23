@@ -13,10 +13,10 @@ namespace AmpScm.Git.Sets.Walker
         HashSet<GitCommitInfo> Commits { get; } = new HashSet<GitCommitInfo>();
         GitRepository Repository {get;}
 
-        public GitRevisionWalker(GitRevisionSetOptions options)
+        public GitRevisionWalker(GitRevisionSetOptions options, GitRepository repository)
         {
             this.options = options;
-            Repository = options.Commits.Select(x => x.Repository).First();
+            Repository = repository;
         }
 
         public async IAsyncEnumerator<GitRevision> GetAsyncEnumerator(CancellationToken cancellationToken = default)

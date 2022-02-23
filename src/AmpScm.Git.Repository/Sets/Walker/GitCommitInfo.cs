@@ -51,7 +51,8 @@ namespace AmpScm.Git.Sets.Walker
 
                 var c = await r.ObjectRepository.Get<GitCommit>(Id);
 
-                _commit = c;
+                if (c != null)
+                    _commit = c;
                 return c?.ParentIds ?? Enumerable.Empty<GitId>();
             }
             else

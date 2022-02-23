@@ -318,7 +318,14 @@ namespace AmpScm.Tests
                 IQueryable v = (IQueryable)prop.GetValue(instance)!;
                 Assert.IsNotNull(v, $"{typeof(T).Name}.{prop.Name} is not null");
 
-                typeof(GitRepositoryTests).GetMethod("WalkSets_TestSet")!.MakeGenericMethod(typeof(T), v.ElementType).Invoke(this, new object[] { v, prop, walked });
+                try
+                {
+                    typeof(GitRepositoryTests).GetMethod("WalkSets_TestSet")!.MakeGenericMethod(typeof(T), v.ElementType).Invoke(this, new object[] { v, prop, walked });
+                }
+                catch(Exception e)
+                {
+                    throw new TargetInvocationException($"When trying the {typeof(T).Name}.{prop.Name} property", e);
+                }
             }
 
             foreach (var prop in typeof(T).GetProperties().Where(prop => !typeof(IQueryable).IsAssignableFrom(prop.PropertyType) && !prop.GetIndexParameters().Any()))
@@ -333,9 +340,16 @@ namespace AmpScm.Tests
                     throw new AssertFailedException($"Fetching {typeof(T).Name}.{prop.Name} works", e);
                 }
 
-                if (ob != null)
+                try
                 {
-                    typeof(GitRepositoryTests).GetMethod(nameof(WalkSets_TestType))!.MakeGenericMethod(prop.PropertyType).Invoke(this, new object[] { ob, walked });
+                    if (ob != null)
+                    {
+                        typeof(GitRepositoryTests).GetMethod(nameof(WalkSets_TestType))!.MakeGenericMethod(prop.PropertyType).Invoke(this, new object[] { ob, walked });
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new TargetInvocationException($"When trying the {typeof(T).Name}.{prop.Name} property", e);
                 }
             }
         }
