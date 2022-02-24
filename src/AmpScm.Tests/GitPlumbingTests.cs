@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AmpScm.Git;
 using AmpScm.Git.Client.Plumbing;
@@ -24,7 +25,7 @@ namespace AmpScm.Tests
         {
             using (var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "GitHelp")))
             {
-                string commandList = await repo.GetPlumbing().GitHelp(new GitHelpArgs { Command = "-a" });
+                string commandList = await repo.GetPlumbing().Help(new GitHelpArgs { Command = "-a" });
 
                 var implementedCommands = new HashSet<string>(
                     typeof(GitPlumbing).GetMethods()
@@ -97,6 +98,33 @@ namespace AmpScm.Tests
                             }
                         }
                     }
+                }
+            }
+        }
+
+        public static IEnumerable<object[]> PlumbingCommandArgs => typeof(GitPlumbing).GetMethods().Where(x => x.GetCustomAttribute<GitCommandAttribute>() != null).Select(x => new[] { x });
+
+        static Regex reArgument = new Regex(@"--?[a-z0-9][a-z0-9-]*(\s*\<[^>]+\>)?(\s*[,|]\s*--?[a-z0-9][a-z0-9-]\s*(\<[^>]+\>)?)*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        [TestMethod]
+        [DynamicData(nameof(PlumbingCommandArgs))]
+        public async Task VerifyUsage(MethodInfo m)
+        {
+            var gca = m.GetCustomAttribute<GitCommandAttribute>() ?? throw new AssertFailedException("Attribute not found");
+
+            using (var repo = GitRepository.Open(Environment.CurrentDirectory))
+            {
+                var args = await repo.GetPlumbing().HelpUsage(gca.Name);
+
+                IEnumerable<string> argInfo = args.SkipWhile(x=>!string.IsNullOrWhiteSpace(x)).Where(x=>x.StartsWith("    -")).Select(x=>x.TrimStart());
+
+                foreach (var line in argInfo)
+                {
+                    var ma = reArgument.Match(line);
+
+                    if (!ma.Success)
+                        TestContext.WriteLine(line);
+                    else
+                        TestContext.WriteLine(ma.ToString());
                 }
             }
         }
