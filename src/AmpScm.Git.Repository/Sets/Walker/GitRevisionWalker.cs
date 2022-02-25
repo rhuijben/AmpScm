@@ -10,7 +10,7 @@ namespace AmpScm.Git.Sets.Walker
     internal class GitRevisionWalker : IAsyncEnumerable<GitRevision>
     {
         private GitRevisionSetOptions options;
-        HashSet<GitCommitInfo> Commits { get; } = new HashSet<GitCommitInfo>();
+        Dictionary<GitId, GitCommitInfo> Commits { get; } = new Dictionary<GitId, GitCommitInfo>();
         GitRepository Repository {get;}
 
         public GitRevisionWalker(GitRevisionSetOptions options, GitRepository repository)
@@ -40,7 +40,7 @@ namespace AmpScm.Git.Sets.Walker
         {
             Stack<GitCommitInfo> stack = new Stack<GitCommitInfo>();
 
-            foreach(var v in Commits.ToList())
+            foreach(var v in Commits.Values)
             {
                 stack.Push(v);
             }
@@ -98,10 +98,9 @@ namespace AmpScm.Git.Sets.Walker
 
         GitCommitInfo EnsureCommit(GitId id)
         {
-            var tst = new GitCommitInfo(id, Repository);
-            if (!Commits.TryGetValue(tst, out var v))
+            if (!Commits.TryGetValue(id, out var v))
             {
-                Commits.Add(v = tst);
+                Commits.Add(id, v = new GitCommitInfo(id, Repository));
             }
             return v;
         }
@@ -113,12 +112,10 @@ namespace AmpScm.Git.Sets.Walker
                 if (v == null)
                     return;
 
-                GitCommitInfo info = new GitCommitInfo(v);
-
-                if (Commits.Contains(info))
+                if (Commits.ContainsKey(v.Id))
                     return;
 
-                Commits.Add(info);
+                Commits.Add(v.Id, new GitCommitInfo(v.Id, Repository));
             }
         }
     }
