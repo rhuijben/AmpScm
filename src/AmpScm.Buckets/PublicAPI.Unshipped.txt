@@ -47,6 +47,7 @@ AmpScm.Buckets.BucketPollBytes.Position.get -> long?
 AmpScm.Buckets.BucketPollBytes.ReadAsync(int readBytes) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 AmpScm.Buckets.BucketPollBytes.this[int index].get -> byte
 AmpScm.Buckets.Specialized.CreateHashBucket.PollAsync(int minRequested = 1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+AmpScm.Buckets.Specialized.NetBitConverter
 AmpScm.Buckets.Specialized.ProxyBucket
 AmpScm.Buckets.Specialized.ProxyBucket.ProxyBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Specialized.ProxyBucket<TBucket>
@@ -167,13 +168,10 @@ static AmpScm.Buckets.BucketExtensions.AsReader(this AmpScm.Buckets.Bucket! self
 static AmpScm.Buckets.BucketExtensions.AsStream(this AmpScm.Buckets.Bucket! self) -> System.IO.Stream!
 static AmpScm.Buckets.BucketExtensions.AsStream(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Interfaces.IBucketWriter! writer) -> System.IO.Stream!
 static AmpScm.Buckets.BucketExtensions.Decompress(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Specialized.BucketCompressionAlgorithm algorithm) -> AmpScm.Buckets.Bucket!
-static AmpScm.Buckets.BucketExtensions.GetBytesReversedIfLittleEndian(this byte[]! array, int index, int length) -> byte[]!
 static AmpScm.Buckets.BucketExtensions.NoClose(this AmpScm.Buckets.Bucket! bucket, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
 static AmpScm.Buckets.BucketExtensions.PollAsync(this AmpScm.Buckets.Bucket! self, int minRequested = 1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 static AmpScm.Buckets.BucketExtensions.PollReadAsync(this AmpScm.Buckets.Bucket! self, int minRequested = 1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketPollBytes!>
 static AmpScm.Buckets.BucketExtensions.Prepend(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.Bucket! newFirst) -> AmpScm.Buckets.Bucket!
-static AmpScm.Buckets.BucketExtensions.ReverseInPlace(this byte[]! array) -> byte[]!
-static AmpScm.Buckets.BucketExtensions.ReverseInPlaceIfLittleEndian(this byte[]! array) -> byte[]!
 static AmpScm.Buckets.BucketExtensions.SeekOnReset(this AmpScm.Buckets.Bucket! bucket) -> AmpScm.Buckets.Bucket!
 static AmpScm.Buckets.BucketExtensions.Skip(this AmpScm.Buckets.Bucket! self, long firstPosition, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
 static AmpScm.Buckets.BucketExtensions.Take(this AmpScm.Buckets.Bucket! self, long limit, bool alwaysWrap = false) -> AmpScm.Buckets.Bucket!
@@ -185,13 +183,36 @@ static AmpScm.Buckets.BucketExtensions.WithTlsClientFor<TBucket>(this TBucket! b
 static AmpScm.Buckets.BucketExtensions.Wrap(this AmpScm.Buckets.Bucket! self) -> AmpScm.Buckets.Bucket!
 static AmpScm.Buckets.FileBucket.OpenRead(string! path) -> AmpScm.Buckets.FileBucket!
 static AmpScm.Buckets.FileBucket.OpenRead(string! path, bool forAsync) -> AmpScm.Buckets.FileBucket!
+static AmpScm.Buckets.Specialized.NetBitConverter.FromNetwork(int value) -> int
+static AmpScm.Buckets.Specialized.NetBitConverter.FromNetwork(long value) -> long
+static AmpScm.Buckets.Specialized.NetBitConverter.FromNetwork(short value) -> short
+static AmpScm.Buckets.Specialized.NetBitConverter.FromNetwork(uint value) -> uint
+static AmpScm.Buckets.Specialized.NetBitConverter.FromNetwork(ulong value) -> ulong
+static AmpScm.Buckets.Specialized.NetBitConverter.FromNetwork(ushort value) -> ushort
+static AmpScm.Buckets.Specialized.NetBitConverter.GetBytes(int value) -> byte[]!
+static AmpScm.Buckets.Specialized.NetBitConverter.GetBytes(long value) -> byte[]!
+static AmpScm.Buckets.Specialized.NetBitConverter.GetBytes(short value) -> byte[]!
+static AmpScm.Buckets.Specialized.NetBitConverter.GetBytes(uint value) -> byte[]!
+static AmpScm.Buckets.Specialized.NetBitConverter.GetBytes(ulong value) -> byte[]!
+static AmpScm.Buckets.Specialized.NetBitConverter.GetBytes(ushort value) -> byte[]!
+static AmpScm.Buckets.Specialized.NetBitConverter.ToInt16(byte[]! value, int startOffset) -> short
+static AmpScm.Buckets.Specialized.NetBitConverter.ToInt32(byte[]! value, int startOffset) -> int
+static AmpScm.Buckets.Specialized.NetBitConverter.ToInt64(byte[]! value, int startOffset) -> long
+static AmpScm.Buckets.Specialized.NetBitConverter.ToNetwork(int value) -> int
+static AmpScm.Buckets.Specialized.NetBitConverter.ToNetwork(long value) -> long
+static AmpScm.Buckets.Specialized.NetBitConverter.ToNetwork(short value) -> short
+static AmpScm.Buckets.Specialized.NetBitConverter.ToNetwork(uint value) -> uint
+static AmpScm.Buckets.Specialized.NetBitConverter.ToNetwork(ulong value) -> ulong
+static AmpScm.Buckets.Specialized.NetBitConverter.ToNetwork(ushort value) -> ushort
+static AmpScm.Buckets.Specialized.NetBitConverter.ToUInt16(byte[]! value, int startOffset) -> ushort
+static AmpScm.Buckets.Specialized.NetBitConverter.ToUInt32(byte[]! value, int startOffset) -> uint
+static AmpScm.Buckets.Specialized.NetBitConverter.ToUInt64(byte[]! value, int startOffset) -> ulong
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.CharCount(this AmpScm.Buckets.BucketEol eol) -> int
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.Crc32(this AmpScm.Buckets.Bucket! self, System.Action<int>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.MD5(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadFullAsync(this AmpScm.Buckets.Bucket! self, int requested) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadUntilAsync(this AmpScm.Buckets.Bucket! self, byte b) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadUntilEolFullAsync(this AmpScm.Buckets.Bucket! self, AmpScm.Buckets.BucketEol acceptableEols, AmpScm.Buckets.BucketEolState? eolState, int requested = 2147483647) -> System.Threading.Tasks.ValueTask<(AmpScm.Buckets.BucketBytes, AmpScm.Buckets.BucketEol)>
-static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReverseIfLittleEndian<T>(this System.Collections.Generic.IEnumerable<T>! self) -> System.Collections.Generic.IEnumerable<T>!
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.SHA1(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.SHA256(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
 static AmpScm.Buckets.ValueOrEof<T>.implicit operator AmpScm.Buckets.ValueOrEof<T>(T value) -> AmpScm.Buckets.ValueOrEof<T>

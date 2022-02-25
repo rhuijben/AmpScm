@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Git.Objects
 {
@@ -86,7 +87,7 @@ namespace AmpScm.Git.Objects
             _chunks = Enumerable.Range(0, chunkCount + 1).Select(i => new Chunk
             {
                 Name = (i < chunkCount) ? Encoding.ASCII.GetString(chunkTable, 12 * i, 4) : null,
-                Position = BitConverter.ToInt64(chunkTable.GetBytesReversedIfLittleEndian(12 * i + 4, sizeof(long)), 0)
+                Position = NetBitConverter.ToInt64(chunkTable, 12 * i + 4)
             }).ToArray();
 
             for (int i = 0; i < chunkCount; i++)
@@ -99,7 +100,7 @@ namespace AmpScm.Git.Objects
             if (ReadFromChunk("OIDF", 0, fanOut) != fanOut.Length)
                 return;
 
-            _fanOut = Enumerable.Range(0, 256).Select(i => BitConverter.ToUInt32(fanOut.GetBytesReversedIfLittleEndian(sizeof(int) * i, sizeof(int)), 0)).ToArray();
+            _fanOut = Enumerable.Range(0, 256).Select(i => NetBitConverter.ToUInt32(fanOut, sizeof(int) * i)).ToArray();
         }
 
 
@@ -146,9 +147,9 @@ namespace AmpScm.Git.Objects
                     return null;
 
                 // commitData now contains the root hash, 2 parent indexes and the topological level
-                uint parent0 = BitConverter.ToUInt32(commitData.GetBytesReversedIfLittleEndian(hashLength, sizeof(uint)), 0);
-                uint parent1 = BitConverter.ToUInt32(commitData.GetBytesReversedIfLittleEndian(hashLength + sizeof(uint), sizeof(uint)), 0);
-                ulong chainLevel = BitConverter.ToUInt64(commitData.GetBytesReversedIfLittleEndian(hashLength + 2 * sizeof(uint), sizeof(ulong)), 0);
+                uint parent0 = NetBitConverter.ToUInt32(commitData, hashLength);
+                uint parent1 = NetBitConverter.ToUInt32(commitData, hashLength + sizeof(uint));
+                ulong chainLevel = NetBitConverter.ToUInt64(commitData, hashLength + 2 * sizeof(uint));
 
                 GitId[] parents;
 
@@ -167,7 +168,7 @@ namespace AmpScm.Git.Objects
                     int? stopAfter = null;
                     parents = new[] { parent0 }.Concat(
                         Enumerable.Range(0, len)
-                            .Select(i => BitConverter.ToUInt32(extraParents.GetBytesReversedIfLittleEndian(i * sizeof(uint), sizeof(uint)), 0))
+                            .Select(i => NetBitConverter.ToUInt32(extraParents, i * sizeof(uint)))
                             .TakeWhile((v, i) => { if (i > stopAfter) return false; else if ((v & 0x80000000) != 0) { stopAfter = i; }; return true; }))
                             .Select(v => GetOid(v & 0x7FFFFFFF)).ToArray();
                 }

@@ -189,7 +189,7 @@ namespace AmpScm.Git
                     await _p.WaitForExitAsync();
 
                     if (_expectedResults != null ? !_expectedResults.Contains(_p.ExitCode) : _p.ExitCode != 0)
-                        throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation");
+                        throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation: {_errText}");
 
                     _p.Dispose();
 

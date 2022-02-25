@@ -5,56 +5,14 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Buckets.Git
 {
     [AttributeUsage(AttributeTargets.Field)]
     sealed class NetworkOrderAttribute : Attribute
     {
-        internal static int ToHost(int value)
-        {
-            return unchecked((int)ToHost((uint)value));
-        }
-
-        internal static uint ToHost(uint value)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                // TODO: Optimize
-                return BitConverter.ToUInt32(BitConverter.GetBytes(value).ReverseInPlace(), 0);
-            }
-            return value;
-        }
-
-        internal static long ToHost(long value)
-        {
-            return unchecked((long)ToHost((ulong)value));
-        }
-
-        internal static ulong ToHost(ulong value)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                // TODO: Optimize
-                return BitConverter.ToUInt64(BitConverter.GetBytes(value).ReverseInPlace(), 0);
-            }
-            return value;
-        }
-
-        internal static short ToHost(short value)
-        {
-            return unchecked((short)ToHost((short)value));
-        }
-
-        internal static ushort ToHost(ushort value)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                // TODO: Optimize
-                return BitConverter.ToUInt16(BitConverter.GetBytes(value).ReverseInPlace(), 0);
-            }
-            return value;
-        }
+        
     }
 
     [DebuggerDisplay("Result={Result}")]
@@ -107,17 +65,17 @@ namespace AmpScm.Buckets.Git
                     var dd = f.GetValue(r);
 
                     if (dd is int di)
-                        dd = NetworkOrderAttribute.ToHost(di);
+                        dd = NetBitConverter.FromNetwork(di);
                     else if (dd is long dl)
-                        dd = NetworkOrderAttribute.ToHost(dl);
+                        dd = NetBitConverter.FromNetwork(dl);
                     else if (dd is short ds)
-                        dd = NetworkOrderAttribute.ToHost(ds);
+                        dd = NetBitConverter.FromNetwork(ds);
                     else if (dd is uint dui)
-                        dd = NetworkOrderAttribute.ToHost(dui);
+                        dd = NetBitConverter.FromNetwork(dui);
                     else if (dd is ulong dul)
-                        dd = NetworkOrderAttribute.ToHost(dul);
+                        dd = NetBitConverter.FromNetwork(dul);
                     else if (dd is short dus)
-                        dd = NetworkOrderAttribute.ToHost(dus);
+                        dd = NetBitConverter.FromNetwork(dus);
                     else
                         continue;
 

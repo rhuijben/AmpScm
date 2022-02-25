@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
+using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Git.Objects
 {
@@ -23,16 +24,6 @@ namespace AmpScm.Git.Objects
         {
             _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
             _idType = idType;
-        }
-
-        internal static uint ToHost(uint value)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                // TODO: Optimize
-                return BitConverter.ToUInt32(BitConverter.GetBytes(value).Reverse().ToArray(), 0);
-            }
-            return value;
         }
 
         void Init()
@@ -80,7 +71,7 @@ namespace AmpScm.Git.Objects
                         _fanOut = new uint[256];
                         for (int i = 0; i < 256; i++)
                         {
-                            _fanOut[i] = ToHost(BitConverter.ToUInt32(fanOut, i * 4));
+                            _fanOut[i] = NetBitConverter.ToUInt32(fanOut, i * 4);
                         }
                     }
                 }
@@ -201,12 +192,12 @@ namespace AmpScm.Git.Objects
         {
             if (_ver == 2)
             {
-                return ToHost(BitConverter.ToUInt32(offsetArray, index * 4));
+                return NetBitConverter.ToUInt32(offsetArray, index * 4);
             }
             else if (_ver == 1)
             {
                 // oidArray = offsetArray with chunks of [4-byte length, 20 or 32 byte oid]
-                return ToHost(BitConverter.ToUInt32(offsetArray, index * (4 + GitId.HashLength(_idType))));
+                return NetBitConverter.ToUInt32(offsetArray, index * (4 + GitId.HashLength(_idType)));
             }
             else
                 return uint.MaxValue;

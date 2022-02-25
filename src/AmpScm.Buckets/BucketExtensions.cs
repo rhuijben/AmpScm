@@ -230,39 +230,6 @@ namespace AmpScm.Buckets
             return new StreamReader(self.AsStream());
         }
 
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public static byte[] ReverseInPlace(this byte[] array)
-        {
-            if (array is null)
-                throw new ArgumentNullException(nameof(array));
-
-            // Use Array.Reverse() ?
-            for (int first = array.GetLowerBound(0), last = array.GetUpperBound(0);
-                first < last;
-                first++, last--)
-            {
-                var tmp = array[first];
-                array[first] = array[last];
-                array[last] = tmp;
-            }
-            return array;
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public static byte[] ReverseInPlaceIfLittleEndian(this byte[] array)
-        {
-            return BitConverter.IsLittleEndian ? ReverseInPlace(array) : array;
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public static byte[] GetBytesReversedIfLittleEndian(this byte[] array, int index, int length)
-        {
-            var bytes = new byte[length];
-            Array.Copy(array, index, bytes, 0, length);
-
-            return bytes.ReverseInPlaceIfLittleEndian();
-        }
-
 #if NETFRAMEWORK
         internal static string GetString(this System.Text.Encoding encoding, ReadOnlySpan<byte> bytes)
         {

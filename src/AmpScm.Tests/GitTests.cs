@@ -679,18 +679,18 @@ namespace AmpScm.Tests
 
             // Let's assume v2 pack index files
             Bucket index = new byte[] { 255, (byte)'t', (byte)'O', (byte)'c' }.AsBucket();
-            index += BitConverter.GetBytes((int)2).ReverseIfLittleEndian().ToArray().AsBucket();
+            index += NetBitConverter.GetBytes((int)2).AsBucket();
 
             // Fanout table
-            index += fanOut.SelectMany(x => BitConverter.GetBytes(x).ReverseIfLittleEndian()).ToArray().AsBucket();
+            index += fanOut.SelectMany(x => NetBitConverter.GetBytes(x)).ToArray().AsBucket();
             // Hashes
             index += new AggregateBucket(hashes.Keys.SelectMany(x => x).ToArray().AsBucket());
 
             TestContext.WriteLine($"CRCs start at {await index.ReadRemainingBytesAsync()}");
             // CRC32 values of packed data
-            index += new AggregateBucket(hashes.Values.Select(x => BitConverter.GetBytes(x.Item2).ReverseIfLittleEndian().ToArray().AsBucket()).ToArray());
+            index += new AggregateBucket(hashes.Values.Select(x => NetBitConverter.GetBytes(x.Item2).AsBucket()).ToArray());
             // File offsets
-            index += new AggregateBucket(hashes.Values.Select(x => BitConverter.GetBytes((uint)x.Item1).ReverseIfLittleEndian().ToArray().AsBucket()).ToArray());
+            index += new AggregateBucket(hashes.Values.Select(x => NetBitConverter.GetBytes((uint)x.Item1).AsBucket()).ToArray());
 
             index += fileChecksum.AsBucket();
 

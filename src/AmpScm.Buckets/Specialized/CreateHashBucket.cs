@@ -210,7 +210,7 @@ namespace AmpScm.Buckets.Specialized
 
             static byte[] UInt32ToBigEndianBytes(uint uint32)
             {
-                return BitConverter.GetBytes(uint32).ReverseInPlaceIfLittleEndian();
+                return NetBitConverter.GetBytes(uint32);
             }
 
             public static new Crc32 Create() => new Crc32();

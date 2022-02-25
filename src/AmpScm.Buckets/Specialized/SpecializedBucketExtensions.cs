@@ -29,15 +29,7 @@ namespace AmpScm.Buckets.Specialized
 
         public static CreateHashBucket Crc32(this Bucket self, Action<int> created)
         {
-            return new CreateHashBucket(self, CreateHashBucket.Crc32.Create(), (v) => created(BitConverter.ToInt32(v.ReverseIfLittleEndian().ToArray(), 0)));
-        }
-
-        public static IEnumerable<T> ReverseIfLittleEndian<T>(this IEnumerable<T> self)
-        {
-            if (BitConverter.IsLittleEndian)
-                return self.Reverse();
-            else
-                return self;
+            return new CreateHashBucket(self, CreateHashBucket.Crc32.Create(), (v) => created(NetBitConverter.ToInt32(v, 0)));
         }
 
         public async static ValueTask<BucketBytes> ReadFullAsync(this Bucket self, int requested)

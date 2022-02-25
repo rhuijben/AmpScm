@@ -589,5 +589,74 @@ namespace AmpScm.Tests
 
             return sb.ToString();
         }
+
+        [TestMethod]
+        [DataRow(typeof(short))]
+        [DataRow(typeof(ushort))]
+        [DataRow(typeof(int))]
+        [DataRow(typeof(uint))]
+        [DataRow(typeof(long))]
+        [DataRow(typeof(ulong))]
+        public void BitConverterTests(Type tp)
+        {
+            long v = 1;
+            bool restart = true;
+
+            for (int i = 0; i < 100; i++)
+            {
+                v *= 5;
+
+                object origValue;
+                try
+                {
+                    origValue = Convert.ChangeType(v, tp);
+                }
+                catch (OverflowException)
+                {
+                    if (restart)
+                    {
+                        restart = false;
+                        v = -1;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                var m = typeof(NetBitConverter).GetMethod(nameof(NetBitConverter.GetBytes), new[] { tp })!;
+
+                var bytes = (byte[])m.Invoke(null, new[] { origValue })!;
+
+
+                var m2 = typeof(BitConverter).GetMethod(nameof(BitConverter.GetBytes), new[] { tp })!;
+                var bytes2 = (byte[])m2.Invoke(null, new[] { origValue })!;
+
+
+                bytes2.ReverseInPlaceIfLittleEndian();
+
+                Assert.IsTrue(bytes.SequenceEqual(bytes2), $"Reversed of for {v}");
+
+
+                var rm = typeof(NetBitConverter).GetMethod("To" + tp.Name, new[] { typeof(byte[]), typeof(int) })!;
+                object v1 = rm.Invoke(null, new object[] { bytes, 0 })!;
+
+
+                var rm2 = typeof(BitConverter).GetMethod("To" + tp.Name, new[] { typeof(byte[]), typeof(int) })!;
+                object v2 = rm2.Invoke(null, new object[] { bytes, 0 })!;
+
+                long vv1 = Convert.ToInt64(v1);
+
+                Assert.AreEqual(v, vv1);
+
+                var th = typeof(NetBitConverter).GetMethod("FromNetwork", new[] { tp })!;
+                Assert.AreEqual(origValue, th.Invoke(null, new[] { th.Invoke(null, new[] { origValue }) }));
+
+                var v3 = th.Invoke(null, new[] { v2 });
+
+                Assert.AreEqual(v1, v3);
+
+
+            }
+        }
     }
 }

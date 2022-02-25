@@ -77,5 +77,23 @@ namespace AmpScm.Tests
         {
             TestContext.WriteLine("");
         }
+
+
+        public static byte[] ReverseInPlaceIfLittleEndian(this byte[] array)
+        {
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(array);
+
+            return array;
+        }
+
+        public static byte[] GetBytesReversedIfLittleEndian(this byte[] array, int index, int length)
+        {
+            var bytes = new byte[length];
+            Array.Copy(array, index, bytes, 0, length);
+
+            return bytes.ReverseInPlaceIfLittleEndian();
+        }
+
     }
 }
