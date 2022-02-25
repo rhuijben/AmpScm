@@ -104,9 +104,16 @@ namespace AmpScm.Tests
 
         public static IEnumerable<object[]> PlumbingCommandArgs => typeof(GitPlumbing).GetMethods().Where(x => x.GetCustomAttribute<GitCommandAttribute>() != null).Select(x => new[] { x });
 
-        static Regex reArgument = new Regex(@"--?[a-z0-9][a-z0-9-]*(\s*\<[^>]+\>)?(\s*[,|]\s*--?[a-z0-9][a-z0-9-]\s*(\<[^>]+\>)?)*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static string PlumbingCommandName(MethodInfo mif, object[] args)
+        {
+            MethodInfo mm = args[0] as MethodInfo;
+            return mif.Name + "-" + mm?.DeclaringType?.Name + "." + mm?.Name;
+        }
+
+        static Regex reArgument = new Regex(@"--?[a-z0-9][a-z0-9-]*(\s*\<[^>]+\>)?(\s*[,|]\s*--?[a-z0-9][a-z0-9-]*\s*(\<[^>]+\>)?)*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         [TestMethod]
-        [DynamicData(nameof(PlumbingCommandArgs))]
+        [DynamicData(nameof(PlumbingCommandArgs), DynamicDataDisplayName = nameof(PlumbingCommandName))]
         public async Task VerifyUsage(MethodInfo m)
         {
             var gca = m.GetCustomAttribute<GitCommandAttribute>() ?? throw new AssertFailedException("Attribute not found");
