@@ -60,33 +60,25 @@ namespace AmpScm.Buckets.Protocols
             bucket.Append(enc.GetBytes((Method ?? "GET") + " ").AsBucket());
             bucket.Append(enc.GetBytes(RequestUri.GetComponents(UriComponents.PathAndQuery, UriFormat.UriEscaped)).AsBucket());
             bucket.Append(enc.GetBytes(" HTTP/1.1\r\n").AsBucket());
-            bucket.Append(enc.GetBytes("Host: ").AsBucket());
-            bucket.Append(enc.GetBytes(RequestUri.Host).AsBucket());
-            bucket.Append(enc.GetBytes("\r\n").AsBucket());
 
-            bucket.Append(CreateHeaders());
-            bucket.Append(enc.GetBytes("\r\n").AsBucket());
+            bucket.Append(CreateHeaders(RequestUri.Host));
 
             return bucket;
         }
 
-        protected virtual Bucket CreateHeaders()
+        protected virtual Bucket CreateHeaders(string hostName)
         {
             AggregateBucket bucket = new AggregateBucket();
             Encoding enc = Encoding.UTF8;
 
-            foreach (string key in Headers.Keys)
+            if (!Headers.Contains(HttpRequestHeader.Host))
             {
-                if (key.Equals("Host", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                bucket.Append(enc.GetBytes(key).AsBucket());
-                bucket.Append(enc.GetBytes(": ").AsBucket());
-                bucket.Append(enc.GetBytes(Headers[key]!.ToString()!).AsBucket());
+                bucket.Append(enc.GetBytes("Host: ").AsBucket());
+                bucket.Append(enc.GetBytes(RequestUri.Host).AsBucket());
                 bucket.Append(enc.GetBytes("\r\n").AsBucket());
             }
 
-            if (Headers[HttpRequestHeader.AcceptEncoding] == null)
+            if (!Headers.Contains(HttpRequestHeader.AcceptEncoding))
             {
 #if NETFRAMEWORK
                 bucket.Append(enc.GetBytes("Accept-Encoding: gzip, deflate\r\n").AsBucket());
@@ -94,6 +86,8 @@ namespace AmpScm.Buckets.Protocols
                 bucket.Append(enc.GetBytes("Accept-Encoding: gzip, deflate, br\r\n").AsBucket());
 #endif
             }
+
+            bucket.Append(Headers.ToByteArray().AsBucket()); // Includes the final \r\n to end the request headers
 
             return bucket;
         }

@@ -21,7 +21,7 @@ namespace AmpScm.Buckets
             set => throw new InvalidOperationException();
         }
 
-        public WebHeaderCollection Headers { get; } = new WebHeaderCollection();
+        public Http.WebHeaderCollection Headers { get; } = new Http.WebHeaderCollection();
 
         public string? ContentType
         {

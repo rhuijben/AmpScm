@@ -1,0 +1,221 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using BaseWhc = System.Net.WebHeaderCollection;
+
+namespace AmpScm.Buckets.Http
+{
+#pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
+    public sealed class WebHeaderCollection : System.Net.WebHeaderCollection, IEnumerable<string>, IDictionary<string, string>
+#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
+    {
+        public new KeysCollection Keys { get; }
+
+        bool ICollection<KeyValuePair<string, string>>.IsReadOnly => false;
+
+        ICollection<string> IDictionary<string, string>.Keys => Keys;
+        ICollection<string> IDictionary<string, string>.Values => new ValuesCollection(this);
+
+        public WebHeaderCollection()
+        {
+            Keys = new KeysCollection(this);
+        }
+
+        BaseWhc BaseWhc => this;
+
+        public new IEnumerator<string> GetEnumerator()
+        {
+            foreach(string s in BaseWhc.Keys)
+            {
+                yield return s;
+            }
+        }
+
+        public bool Contains(HttpRequestHeader requestHeader)
+        {
+            return base[requestHeader] != null;
+        }
+
+        public bool Contains(HttpResponseHeader responseHeader)
+        {
+            return base[responseHeader] != null;
+        }
+
+        public bool Contains(string header)
+        {
+            return base[header] != null;
+        }
+
+        bool IDictionary<string, string>.ContainsKey(string key)
+        {
+            return Contains(key);
+        }
+
+        bool IDictionary<string, string>.Remove(string key)
+        {
+            bool removed = Contains(key);
+            base.Remove(key);
+            return removed;
+        }
+
+        bool IDictionary<string, string>.TryGetValue(string key, out string value)
+        {
+            value = base[key]!;
+            return (value != null);            
+        }
+
+        void ICollection<KeyValuePair<string, string>>.Add(KeyValuePair<string, string> item)
+        {
+            base[item.Key] = item.Value;
+        }
+
+        bool ICollection<KeyValuePair<string, string>>.Contains(KeyValuePair<string, string> item)
+        {
+            return base[item.Key] == item.Value;
+        }
+
+        void ICollection<KeyValuePair<string, string>>.CopyTo(KeyValuePair<string, string>[] array, int arrayIndex)
+        {
+            foreach(var kv in (IEnumerable<KeyValuePair<string,string>>)this)
+            {
+                array[arrayIndex++] = kv;
+            }
+        }
+
+        bool ICollection<KeyValuePair<string, string>>.Remove(KeyValuePair<string, string> item)
+        {
+            var v = base[item.Key];
+            if (v == item.Value)
+            {
+                base.Remove(item.Key);
+                return true;
+            }
+            else
+                return false;
+        }
+
+        IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
+        {
+            foreach(string k in this)
+            { 
+                yield return new KeyValuePair<string, string>(k, base[k]!);
+            }
+        }
+
+        public new sealed class KeysCollection : IReadOnlyList<string>, ICollection<string>
+        {
+            readonly WebHeaderCollection _whc;
+            internal KeysCollection(WebHeaderCollection whc)
+            {
+                _whc = whc ?? throw new ArgumentNullException(nameof(whc));
+            }
+
+            BaseWhc BaseWhc => _whc;
+
+            public string this[int index] => BaseWhc.Keys[index]!;
+
+            public int Count => _whc.Count;
+
+            public bool IsReadOnly => true;
+
+            public void Add(string item)
+            {
+                throw new InvalidOperationException();
+            }
+
+            public void Clear()
+            {
+                throw new InvalidOperationException();
+            }
+
+            public bool Contains(string item)
+            {
+                return _whc.Contains(item);
+            }
+
+            public void CopyTo(string[] array, int arrayIndex)
+            {
+                ((ICollection)BaseWhc.Keys).CopyTo(array, arrayIndex);
+            }
+
+            public IEnumerator<string> GetEnumerator()
+            {
+                return _whc.GetEnumerator();
+            }
+
+            public bool Remove(string item)
+            {
+                bool v = _whc.Contains(item);
+                _whc.Remove(item);
+                return v;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return _whc.GetEnumerator();
+            }
+        }
+
+        sealed class ValuesCollection : IReadOnlyList<string>, ICollection<string>
+        {
+            readonly WebHeaderCollection _whc;
+            internal ValuesCollection(WebHeaderCollection whc)
+            {
+                _whc = whc ?? throw new ArgumentNullException(nameof(whc));
+            }
+
+            BaseWhc BaseWhc => _whc;
+
+            public string this[int index] => _whc[index]!;
+
+            public int Count => _whc.Count;
+
+            public bool IsReadOnly => true;
+
+            public void Add(string item)
+            {
+                throw new InvalidOperationException();
+            }
+
+            public void Clear()
+            {
+                throw new InvalidOperationException();
+            }
+
+            public bool Contains(string item)
+            {
+                return _whc.Contains(item);
+            }
+
+            public void CopyTo(string[] array, int arrayIndex)
+            {
+                foreach(string v in BaseWhc)
+                {
+                    array[arrayIndex++] = BaseWhc[v]!;
+                }
+            }
+
+            public IEnumerator<string> GetEnumerator()
+            {
+                foreach (string v in BaseWhc)
+                {
+                    yield return BaseWhc[v]!;
+                }
+            }
+
+            public bool Remove(string item)
+            {
+                throw new InvalidOperationException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+    }
+}

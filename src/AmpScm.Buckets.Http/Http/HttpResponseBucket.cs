@@ -10,7 +10,6 @@ namespace AmpScm.Buckets.Http
 {
     public class HttpResponseBucket : ResponseBucket
     {
-        bool _readStatus;
         bool _readHeaders;
         BucketEolState? _state;
         Bucket ? _reader;
@@ -103,7 +102,7 @@ namespace AmpScm.Buckets.Http
             if (_readHeaders)
                 return;
 
-            if (!_readStatus)
+            if (!HttpStatus.HasValue)
                 await ReadStatus();
 
             ResponseHeaders ??= new WebHeaderCollection();
@@ -122,10 +121,10 @@ namespace AmpScm.Buckets.Http
             _readHeaders = true;
         }
 
-        public virtual async ValueTask ReadStatus()
+        public async ValueTask<int> ReadStatus()
         {
-            if (_readStatus)
-                return;
+            if (HttpStatus.HasValue)
+                return HttpStatus.Value!;
 
             _state = new BucketEolState();
             var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.AnyEol, _state);
@@ -145,7 +144,7 @@ namespace AmpScm.Buckets.Http
                 throw new HttpBucketException($"No Proper HTTP status: {line}");
 
             HttpMessage = parts[2];
-            _readStatus = true;
+            return status;
         }
     }
 }
