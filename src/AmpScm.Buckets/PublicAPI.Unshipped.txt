@@ -28,8 +28,9 @@ AmpScm.Buckets.SocketBucket.ShutdownAsync() -> System.Threading.Tasks.ValueTask
 AmpScm.Buckets.SocketBucket.SocketBucket(System.Net.Sockets.Socket! socket, int bufferSize = 16384) -> void
 AmpScm.Buckets.SocketBucket.Write(AmpScm.Buckets.Bucket! bucket) -> void
 AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
-AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.Brotli = 2 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
+AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.Brotli = 3 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
 AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.Deflate = 0 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
+AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.GZip = 2 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
 AmpScm.Buckets.Specialized.BucketCompressionAlgorithm.ZLib = 1 -> AmpScm.Buckets.Specialized.BucketCompressionAlgorithm
 AmpScm.Buckets.Specialized.CreateHashBucket
 AmpScm.Buckets.Specialized.CreateHashBucket.CreateHashBucket(AmpScm.Buckets.Bucket! inner, System.Security.Cryptography.HashAlgorithm! hasher) -> void

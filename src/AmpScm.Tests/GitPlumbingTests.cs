@@ -106,7 +106,7 @@ namespace AmpScm.Tests
 
         public static string PlumbingCommandName(MethodInfo mif, object[] args)
         {
-            MethodInfo mm = args[0] as MethodInfo;
+            MethodInfo mm = (MethodInfo)args[0];
             return mif.Name + "-" + mm?.DeclaringType?.Name + "." + mm?.Name;
         }
 

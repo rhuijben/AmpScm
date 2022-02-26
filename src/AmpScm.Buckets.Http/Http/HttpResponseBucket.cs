@@ -8,12 +8,13 @@ using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Buckets.Http
 {
-    class HttpResponseBucket : ResponseBucket
+    public class HttpResponseBucket : ResponseBucket
     {
         bool _readStatus;
         bool _readHeaders;
         BucketEolState? _state;
         Bucket ? _reader;
+        private bool _doneAtEof;
 
         public string? HttpVersion { get; private set; }
         public int? HttpStatus { get; private set; }
@@ -35,18 +36,54 @@ namespace AmpScm.Buckets.Http
             if (_reader == null)
             {
                 var rdr = Inner;
+                bool chunked = false;
+                bool allowNext = false;
 
+                // Transfer-Encoding, aka Hop by hop encoding. Typically 'chunked'
                 if (ResponseHeaders[HttpResponseHeader.TransferEncoding] is string te)
                 {
-                    GC.KeepAlive(te);
+                    foreach(var tEnc in te.Split(new[] { ',' }))
+                    {
+                        if (string.Equals(tEnc, "chunked", StringComparison.OrdinalIgnoreCase))
+                        {
+                            allowNext = chunked = true;
+                            rdr = new HttpDechunkBucket(rdr, true);
+                        }
+                    }
                 }
 
-                if (ResponseHeaders[HttpResponseHeader.ContentLength] is string cl
+                // RFC 7231 specifies that we should determine the message length via Transfer-Encoding
+                // chunked, when both chunked and Content-Length are passed
+                if (!chunked && ResponseHeaders[HttpResponseHeader.ContentLength] is string cl
                     && long.TryParse(cl, out var contentLength) && contentLength >= 0)
                 {
-                    rdr = rdr.Take(contentLength);
+                    rdr = rdr.Take(contentLength, true).NoClose();
+                    allowNext = true;
                 }
 
+                // Content-Encoding, aka end-to-end encoding. Typically 'gzip'
+                if (ResponseHeaders[HttpResponseHeader.ContentEncoding] is string ce)
+                {
+                    foreach (var cEnc in ce.Split(new[] { ',' }))
+                    {
+                        if (string.Equals(cEnc, "gzip", StringComparison.OrdinalIgnoreCase))
+                        {
+                            rdr = rdr.Decompress(BucketCompressionAlgorithm.GZip);
+                        }
+                        else if (string.Equals(cEnc, "deflate", StringComparison.OrdinalIgnoreCase))
+                        {
+                            rdr = rdr.Decompress(BucketCompressionAlgorithm.Deflate);
+                        }
+#if !NETFRAMEWORK
+                        else if (string.Equals(cEnc, "br", StringComparison.OrdinalIgnoreCase))
+                        {
+                            rdr = rdr.Decompress(BucketCompressionAlgorithm.Brotli);
+                        }
+#endif
+                    }
+                }
+
+                _doneAtEof = !allowNext;
                 _reader = rdr;
             }
 

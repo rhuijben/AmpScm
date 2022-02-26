@@ -51,17 +51,17 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        internal override ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
         {
             var name = oid.ToString();
 
             string path = Path.Combine(objectsDir, name.Substring(0, 2), name.Substring(2));
 
             if (!File.Exists(path))
-                return null;
+                return default;
 
             var fileReader = FileBucket.OpenRead(path);
-            return new GitObjectFileBucket(fileReader);
+            return new ValueTask<GitObjectBucket?>(new GitObjectFileBucket(fileReader));
         }
 
         public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()

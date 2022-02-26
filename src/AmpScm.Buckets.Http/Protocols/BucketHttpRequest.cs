@@ -82,8 +82,17 @@ namespace AmpScm.Buckets.Protocols
 
                 bucket.Append(enc.GetBytes(key).AsBucket());
                 bucket.Append(enc.GetBytes(": ").AsBucket());
-                bucket.Append(enc.GetBytes(Headers[key].ToString()!).AsBucket());
+                bucket.Append(enc.GetBytes(Headers[key]!.ToString()!).AsBucket());
                 bucket.Append(enc.GetBytes("\r\n").AsBucket());
+            }
+
+            if (Headers[HttpRequestHeader.AcceptEncoding] == null)
+            {
+#if NETFRAMEWORK
+                bucket.Append(enc.GetBytes("Accept-Encoding: gzip, deflate\r\n").AsBucket());
+#else
+                bucket.Append(enc.GetBytes("Accept-Encoding: gzip, deflate, br\r\n").AsBucket());
+#endif
             }
 
             return bucket;
