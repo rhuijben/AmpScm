@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Git.Buckets;
 using AmpScm.Buckets.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -17,7 +18,7 @@ namespace AmpScm.Tests
     {
         public TestContext TestContext { get; set; } = null!;
 
- 
+
 
         [TestMethod]
         public async Task GetGitHubHome()
@@ -35,15 +36,14 @@ namespace AmpScm.Tests
 
             while (!(bb = await result.ReadAsync()).IsEof)
             {
-                if (first)
+                if (first && result is HttpResponseBucket hrb)
                 {
-                    if (result is HttpResponseBucket hrb)
+                    TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
+                    foreach (string h in hrb.ResponseHeaders)
                     {
-                        foreach (string h in hrb.ResponseHeaders)
-                        {
-                            TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
-                        }
+                        TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
                     }
+                    TestContext.WriteLine();
                     first = false;
                 }
 
@@ -71,15 +71,127 @@ namespace AmpScm.Tests
 
             while (!(bb = await result.ReadAsync()).IsEof)
             {
-                if (first)
+                if (first && result is HttpResponseBucket hrb)
                 {
-                    if (result is HttpResponseBucket hrb)
+                    TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
+                    foreach (string h in hrb.ResponseHeaders)
                     {
-                        foreach(string h in hrb.ResponseHeaders)
-                        {
-                            TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
-                        }
+                        TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
                     }
+                    TestContext.WriteLine();
+                    first = false;
+                }
+                var t = bb.ToUTF8String();
+                len += bb.Length;
+                TestContext.WriteLine(t);
+                total += t;
+            }
+        }
+
+        [TestMethod]
+        public async Task GetGitInfoV1()
+        {
+            using var br = BucketWebRequest.Create($"https://github.com/rhuijben/tt-parser.git/info/refs?service=git-upload-pack");
+
+            br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
+            //br.Headers["Git-Protocol"] = "version=2";
+            var result = await br.GetResponseAsync();
+
+            BucketBytes bb;
+            string total = "";
+            int len = 0;
+            bool first = true;
+
+            var pkt = new GitPacketBucket(result);
+
+            while (!(bb = await pkt.ReadFullPacket()).IsEof)
+            {
+                if (first && result is HttpResponseBucket hrb)
+                {
+                    TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
+                    foreach (string h in hrb.ResponseHeaders)
+                    {
+                        TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
+                    }
+                    TestContext.WriteLine();
+
+                    first = false;
+                }
+
+                TestContext.WriteLine($"-- {pkt.CurrentPacketLength} --");
+
+                var t = bb.ToUTF8String();
+                len += bb.Length;
+                TestContext.WriteLine(t);
+                total += t;
+            }
+        }
+
+        [TestMethod]
+        public async Task GetGitInfoV2()
+        {
+            using var br = BucketWebRequest.Create($"https://github.com/rhuijben/tt-parser.git/info/refs?service=git-upload-pack");
+
+            br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
+            br.Headers["Git-Protocol"] = "version=2";
+            var result = await br.GetResponseAsync();
+
+            BucketBytes bb;
+            string total = "";
+            int len = 0;
+            bool first = true;
+
+            var pkt = new GitPacketBucket(result);
+
+            while (!(bb = await pkt.ReadFullPacket()).IsEof)
+            {
+                if (first && result is HttpResponseBucket hrb)
+                {
+                    TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
+                    foreach (string h in hrb.ResponseHeaders)
+                    {
+                        TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
+                    }
+                    TestContext.WriteLine();
+
+                    first = false;
+                }
+
+                TestContext.WriteLine($"-- {pkt.CurrentPacketLength} --");
+
+                var t = bb.ToUTF8String();
+                len += bb.Length;
+                TestContext.WriteLine(t);
+                total += t;
+            }
+        }
+
+        [TestMethod]
+        public async Task GetGitInfoV2Auth()
+        {
+            using var br = BucketWebRequest.Create($"https://github.com/rhuijben/asd-admin-css.git/info/refs?service=git-upload-pack");
+
+            br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
+            br.Headers["Git-Protocol"] = "version=2";
+            var result = await br.GetResponseAsync();
+
+            BucketBytes bb;
+            string total = "";
+            int len = 0;
+            bool first = true;
+
+            var pkt = new GitPacketBucket(result);
+
+            while (!(bb = await result.ReadAsync()).IsEof)
+            {
+                if (first && result is HttpResponseBucket hrb)
+                {
+                    TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
+                    foreach (string h in hrb.ResponseHeaders)
+                    {
+                        TestContext.WriteLine($"{h}: {hrb.ResponseHeaders[h]}");
+                    }
+                    TestContext.WriteLine();
                     first = false;
                 }
                 var t = bb.ToUTF8String();
