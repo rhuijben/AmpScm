@@ -15,10 +15,13 @@ namespace AmpScm.Git.Objects
     {
         protected GitRepository Repository { get; }
 
-        protected GitObjectRepository(GitRepository repository)
+        protected GitObjectRepository(GitRepository repository, string key)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            Key = key ?? throw new ArgumentNullException(nameof(key));
         }
+
+        internal virtual string Key { get; }
 
         public virtual IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
             where TGitObject : GitObject

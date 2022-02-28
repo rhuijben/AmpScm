@@ -9,7 +9,16 @@ AmpScm.Buckets.BucketBytes.ToUTF8String(AmpScm.Buckets.BucketEol eol) -> string!
 AmpScm.Buckets.BucketBytes.ToUTF8String(int position, int length) -> string!
 AmpScm.Buckets.BucketBytes.ToUTF8String(int position, int length, AmpScm.Buckets.BucketEol eol) -> string!
 AmpScm.Buckets.BucketPollBytes.BucketPollBytes(AmpScm.Buckets.Bucket! bucket, AmpScm.Buckets.BucketBytes data, int alreadyRead) -> void
+AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs
+AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs.Password.get -> string?
+AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs.Password.set -> void
+AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs.Username.get -> string?
+AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs.Username.set -> void
+AmpScm.Buckets.Client.BucketAuthenticationEventArgs
+AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Continue.get -> bool
+AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Continue.set -> void
 AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Failed -> System.EventHandler<AmpScm.Buckets.Client.BucketAuthenticationEventArgs!>?
+AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Handled.get -> bool
 AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Handled.set -> void
 AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Realm.get -> string!
 AmpScm.Buckets.Client.BucketAuthenticationEventArgs.Succeeded -> System.EventHandler<AmpScm.Buckets.Client.BucketAuthenticationEventArgs!>?
@@ -42,10 +51,11 @@ AmpScm.Buckets.Client.BucketWebRequest.PreAuthenticate.get -> bool
 AmpScm.Buckets.Client.BucketWebRequest.PreAuthenticate.set -> void
 AmpScm.Buckets.Client.BucketWebRequest.RequestUri.get -> System.Uri!
 AmpScm.Buckets.Client.Http.HttpResponseBucket
+AmpScm.Buckets.Client.Http.HttpResponseBucket.HttpMessage.get -> string?
 AmpScm.Buckets.Client.Http.HttpResponseBucket.HttpStatus.get -> int?
 AmpScm.Buckets.Client.Http.HttpResponseBucket.HttpVersion.get -> string?
+AmpScm.Buckets.Client.Http.HttpResponseBucket.ReadStatusAsync() -> System.Threading.Tasks.ValueTask<int>
 AmpScm.Buckets.Client.Http.HttpResponseBucket.Request.get -> AmpScm.Buckets.Client.Protocols.HttpBucketRequest!
-AmpScm.Buckets.Client.Protocols.BucketHttpRequest
 AmpScm.Buckets.Client.ResponseBucket
 AmpScm.Buckets.Client.ResponseBucket.Request.get -> AmpScm.Buckets.Client.BucketWebRequest!
 AmpScm.Buckets.Client.ResponseBucket.ResponseBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Buckets.Client.BucketWebRequest! request) -> void
@@ -162,7 +172,6 @@ override AmpScm.Buckets.Client.Http.HttpResponseBucket.ReadAsync(int requested =
 override AmpScm.Buckets.Client.Http.HttpResponseBucket.ReadHeaders() -> System.Threading.Tasks.ValueTask
 override AmpScm.Buckets.Client.Http.HttpResponseBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
 override AmpScm.Buckets.Client.Http.HttpResponseBucket.SupportsHeaders.get -> bool
-override AmpScm.Buckets.Client.Protocols.BucketHttpRequest.GetResponseAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Client.ResponseBucket!>
 override AmpScm.Buckets.Client.Protocols.HttpBucketRequest.GetResponseAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Client.ResponseBucket!>
 override AmpScm.Buckets.FileBucket.CanReset.get -> bool
 override AmpScm.Buckets.FileBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>

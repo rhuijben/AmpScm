@@ -16,7 +16,7 @@ namespace AmpScm.Git.Objects
 
 
         public GitRepositoryObjectRepository(GitRepository repository, string objectsDir)
-            : base(repository)
+            : base(repository, "Repository:" + Path.GetDirectoryName(objectsDir))
         {
             if (!Directory.Exists(Path.Combine(objectsDir)))
                 throw new GitRepositoryException($"{objectsDir} does not exist");
@@ -38,7 +38,7 @@ namespace AmpScm.Git.Objects
                 {
                     switch (key.ToLowerInvariant())
                     {
-                        case "nop":
+                        case "noop":
                             break;
                         case "partialclone":
                             PromisorRemote = value;

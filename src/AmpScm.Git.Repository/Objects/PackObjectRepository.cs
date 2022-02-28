@@ -20,7 +20,7 @@ namespace AmpScm.Git.Objects
         uint[]? _fanOut;
 
         public PackObjectRepository(GitRepository repository, string packFile, GitIdType idType)
-            : base(repository)
+            : base(repository, "Pack:" + packFile)
         {
             _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
             _idType = idType;

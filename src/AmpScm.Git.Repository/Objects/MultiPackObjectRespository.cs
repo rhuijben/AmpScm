@@ -9,7 +9,7 @@ namespace AmpScm.Git.Objects
 {
     internal class MultiPackObjectRespository : GitObjectRepository
     {
-        public MultiPackObjectRespository(GitRepository repository) : base(repository)
+        public MultiPackObjectRespository(GitRepository repository) : base(repository, "MultiPack:" + repository.GitDir)
         {
         }
 

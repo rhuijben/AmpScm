@@ -15,7 +15,7 @@ namespace AmpScm.Git.Objects
         private string objectsDir;
 
         public FileObjectRepository(GitRepository repository, string objectsDir)
-            : base(repository)
+            : base(repository, "Blobs:" + objectsDir)
         {
             this.objectsDir = objectsDir;
         }

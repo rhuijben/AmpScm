@@ -12,7 +12,7 @@ namespace AmpScm.Git.Objects
         private string chain;
         List<CommitGraphRepository>? Graphs;
 
-        public CommitGraphChainRepository(GitRepository repository, string chain) : base(repository)
+        public CommitGraphChainRepository(GitRepository repository, string chain) : base(repository, "CommitChain:" + chain)
         {
             this.chain = chain;
         }

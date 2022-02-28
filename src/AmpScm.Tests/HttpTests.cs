@@ -49,7 +49,7 @@ namespace AmpScm.Tests
             {
                 TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
                 TestContext.WriteLine(result.Headers.ToString());
-            }            
+            }
 
             while (!(bb = await result.ReadAsync()).IsEof)
             {

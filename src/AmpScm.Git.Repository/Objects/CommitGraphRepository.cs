@@ -17,7 +17,7 @@ namespace AmpScm.Git.Objects
         FileStream? _fs;
         bool _initialized;
 
-        public CommitGraphRepository(GitRepository repository, string chainFile) : base(repository)
+        public CommitGraphRepository(GitRepository repository, string chainFile) : base(repository, "CommitGraph:"+chainFile)
         {
             _fileName = chainFile ?? throw new ArgumentNullException(nameof(chainFile));
             _initialized = false;
