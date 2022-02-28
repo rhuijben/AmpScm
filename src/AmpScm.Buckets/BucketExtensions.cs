@@ -169,15 +169,42 @@ namespace AmpScm.Buckets
             switch (algorithm)
             {
                 case BucketCompressionAlgorithm.ZLib:
-                    return new ZLibBucket(self);
+                    return new ZLibBucket(self); // Implemented non-eager, using the zlib framing, as required by Git
                 case BucketCompressionAlgorithm.Deflate:
+                    // Could be optimized like zlib, but currently unneeded
                     return new CompressionBucket(self, (inner) => new DeflateStream(inner, CompressionMode.Decompress));
                 case BucketCompressionAlgorithm.GZip:
+                    // Could be optimized like zlib, but currently unneeded
                     return new CompressionBucket(self, (inner) => new GZipStream(inner, CompressionMode.Decompress));
                 case BucketCompressionAlgorithm.Brotli:
 #if !NETFRAMEWORK
+                    // Available starting with .Net Core
                     return new CompressionBucket(self, (inner) => new BrotliStream(inner, CompressionMode.Decompress));
 #endif
+                // Maybe: ZStd via https://www.nuget.org/packages/ZstdSharp.Port
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(algorithm));
+            }
+        }
+
+        public static Bucket Compress(this Bucket self, BucketCompressionAlgorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case BucketCompressionAlgorithm.ZLib:
+                    return new ZLibBucket(self, ZLibLevel.Maximum);
+                case BucketCompressionAlgorithm.Deflate:
+                    // Could be optimized like zlib, but currently unneeded
+                    return new CompressionBucket(self, (inner) => new DeflateStream(inner, CompressionMode.Compress));
+                case BucketCompressionAlgorithm.GZip:
+                    // Could be optimized like zlib, but currently unneeded
+                    return new CompressionBucket(self, (inner) => new GZipStream(inner, CompressionMode.Compress));
+                case BucketCompressionAlgorithm.Brotli:
+#if !NETFRAMEWORK
+                    // Available starting with .Net Core
+                    return new CompressionBucket(self, (inner) => new BrotliStream(inner, CompressionMode.Compress));
+#endif
+                // Maybe: ZStd via https://www.nuget.org/packages/ZstdSharp.Port
                 default:
                     throw new ArgumentOutOfRangeException(nameof(algorithm));
             }

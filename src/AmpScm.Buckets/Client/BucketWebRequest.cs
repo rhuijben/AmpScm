@@ -5,13 +5,15 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using AmpScm.Buckets.Protocols;
+using AmpScm.Buckets.Client;
+using AmpScm.Buckets.Client.Protocols;
 
-namespace AmpScm.Buckets
+namespace AmpScm.Buckets.Client
 {
     public abstract class BucketWebRequest : IAsyncDisposable, IDisposable
     {
-        private bool disposedValue;
+        protected BucketWebClient Client {get; }
+        private bool _disposed;
 
         public Uri RequestUri { get; }
 
@@ -21,7 +23,7 @@ namespace AmpScm.Buckets
             set => throw new InvalidOperationException();
         }
 
-        public Http.WebHeaderCollection Headers { get; } = new Http.WebHeaderCollection();
+        public Client.WebHeaderDictionary Headers { get; } = new Client.WebHeaderDictionary();
 
         public string? ContentType
         {
@@ -37,34 +39,19 @@ namespace AmpScm.Buckets
 
         public bool PreAuthenticate { get; set; }
 
-        protected BucketWebRequest(Uri requestUri)
+        public bool FollowRedirects { get; set; } = true;
+
+        protected BucketWebRequest(BucketWebClient client, Uri requestUri)
         {
+            Client = client ?? throw new ArgumentNullException(nameof(client));
             RequestUri = requestUri ?? throw new ArgumentNullException(nameof(requestUri));
         }
 
-        public static BucketWebRequest Create(Uri requestUri)
-        {
-            if (requestUri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase))
-                return new BucketHttpRequest(requestUri);
-            else if (requestUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
-                return new BucketHttpsRequest(requestUri);
-            else
-                throw new NotSupportedException();
-        }
-
-        public static BucketWebRequest Create(string url)
-        {
-            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return Create(uri);
-            else
-                throw new ArgumentOutOfRangeException(url);
-        }
-
-        public abstract ValueTask<Bucket> GetResponseAsync();
+        public abstract ValueTask<ResponseBucket> GetResponseAsync();
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -73,7 +60,7 @@ namespace AmpScm.Buckets
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                 // TODO: set large fields to null
-                disposedValue = true;
+                _disposed = true;
             }
         }
 
@@ -103,6 +90,11 @@ namespace AmpScm.Buckets
             return default;
         }
 
-        public virtual string? Stats() => null;
+        public event EventHandler<BasicBucketAuthenticationEventArgs> BasicAuthentication;
+
+        internal EventHandler<BasicBucketAuthenticationEventArgs> GetBasicAuthenticationHandlers()
+        {
+            return BasicAuthentication + Client.GetBasicAuthenticationHandlers();
+        }
     }
 }

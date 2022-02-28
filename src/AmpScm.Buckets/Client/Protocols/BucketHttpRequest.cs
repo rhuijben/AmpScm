@@ -5,35 +5,56 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using AmpScm.Buckets.Http;
+using AmpScm.Buckets.Client;
+using AmpScm.Buckets.Client.Http;
 using AmpScm.Buckets.Interfaces;
 
-namespace AmpScm.Buckets.Protocols
+namespace AmpScm.Buckets.Client.Protocols
 {
     public class BucketHttpRequest : BucketWebRequest
     {
-        public BucketHttpRequest(Uri uri) : base(uri)
+        internal BucketChannel? Channel { get; set; }
+
+        internal BucketHttpRequest(Client.BucketWebClient client, Uri uri) : base(client, uri)
         {
         }
 
-        private protected BucketHttpRequest(Uri uri, bool forHttps) : base(uri)
+        private protected BucketHttpRequest(Client.BucketWebClient client, Uri uri, bool forHttps) : base(client, uri)
         {
 
         }
 
-        public override async ValueTask<Bucket> GetResponseAsync()
+        public override async ValueTask<ResponseBucket> GetResponseAsync()
         {
-            var (r, w) = await CreateChannel();
+            var channel = await SetupChannel().ConfigureAwait(false);
 
-            w.Write(CreateRequest());
-            //await w.ShutdownAsync();
+            var response = new HttpResponseBucket(channel.Reader, this);
 
-            return new HttpResponseBucket(r);
+            if (PreAuthenticate)
+                response.HandlePreAuthenticate(this);
+
+            channel.Writer.Write(CreateRequest());
+
+            return response;
         }
 
         public Encoding RequestEncoding { get; set; } = Encoding.UTF8;
 
-        protected virtual async ValueTask<(Bucket, IBucketWriter)> CreateChannel()
+        private protected async ValueTask<BucketChannel> SetupChannel()
+        {
+            if (Client.TryGetChannel(RequestUri, out var channel))
+            {
+                return Channel = channel!;
+            }
+            else
+            {
+                var (reader, writer) = await CreateChannel().ConfigureAwait(false);
+
+                return Channel = CreateChannel(reader, writer);
+            }
+        }
+
+        private protected virtual async ValueTask<(Bucket Reader, IBucketWriter Writer)> CreateChannel()
         {
             Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
@@ -41,7 +62,7 @@ namespace AmpScm.Buckets.Protocols
             {
                 var sb = new SocketBucket(s);
 
-                await sb.ConnectAsync(RequestUri.Host, RequestUri.Port);
+                await sb.ConnectAsync(RequestUri.Host, RequestUri.Port).ConfigureAwait(false);
 
                 return (sb, sb);
             }
@@ -52,7 +73,24 @@ namespace AmpScm.Buckets.Protocols
             }
         }
 
-        protected virtual Bucket CreateRequest()
+        internal void ReleaseChannel()
+        {
+            try
+            {
+                Channel?.Release();
+            }
+            finally
+            {
+                Channel = null;
+            }
+        }
+
+        private protected virtual BucketChannel CreateChannel(Bucket reader, IBucketWriter writer)
+        {
+            return new BucketChannel(Client, RequestUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped), reader, writer);
+        }
+
+        internal virtual Bucket CreateRequest()
         {
             AggregateBucket bucket = new AggregateBucket();
             Encoding enc = RequestEncoding;

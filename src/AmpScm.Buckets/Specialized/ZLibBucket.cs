@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Interfaces;
 using Elskom.Generic.Libs;
@@ -136,7 +137,11 @@ namespace AmpScm.Buckets.Specialized
                 _z.NextOutIndex = 0;
                 _z.AvailOut = Math.Min(write_data.Length, requested);
 
-                int r = _z.Inflate(_readEof ? ZlibConst.ZFINISH : ZlibConst.ZSYNCFLUSH); // Write as much inflated data as possible
+                int r;
+                if (!_level.HasValue)
+                    r = _z.Inflate(_readEof ? ZlibConst.ZFINISH : ZlibConst.ZSYNCFLUSH); // Write as much inflated data as possible
+                else
+                    r = _z.Deflate(_readEof ? ZlibConst.ZFINISH : ZlibConst.ZSYNCFLUSH);
 
                 write_buffer = new BucketBytes(write_data, 0, _z.NextOutIndex);
 
@@ -151,7 +156,7 @@ namespace AmpScm.Buckets.Specialized
                 //}
                 else if (r != ZlibConst.ZOK)
                 {
-                    throw new System.IO.IOException($"ZLib inflate failed {r}: {_z.Msg}");
+                    throw new System.IO.IOException($"ZLib handler failed {r}: {_z.Msg}");
                 }
 
                 if (write_buffer.IsEmpty)

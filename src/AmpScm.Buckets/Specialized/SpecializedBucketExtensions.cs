@@ -32,6 +32,15 @@ namespace AmpScm.Buckets.Specialized
             return new CreateHashBucket(self, CreateHashBucket.Crc32.Create(), (v) => created(NetBitConverter.ToInt32(v, 0)));
         }
 
+        public async static ValueTask ReadSkipUntilEofAsync(this Bucket self)
+        {
+            if (self == null)
+                throw new ArgumentNullException(nameof(self));
+
+            while (0 != await self.ReadSkipAsync(int.MaxValue).ConfigureAwait(false))
+            { }
+        }
+
         public async static ValueTask<BucketBytes> ReadFullAsync(this Bucket self, int requested)
         {
             if (self is null)

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Client;
 using AmpScm.Buckets.Git;
 using AmpScm.Git.Repository.Implementation;
 using AmpScm.Git.Sets;
@@ -444,6 +445,49 @@ namespace AmpScm.Git.Repository
                 var email = GetString("user", "email") ?? $"me@{Environment.MachineName}.local";
 
                 return new GitSignature(username, email, DateTime.Now);
+            }
+        }
+
+        public void BasicAuthenticationHandler(object? sender, BasicBucketAuthenticationEventArgs e)
+        {
+            e.Continue = false; // Only run this handler once!
+
+            // BUG: Somehow the first line gets corrupted, so we write an ignored first line to make sure the required fields get through correctly
+
+            var r = Repository.RunPlumbingCommandOut("credential", new[] { "fill" }, stdinText: $"ignore=true\nurl={e.Uri}").AsTask();
+
+            var (exitCode, output) = r.GetAwaiter().GetResult();
+            bool gotUser = false;
+            bool gotPass = false;
+            string username = null;
+            string password = null;
+
+            foreach(var l in output.Split('\n'))
+            {
+                var kv = l.Split(new[] { '=' },2);
+
+                if ("username".Equals(kv[0], StringComparison.OrdinalIgnoreCase))
+                {
+                    username = kv[1].TrimEnd();
+                    gotUser = true;
+                }
+                else if ("password".Equals(kv[0], StringComparison.OrdinalIgnoreCase))
+                {
+                    password = kv[1].TrimEnd();
+                    gotPass = true;
+                }
+            }
+
+            if (!gotUser || !gotPass || (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password)))
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Username = username;
+                e.Password = password;
+                e.Succeeded += async(_,_) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
+                e.Failed += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "reject" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
             }
         }
 

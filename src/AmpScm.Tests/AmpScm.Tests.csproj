@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AmpScm.Buckets.Http\AmpScm.Buckets.Http.csproj" />
     <ProjectReference Include="..\AmpScm.Buckets\AmpScm.Buckets.csproj" />
     <ProjectReference Include="..\AmpScm.Git.Client\AmpScm.Git.Client.csproj" />
     <ProjectReference Include="..\AmpScm.Git.Repository\AmpScm.Git.Repository.csproj" />

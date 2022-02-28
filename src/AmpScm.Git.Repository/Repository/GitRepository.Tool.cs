@@ -59,7 +59,7 @@ namespace AmpScm.Git
             await p!.WaitForExitAsync();
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
-                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");
+                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
 
             return p.ExitCode;
         }
@@ -94,17 +94,20 @@ namespace AmpScm.Git
             p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
             p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
 
-            if (!string.IsNullOrEmpty(stdinText))
-                p.StandardInput.Write(stdinText);
-
-            p.StandardInput.Close();
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
+
+            if (!string.IsNullOrEmpty(stdinText))
+            {
+                p.StandardInput.Write(stdinText);
+            }
+
+            p.StandardInput.Close();
 
             await p.WaitForExitAsync();
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
-                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");
+                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
 
             return (p.ExitCode, outputText?.ToString() ?? "");
         }

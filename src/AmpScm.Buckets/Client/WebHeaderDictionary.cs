@@ -3,16 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using BaseWhc = System.Net.WebHeaderCollection;
 
-namespace AmpScm.Buckets.Http
+namespace AmpScm.Buckets.Client
 {
-#pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
-    public sealed class WebHeaderCollection : System.Net.WebHeaderCollection, IEnumerable<string>, IDictionary<string, string>
-#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
+    [Serializable]
+    public sealed class WebHeaderDictionary : WebHeaderCollection, IEnumerable<string>, IDictionary<string, string>
     {
+        [field: NonSerialized]
         public new KeysCollection Keys { get; }
 
         bool ICollection<KeyValuePair<string, string>>.IsReadOnly => false;
@@ -20,12 +21,38 @@ namespace AmpScm.Buckets.Http
         ICollection<string> IDictionary<string, string>.Keys => Keys;
         ICollection<string> IDictionary<string, string>.Values => new ValuesCollection(this);
 
-        public WebHeaderCollection()
+        public WebHeaderDictionary()
+        {
+            Keys = new KeysCollection(this);
+        }
+
+        private WebHeaderDictionary(SerializationInfo serializationInfo, StreamingContext streamingContext)
+            : base(serializationInfo, streamingContext)
         {
             Keys = new KeysCollection(this);
         }
 
         BaseWhc BaseWhc => this;
+
+        string IDictionary<string, string>.this[string key]
+        {
+            get
+            {
+                if (key is null)
+                    throw new ArgumentNullException(nameof(key));
+                var v = BaseWhc[key];
+
+                if (v is null)
+                    throw new KeyNotFoundException();
+
+                return v;
+            }
+            set
+            {
+                this[key] = value;
+            }
+        }
+
 
         public new IEnumerator<string> GetEnumerator()
         {
@@ -108,8 +135,8 @@ namespace AmpScm.Buckets.Http
 
         public new sealed class KeysCollection : IReadOnlyList<string>, ICollection<string>
         {
-            readonly WebHeaderCollection _whc;
-            internal KeysCollection(WebHeaderCollection whc)
+            readonly WebHeaderDictionary _whc;
+            internal KeysCollection(WebHeaderDictionary whc)
             {
                 _whc = whc ?? throw new ArgumentNullException(nameof(whc));
             }
@@ -162,8 +189,8 @@ namespace AmpScm.Buckets.Http
 
         sealed class ValuesCollection : IReadOnlyList<string>, ICollection<string>
         {
-            readonly WebHeaderCollection _whc;
-            internal ValuesCollection(WebHeaderCollection whc)
+            readonly WebHeaderDictionary _whc;
+            internal ValuesCollection(WebHeaderDictionary whc)
             {
                 _whc = whc ?? throw new ArgumentNullException(nameof(whc));
             }

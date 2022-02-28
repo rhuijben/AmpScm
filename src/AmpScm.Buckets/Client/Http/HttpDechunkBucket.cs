@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Specialized;
 
-namespace AmpScm.Buckets.Http
+namespace AmpScm.Buckets.Client.Http
 {
     internal class HttpDechunkBucket : WrappingBucket
     {
@@ -54,7 +54,7 @@ namespace AmpScm.Buckets.Http
             {
                 case DechunkState.Chunk:
                     {
-                        var bb = await Inner.ReadAsync(Math.Min(requested, _chunkLeft));
+                        var bb = await Inner.ReadAsync(Math.Min(requested, _chunkLeft)).ConfigureAwait(false);
 
                         _chunkLeft -= bb.Length;
                         if (_chunkLeft == 0)
@@ -67,7 +67,7 @@ namespace AmpScm.Buckets.Http
                 case DechunkState.Eof:
                     return BucketBytes.Eof;
                 default:
-                    await Advance(true);
+                    await Advance(true).ConfigureAwait(false);
 
                     if (_state == DechunkState.Chunk)
                         goto case DechunkState.Chunk;
@@ -94,7 +94,7 @@ namespace AmpScm.Buckets.Http
                 {
                     case DechunkState.Start:
                         {
-                            var (bb, eol) = await Inner.ReadUntilEolAsync(BucketEol.CRLF);
+                            var (bb, eol) = await Inner.ReadUntilEolAsync(BucketEol.CRLF).ConfigureAwait(false);
 
                             if (eol == BucketEol.CRLF)
                             {
@@ -114,7 +114,7 @@ namespace AmpScm.Buckets.Http
                         }
                     case DechunkState.Size:
                         {
-                            var (bb, eol) = await Inner.ReadUntilEolAsync(_eol != BucketEol.None ? BucketEol.LF : BucketEol.CRLF);
+                            var (bb, eol) = await Inner.ReadUntilEolAsync(_eol != BucketEol.None ? BucketEol.LF : BucketEol.CRLF).ConfigureAwait(false);
 
                             if (eol != BucketEol.None && eol != BucketEol.CRSplit)
                             {
@@ -132,7 +132,7 @@ namespace AmpScm.Buckets.Http
                         break;
                     case DechunkState.Term:
                         {
-                            var bb = await Inner.ReadAsync(_chunkLeft);
+                            var bb = await Inner.ReadAsync(_chunkLeft).ConfigureAwait(false);
                             _chunkLeft -= bb.Length;
 
                             if (bb.IsEof)
