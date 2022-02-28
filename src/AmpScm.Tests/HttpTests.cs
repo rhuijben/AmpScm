@@ -48,9 +48,8 @@ namespace AmpScm.Tests
             if (result is HttpResponseBucket hrb)
             {
                 TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
-            }
-
-            TestContext.WriteLine(result.Headers.ToString());
+                TestContext.WriteLine(result.Headers.ToString());
+            }            
 
             while (!(bb = await result.ReadAsync()).IsEof)
             {
@@ -80,13 +79,14 @@ namespace AmpScm.Tests
                 TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
 
                 TestContext.WriteLine(result.Headers.ToString());
+                TestContext.WriteLine();
             }
 
             while (!(bb = await result.ReadAsync()).IsEof)
             {
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                TestContext.WriteLine(t);
+                TestContext.Write(t);
                 total += t;
             }
         }
@@ -94,7 +94,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitInfoV1()
         {
-            using var br = Client.CreateRequest($"https://github.com/rhuijben/tt-parser.git/info/refs?service=git-upload-pack");
+            using var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             //br.Headers["Git-Protocol"] = "version=2";
@@ -110,6 +110,7 @@ namespace AmpScm.Tests
                 TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
 
                 TestContext.WriteLine(result.Headers.ToString());
+                TestContext.WriteLine();
             }
 
             var pkt = new GitPacketBucket(result);
@@ -120,7 +121,7 @@ namespace AmpScm.Tests
 
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                TestContext.WriteLine(t);
+                TestContext.Write(t);
                 total += t;
             }
         }
@@ -128,7 +129,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitInfoV2()
         {
-            using var br = Client.CreateRequest($"https://github.com/rhuijben/tt-parser.git/info/refs?service=git-upload-pack");
+            using var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             br.Headers["Git-Protocol"] = "version=2";
@@ -144,6 +145,7 @@ namespace AmpScm.Tests
                 TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
 
                 TestContext.WriteLine(result.Headers.ToString());
+                TestContext.WriteLine();
             }
 
             var pkt = new GitPacketBucket(result);
@@ -154,7 +156,7 @@ namespace AmpScm.Tests
 
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                TestContext.WriteLine(t);
+                TestContext.Write(t);
                 total += t;
             }
         }
@@ -186,6 +188,7 @@ namespace AmpScm.Tests
                 TestContext.WriteLine($"HTTP/1.1 {hrb.HttpStatus} {hrb.HttpMessage}");
 
                 TestContext.WriteLine(result.Headers.ToString());
+                TestContext.WriteLine();
             }
 
             var pkt = new GitPacketBucket(result);
@@ -194,7 +197,7 @@ namespace AmpScm.Tests
             {
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                TestContext.WriteLine(t);
+                TestContext.Write(t);
                 total += t;
             }
         }

@@ -15,7 +15,7 @@ namespace AmpScm.Buckets.Client
         protected BucketWebClient Client {get; }
         private bool _disposed;
 
-        public Uri RequestUri { get; }
+        public Uri RequestUri { get; private set;}
 
         public virtual string? Method 
         { 
@@ -95,6 +95,14 @@ namespace AmpScm.Buckets.Client
         internal EventHandler<BasicBucketAuthenticationEventArgs> GetBasicAuthenticationHandlers()
         {
             return BasicAuthentication + Client.GetBasicAuthenticationHandlers();
+        }
+
+        internal void UpdateUri(Uri newUri)
+        {
+            if (newUri == null)
+                throw new ArgumentNullException(nameof(newUri));
+
+            RequestUri = newUri;
         }
     }
 }

@@ -7,9 +7,9 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Client.Protocols
 {
-    internal class BucketHttpsChannel : BucketHttpChannel
+    internal class HttpBucketChannel : BucketChannel
     {
-        public BucketHttpsChannel(BucketWebClient client, string key, Bucket reader, IBucketWriter writer) : base(client, key, reader, writer)
+        internal HttpBucketChannel(BucketWebClient client, string key, Bucket reader, IBucketWriter writer) : base(client, key, reader, writer)
         {
         }
     }

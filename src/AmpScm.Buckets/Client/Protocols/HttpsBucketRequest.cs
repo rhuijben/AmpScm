@@ -8,9 +8,9 @@ using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Buckets.Client.Protocols
 {
-    internal class BucketHttpsRequest : BucketHttpRequest
+    internal class HttpsBucketRequest : HttpBucketRequest
     {
-        public BucketHttpsRequest(Client.BucketWebClient client, Uri uri)
+        public HttpsBucketRequest(Client.BucketWebClient client, Uri uri)
             : base(client, uri, true)
         {
         }
@@ -26,7 +26,7 @@ namespace AmpScm.Buckets.Client.Protocols
 
         private protected override BucketChannel CreateChannel(Bucket reader, IBucketWriter writer)
         {
-            return new BucketHttpsChannel(Client, RequestUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped), reader, writer);
+            return new HttpsBucketChannel(Client, RequestUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped), reader, writer);
         }
     }
 }

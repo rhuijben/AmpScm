@@ -17,21 +17,21 @@ namespace AmpScm.Buckets.Client.Http
         Bucket? _reader;
         private bool _doneAtEof;
         WebHeaderDictionary? _responseHeaders;
-        int _nRedirects;
         Action? _succes;
         Action? _authFailed;
+        int _nRedirects;
 
         public string? HttpVersion { get; private set; }
         public int? HttpStatus { get; private set; }
         public string? HttpMessage { get; private set; }
 
-        internal HttpResponseBucket(Bucket inner, BucketHttpRequest request)
+        internal HttpResponseBucket(Bucket inner, HttpBucketRequest request)
             : base(inner, request)
         {
-
+            _nRedirects = request.MaxRedirects;
         }
 
-        public new BucketHttpRequest Request => (BucketHttpRequest)base.Request;
+        public new HttpBucketRequest Request => (HttpBucketRequest)base.Request;
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
@@ -134,7 +134,7 @@ namespace AmpScm.Buckets.Client.Http
                 return;
 
             if (!HttpStatus.HasValue)
-                await ReadStatus().ConfigureAwait(false);
+                await ReadStatusAsync().ConfigureAwait(false);
 
             _responseHeaders ??= await ReadHeaderSet().ConfigureAwait(false);
         }
@@ -157,7 +157,7 @@ namespace AmpScm.Buckets.Client.Http
             return whc;
         }
 
-        public async ValueTask<int> ReadStatus()
+        public async ValueTask<int> ReadStatusAsync()
         {
             if (HttpStatus.HasValue)
                 return HttpStatus.Value!;
@@ -180,17 +180,19 @@ namespace AmpScm.Buckets.Client.Http
                 {
                     switch (status)
                     {
+                        case (int)HttpStatusCode.MovedPermanently:
+                        case (int)HttpStatusCode.Found:
                         case (int)HttpStatusCode.TemporaryRedirect:
 #if !NETFRAMEWORK
                         case (int)HttpStatusCode.PermanentRedirect:
 #else
                         case 308:
 #endif
-                            if (Request.FollowRedirects && _nRedirects < 10)
+                            if (Request.FollowRedirects && _nRedirects > 0)
                             {
-                                _nRedirects++;
-                                await HandleRedirect().ConfigureAwait(false);
-                                continue;
+                                _nRedirects--;
+                                if (await HandleRedirect().ConfigureAwait(false))
+                                    continue;
                             }
                             break;
                         case (int)HttpStatusCode.Unauthorized:
@@ -217,7 +219,15 @@ namespace AmpScm.Buckets.Client.Http
             }
         }
 
+        public override long? Position => _reader?.Position;
 
+        public override ValueTask<long?> ReadRemainingBytesAsync()
+        {
+            if (_reader == null)
+                return default;
+
+            return _reader.ReadRemainingBytesAsync();
+        }
 
         IEnumerable<(string username, string password, string q, Action success, Action failed)> WalkAuthorization(Uri uri, string realm)
         {
@@ -323,7 +333,7 @@ namespace AmpScm.Buckets.Client.Http
             return true; // Read next result
         }
 
-        internal void HandlePreAuthenticate(BucketHttpRequest bucketHttpRequest)
+        internal void HandlePreAuthenticate(HttpBucketRequest bucketHttpRequest)
         {
             if (_authState != null)
                 throw new InvalidOperationException();
@@ -340,9 +350,45 @@ namespace AmpScm.Buckets.Client.Http
             _authFailed += c.failed;
         }
 
-        private ValueTask<bool> HandleRedirect()
+        private async ValueTask<bool> HandleRedirect(bool keepMethod = true)
         {
-            throw new NotImplementedException();
+            // We got an HTTP/1.1 301 Moved or similar
+
+            var headers = await ReadHeaderSet().ConfigureAwait(false);
+
+            Uri? newUri;
+            if (headers[HttpResponseHeader.Location] is string location
+                && Uri.TryCreate(Request.RequestUri, location, out newUri))
+            {
+                //
+            }
+            else if (headers[HttpResponseHeader.ContentLocation] is string location2
+                && Uri.TryCreate(Request.RequestUri, location2, out newUri))
+            {
+                //
+            }
+            else
+            {
+                _responseHeaders = headers;
+                return false;
+            }
+
+            var (reader, _) = GetBodyReader(headers);
+            await reader.ReadSkipUntilEofAsync().ConfigureAwait(false);
+
+            if (Request.RequestUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped) == newUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped))
+            {
+                // Re-use existing connection
+                Request.UpdateUri(newUri);
+
+                Request.Channel!.Writer.Write(Request.CreateRequest()); // Request same page again
+                return true;
+            }
+            else
+            {
+                await Request.RunRedirect(newUri, keepMethod, this).ConfigureAwait(false);
+                return false;
+            }
         }
 
         public override bool SupportsHeaders => true;

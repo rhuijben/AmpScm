@@ -11,15 +11,17 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Client.Protocols
 {
-    public class BucketHttpRequest : BucketWebRequest
+    public class HttpBucketRequest : BucketWebRequest
     {
         internal BucketChannel? Channel { get; set; }
+        internal int MaxRedirects { get; set; } = 10;
+        HttpResponseBucket? _redirectResponse;
 
-        internal BucketHttpRequest(Client.BucketWebClient client, Uri uri) : base(client, uri)
+        internal HttpBucketRequest(Client.BucketWebClient client, Uri uri) : base(client, uri)
         {
         }
 
-        private protected BucketHttpRequest(Client.BucketWebClient client, Uri uri, bool forHttps) : base(client, uri)
+        private protected HttpBucketRequest(Client.BucketWebClient client, Uri uri, bool forHttps) : base(client, uri)
         {
 
         }
@@ -35,10 +37,22 @@ namespace AmpScm.Buckets.Client.Protocols
 
             channel.Writer.Write(CreateRequest());
 
-            return response;
+            while (true)
+            {
+                await response.ReadStatusAsync().ConfigureAwait(false);
+
+                if (_redirectResponse != null)
+                {
+                    response = _redirectResponse;
+                    _redirectResponse = null;
+                    continue;
+                }
+
+                return response;
+            }
         }
 
-        public Encoding RequestEncoding { get; set; } = Encoding.UTF8;
+        Encoding RequestEncoding { get; set; } = Encoding.UTF8;
 
         private protected async ValueTask<BucketChannel> SetupChannel()
         {
@@ -128,6 +142,28 @@ namespace AmpScm.Buckets.Client.Protocols
             bucket.Append(Headers.ToByteArray().AsBucket()); // Includes the final \r\n to end the request headers
 
             return bucket;
+        }
+
+        internal async ValueTask RunRedirect(Uri newUri, bool keepMethod, HttpResponseBucket httpResponseBucket)
+        {
+            UpdateUri(newUri);
+
+            var c = Client.CreateRequest(newUri);
+
+            (c as HttpBucketRequest)?.CopyFrom(this);
+
+            ReleaseChannel();
+            _redirectResponse = (HttpResponseBucket)await c.GetResponseAsync().ConfigureAwait(false);
+        }
+
+        private void CopyFrom(HttpBucketRequest from)
+        {
+            foreach (var k in from.Headers)
+            {
+                Headers[k] = from.Headers[k];
+            }
+            PreAuthenticate = from.PreAuthenticate;
+            MaxRedirects = from.MaxRedirects - 1;
         }
     }
 }

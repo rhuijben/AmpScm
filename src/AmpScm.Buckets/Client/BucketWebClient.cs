@@ -17,9 +17,9 @@ namespace AmpScm.Buckets.Client
             switch (requestUri.Scheme.ToUpperInvariant())
             {
                 case "HTTP":
-                    return new BucketHttpRequest(this, requestUri);
+                    return new HttpBucketRequest(this, requestUri);
                 case "HTTPS":
-                    return new BucketHttpsRequest(this, requestUri);
+                    return new HttpsBucketRequest(this, requestUri);
                 default:
                     throw new NotSupportedException();
             }
