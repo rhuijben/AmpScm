@@ -61,12 +61,7 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
-#if !NETFRAMEWORK
                 value = BinaryPrimitives.ReverseEndianness(value);
-#else
-                ushort val = value;
-                value = unchecked((ushort)((val >> 8) | (val << 8)));
-#endif
             }
             return value;
         }
@@ -75,12 +70,7 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
-#if !NETFRAMEWORK
                 value = BinaryPrimitives.ReverseEndianness(value);
-#else
-                uint val = unchecked((uint)value);
-                value = unchecked((int)((val >> 24) | (val << 24) | (val & 0xFF00) << 8 | (val & 0xFF0000) >> 8));
-#endif
             }
             return value;
         }
@@ -90,12 +80,7 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
-#if !NETFRAMEWORK
                 value = BinaryPrimitives.ReverseEndianness(value);
-#else
-                uint val = value;
-                value = unchecked((uint)((val >> 24) | (val << 24) | (val & 0xFF00) << 8 | (val & 0xFF0000) >> 8));
-#endif
             }
             return value;
         }
@@ -104,20 +89,7 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
-#if !NETFRAMEWORK
                 value = BinaryPrimitives.ReverseEndianness(value);
-#else
-                ulong val = unchecked((ulong)value);
-                value = unchecked((long)(
-                      ((val & 0x00000000000000FFL) << 56)
-                    | ((val & 0x000000000000FF00L) << 40)
-                    | ((val & 0x0000000000FF0000L) << 24)
-                    | ((val & 0x00000000FF000000L) << 8)
-                    | ((val & 0x000000FF00000000L) >> 8)
-                    | ((val & 0x0000FF0000000000L) >> 24)
-                    | ((val & 0x00FF000000000000L) >> 40)
-                    | ((val & 0xFF00000000000000L) >> 56)));
-#endif
             }
             return value;
         }
@@ -127,20 +99,7 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
-#if !NETFRAMEWORK
                 value = BinaryPrimitives.ReverseEndianness(value);
-#else
-                ulong val = value;
-                value = unchecked((ulong)(
-                      ((val & 0x00000000000000FFL) << 56)
-                    | ((val & 0x000000000000FF00L) << 40)
-                    | ((val & 0x0000000000FF0000L) << 24)
-                    | ((val & 0x00000000FF000000L) <<  8)
-                    | ((val & 0x000000FF00000000L) >>  8)
-                    | ((val & 0x0000FF0000000000L) >> 24)
-                    | ((val & 0x00FF000000000000L) >> 40)
-                    | ((val & 0xFF00000000000000L) >> 56)));
-#endif
             }
             return value;
         }
@@ -155,29 +114,49 @@ namespace AmpScm.Buckets.Specialized
         [CLSCompliant(false)]
         public static ushort ToNetwork(ushort value)
         {
-            return FromNetwork(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                value = BinaryPrimitives.ReverseEndianness(value);
+            }
+            return value;
         }
 
         public static int ToNetwork(int value)
         {
-            return FromNetwork(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                value = BinaryPrimitives.ReverseEndianness(value);
+            }
+            return value;
         }
 
         [CLSCompliant(false)]
         public static uint ToNetwork(uint value)
         {
-            return FromNetwork(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                value = BinaryPrimitives.ReverseEndianness(value);
+            }
+            return value;
         }
 
         public static long ToNetwork(long value)
         {
-            return FromNetwork(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                value = BinaryPrimitives.ReverseEndianness(value);
+            }
+            return value;
         }
 
         [CLSCompliant(false)]
         public static ulong ToNetwork(ulong value)
         {
-            return FromNetwork(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                value = BinaryPrimitives.ReverseEndianness(value);
+            }
+            return value;
         }
 
         public static short ToInt16(byte[] value, int startOffset)
