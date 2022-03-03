@@ -51,12 +51,16 @@ namespace AmpScm.Git.Implementation
             return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
         }
 
-        internal IAsyncEnumerable<T> GetNamedAsyncEnumerable<T>(CancellationToken cancellationToken)
+        internal IAsyncEnumerable<T> GetNamedAsyncEnumerable<T>(CancellationToken cancellationToken=default)
         {
             if (typeof(T) == typeof(GitReference))
                 return (IAsyncEnumerable<T>)Repository.ReferenceRepository.GetAll();
             else if (typeof(T) == typeof(GitRemote))
                 return (IAsyncEnumerable<T>)Repository.Configuration.GetAllRemotes();
+            else if (typeof(T) == typeof(GitBranch))
+                return (IAsyncEnumerable<T>)GetNamedAsyncEnumerable<GitReference>().Where(x => x.IsBranch).Select(x => new GitBranch(x));
+            else if (typeof(T) == typeof(GitTag))
+                return (IAsyncEnumerable<T>)GetNamedAsyncEnumerable<GitReference>().Where(x => x.IsTag).Select(x => new GitTag(x));
 
             return Enumerable.Empty<T>().ToAsyncEnumerable();
         }

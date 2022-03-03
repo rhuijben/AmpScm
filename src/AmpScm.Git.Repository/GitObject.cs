@@ -44,7 +44,7 @@ namespace AmpScm.Git
                 case GitObjectType.Blob:
                     return new GitBlob(repository, rdr, id);
                 case GitObjectType.Tag:
-                    return new GitTag(repository, rdr, id);
+                    return new GitTagObject(repository, rdr, id);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

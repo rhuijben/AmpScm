@@ -45,7 +45,7 @@ namespace AmpScm.Git.Sets
 
         IList IListSource.GetList()
         {
-            return Repository.SetQueryProvider.GetNamedList<GitReference>();
+            return Repository.SetQueryProvider.GetNamedList<T>();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

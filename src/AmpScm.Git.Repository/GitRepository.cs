@@ -35,12 +35,15 @@ namespace AmpScm.Git
             Objects = new GitSet<GitObject>(this, () => this.Objects!);
             Commits = new GitCommitsSet(this, () => this.Commits!);
             Blobs = new GitSet<GitBlob>(this, () => this.Blobs!);
-            TagObjects = new GitSet<GitTag>(this, () => this.TagObjects!);
+            TagObjects = new GitSet<GitTagObject>(this, () => this.TagObjects!);
             Trees = new GitSet<GitTree>(this, () => this.Trees!);
             References = new GitReferencesSet(this, () => this.References!);
             Remotes = new GitRemotesSet(this, () => this.Remotes!);
             _gitConfiguration = new Lazy<GitConfiguration>(LoadConfig);
             NoRevisions = new GitRevisionSet(this);
+
+            Branches = new GitBranchesSet(this, () => this.Branches!);
+            Tags = new GitTagsSet(this, () => this.Tags!);
 
             ObjectRepository = null!;
             GitDir = null!;
@@ -80,7 +83,11 @@ namespace AmpScm.Git
         public GitCommitsSet Commits { get; }
         public GitSet<GitTree> Trees { get; }
         public GitSet<GitBlob> Blobs { get; }
-        public GitSet<GitTag> TagObjects { get; }
+        public GitSet<GitTagObject> TagObjects { get; }
+
+        public GitNamedSet<GitBranch> Branches { get; }
+
+        public GitNamedSet<GitTag> Tags { get; }
 
         public GitReferencesSet References { get; }
         public GitRemotesSet Remotes { get; }

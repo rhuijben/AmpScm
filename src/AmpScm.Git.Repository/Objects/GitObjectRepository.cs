@@ -57,7 +57,7 @@ namespace AmpScm.Git.Objects
                 return GitObjectType.Tree;
             else if (typeof(TGitObject) == typeof(GitCommit))
                 return GitObjectType.Commit;
-            else if (typeof(TGitObject) == typeof(GitTag))
+            else if (typeof(TGitObject) == typeof(GitTagObject))
                 return GitObjectType.Tag;
             else
                 return null;

@@ -133,7 +133,9 @@ namespace AmpScm.Buckets.Client
             }
         }
 
+#pragma warning disable CA1034 // Nested types should not be visible
         public new sealed class KeysCollection : IReadOnlyList<string>, ICollection<string>
+#pragma warning restore CA1034 // Nested types should not be visible
         {
             readonly WebHeaderDictionary _whc;
             internal KeysCollection(WebHeaderDictionary whc)

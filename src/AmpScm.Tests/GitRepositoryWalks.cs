@@ -73,11 +73,13 @@ namespace AmpScm.Tests
 
             await foreach (var r in repo.References)
             {
-                TestContext.WriteLine($"{r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
+                TestContext.WriteLine($"{r.Name} {r.ShortName.PadRight(15)} - {r.Commit?.Id:x7} - {r.Commit?.Author}");
             }
 
             if (!repo.IsShallow)
                 Assert.IsNotNull(repo.Commits.FirstOrDefault(x => x.Parents.Count > 1), "Repository has merges");
+
+            Assert.IsTrue(repo.Branches.Any());
         }
 
         [TestMethod]

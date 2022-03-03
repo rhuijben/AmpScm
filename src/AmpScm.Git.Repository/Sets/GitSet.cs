@@ -67,7 +67,7 @@ namespace AmpScm.Git.Sets
 
         public T? this[GitId id]
         {
-            get => Repository.SetQueryProvider.GetAsync<T>(id).Result;
+            get => Repository.SetQueryProvider.GetAsync<T>(id).AsTask().Result;
         }
     }
 }

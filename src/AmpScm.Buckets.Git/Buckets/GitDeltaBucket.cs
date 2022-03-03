@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Interfaces;
@@ -58,11 +59,15 @@ namespace AmpScm.Buckets.Git
 
         public override long? Position => position;
 
-        static uint NumberOfSetBits(uint i)
+        static int PopCount(uint value)
         {
-            i = i - ((i >> 1) & 0x55555555);
-            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-            return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+#if NETFRAMEWORK
+            value = value - ((value >> 1) & 0x55555555);
+            value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
+            return (int)((((value + (value >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24);
+#else
+            return BitOperations.PopCount(value);
+#endif
         }
 
         static int NeedBytes(byte data)
@@ -70,7 +75,7 @@ namespace AmpScm.Buckets.Git
             if (0 == (data & 0x80))
                 return 1;
             else
-                return (int)NumberOfSetBits(data);
+                return PopCount(data);
         }
 
         async ValueTask<bool> AdvanceAsync()

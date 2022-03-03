@@ -103,7 +103,7 @@ namespace AmpScm.Git
             {
                 if (_commit is GitCommit commit)
                     return commit;
-                else if (_object is GitTag tag)
+                else if (_object is GitTagObject tag)
                 {
                     if (tag.Object is GitCommit c2)
                     {
@@ -129,7 +129,7 @@ namespace AmpScm.Git
                         _commit = c4;
                         return c4;
                     }
-                    else if (ob is GitTag tag2)
+                    else if (ob is GitTagObject tag2)
                     {
                         c4 = (tag2.Object as GitCommit)!;
                         _commit = c4;
@@ -142,7 +142,10 @@ namespace AmpScm.Git
 
         public GitRevisionSet Revisions => new GitRevisionSet(Repository.Repository).AddReference(this);
 
-        static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars().Concat(new [] { '^', '@', '{', '}' }));
+        internal bool IsBranch => Name.StartsWith("refs/heads/") || Name == "HEAD";
+        internal bool IsTag => Name.StartsWith("refs/tags/");
+
+        static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 
         public static bool ValidName(string name, bool allowSpecialSymbols)
         {
@@ -158,11 +161,19 @@ namespace AmpScm.Git
                 switch (name[i])
                 {
                     case '\\':
+                    case '~':
+                    case '[':
                         return false;
                     case '.' when (last == '/' || last == '\0'):
                         return false;
-                    case '/' when (last == '\0' || last == '\0'):
+                    case '/' when (last == '\0'):
                         return false;
+                    case '{' when last == '@':
+                        return false;
+                    case '@' when (last == '/' || last == '\0'):
+                        if (("/" + name + "/").Contains("/@/"))
+                            return false;
+                        continue;
                     case '/':
                     case '.':
                         continue;
@@ -172,7 +183,7 @@ namespace AmpScm.Git
                         break;
                 }
             }
-            return (name.Length > 1) && (allowSpecialSymbols || !AllUpper(name));
+            return (name.Length > 1) && (allowSpecialSymbols || !AllUpper(name)) && !name.EndsWith(".lock", StringComparison.OrdinalIgnoreCase);
         }
 
         internal GitReference SetPeeled(GitId? peeled)

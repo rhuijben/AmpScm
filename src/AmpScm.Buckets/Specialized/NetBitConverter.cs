@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -60,8 +61,12 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
+#if !NETFRAMEWORK
+                value = BinaryPrimitives.ReverseEndianness(value);
+#else
                 ushort val = value;
                 value = unchecked((ushort)((val >> 8) | (val << 8)));
+#endif
             }
             return value;
         }
@@ -70,8 +75,12 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
+#if !NETFRAMEWORK
+                value = BinaryPrimitives.ReverseEndianness(value);
+#else
                 uint val = unchecked((uint)value);
                 value = unchecked((int)((val >> 24) | (val << 24) | (val & 0xFF00) << 8 | (val & 0xFF0000) >> 8));
+#endif
             }
             return value;
         }
@@ -81,8 +90,12 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
+#if !NETFRAMEWORK
+                value = BinaryPrimitives.ReverseEndianness(value);
+#else
                 uint val = value;
                 value = unchecked((uint)((val >> 24) | (val << 24) | (val & 0xFF00) << 8 | (val & 0xFF0000) >> 8));
+#endif
             }
             return value;
         }
@@ -91,6 +104,9 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
+#if !NETFRAMEWORK
+                value = BinaryPrimitives.ReverseEndianness(value);
+#else
                 ulong val = unchecked((ulong)value);
                 value = unchecked((long)(
                       ((val & 0x00000000000000FFL) << 56)
@@ -101,6 +117,7 @@ namespace AmpScm.Buckets.Specialized
                     | ((val & 0x0000FF0000000000L) >> 24)
                     | ((val & 0x00FF000000000000L) >> 40)
                     | ((val & 0xFF00000000000000L) >> 56)));
+#endif
             }
             return value;
         }
@@ -110,6 +127,9 @@ namespace AmpScm.Buckets.Specialized
         {
             if (BitConverter.IsLittleEndian)
             {
+#if !NETFRAMEWORK
+                value = BinaryPrimitives.ReverseEndianness(value);
+#else
                 ulong val = value;
                 value = unchecked((ulong)(
                       ((val & 0x00000000000000FFL) << 56)
@@ -120,6 +140,7 @@ namespace AmpScm.Buckets.Specialized
                     | ((val & 0x0000FF0000000000L) >> 24)
                     | ((val & 0x00FF000000000000L) >> 40)
                     | ((val & 0xFF00000000000000L) >> 56)));
+#endif
             }
             return value;
         }
@@ -134,7 +155,7 @@ namespace AmpScm.Buckets.Specialized
         [CLSCompliant(false)]
         public static ushort ToNetwork(ushort value)
         {
-            return FromNetwork(value);            
+            return FromNetwork(value);
         }
 
         public static int ToNetwork(int value)
@@ -161,35 +182,35 @@ namespace AmpScm.Buckets.Specialized
 
         public static short ToInt16(byte[] value, int startOffset)
         {
-            return FromNetwork(BitConverter.ToInt16( value, startOffset));
+            return FromNetwork(BitConverter.ToInt16(value, startOffset));
         }
 
         public static int ToInt32(byte[] value, int startOffset)
         {
-            return FromNetwork(BitConverter.ToInt32( value, startOffset));
+            return FromNetwork(BitConverter.ToInt32(value, startOffset));
         }
 
         public static long ToInt64(byte[] value, int startOffset)
         {
-            return FromNetwork(BitConverter.ToInt64( value, startOffset));
+            return FromNetwork(BitConverter.ToInt64(value, startOffset));
         }
 
         [CLSCompliant(false)]
         public static ushort ToUInt16(byte[] value, int startOffset)
         {
-            return FromNetwork(BitConverter.ToUInt16( value, startOffset));
+            return FromNetwork(BitConverter.ToUInt16(value, startOffset));
         }
 
         [CLSCompliant(false)]
         public static uint ToUInt32(byte[] value, int startOffset)
         {
-            return FromNetwork(BitConverter.ToUInt32( value, startOffset));
+            return FromNetwork(BitConverter.ToUInt32(value, startOffset));
         }
 
         [CLSCompliant(false)]
         public static ulong ToUInt64(byte[] value, int startOffset)
         {
-            return FromNetwork(BitConverter.ToUInt64( value, startOffset));
+            return FromNetwork(BitConverter.ToUInt64(value, startOffset));
         }
     }
 }

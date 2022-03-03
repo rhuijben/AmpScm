@@ -24,7 +24,7 @@ namespace AmpScm.Git.References
             if (File.Exists(Path.Combine(GitDir, GitPackedRefsReferenceRepository.PackedRefsFile)))
                 yield return new GitPackedRefsReferenceRepository(this, GitDir);
 
-            yield return new GitShellReferenceRepository(this, GitDir);
+            //yield return new GitShellReferenceRepository(this, GitDir);
         }
 
 
