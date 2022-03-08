@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -604,11 +605,11 @@ namespace AmpScm.Tests
 
             for (int i = 0; i < 100; i++)
             {
-                v *= 5;
-
                 object origValue;
                 try
                 {
+                    v = checked(v * 3); // Triggers OverFlowException when overflowing long
+
                     origValue = Convert.ChangeType(v, tp);
                 }
                 catch (OverflowException)
@@ -654,9 +655,135 @@ namespace AmpScm.Tests
                 var v3 = th.Invoke(null, new[] { v2 });
 
                 Assert.AreEqual(v1, v3);
-
-
             }
+
+            Assert.IsFalse(restart, $"Did negative check (v={v})");
+        }
+
+
+        [DataRow(BucketCompressionAlgorithm.ZLib)]
+        [DataRow(BucketCompressionAlgorithm.Deflate)]
+        [DataRow(BucketCompressionAlgorithm.GZip)]
+        [TestMethod]
+        public async Task CompressionTest(BucketCompressionAlgorithm alg)
+        {
+            var baseStream = new MemoryStream();
+            for (int i = 0; i < 10; i++)
+            {
+                baseStream.Write(Guid.NewGuid().ToByteArray(), 0, 16);
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                baseStream.Write(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }, 0, 8);
+            }
+
+            var baseData = baseStream.ToArray();
+
+            Bucket compressed;
+
+            switch (alg)
+            {
+                case BucketCompressionAlgorithm.ZLib:
+#if !NET6_0_OR_GREATER
+                    compressed = baseData.AsBucket().Compress(alg);
+#else
+                    {
+                        var ms = new MemoryStream();
+                        var zs = new System.IO.Compression.ZLibStream(ms, System.IO.Compression.CompressionLevel.Optimal);
+
+                        zs.Write(baseData, 0, baseData.Length);
+                        zs.Close();
+                        compressed = ms.ToArray().AsBucket();
+                    }
+#endif
+                    break;
+
+                case BucketCompressionAlgorithm.GZip:
+                    {
+                        var ms = new MemoryStream();
+                        var zs = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal);
+
+                        zs.Write(baseData, 0, baseData.Length);
+                        zs.Close();
+                        compressed = ms.ToArray().AsBucket();
+                        break;
+                    }
+                case BucketCompressionAlgorithm.Deflate:
+                    {
+                        var ms = new MemoryStream();
+                        var zs = new System.IO.Compression.DeflateStream(ms, System.IO.Compression.CompressionLevel.Optimal);
+
+                        zs.Write(baseData, 0, baseData.Length);
+                        zs.Close();
+                        compressed = ms.ToArray().AsBucket();
+                        break;
+                    }
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            var finishData = Guid.NewGuid().ToByteArray();
+            var compressedData = await compressed.Append(finishData.AsBucket()).ToArrayAsync();
+
+            ushort firstTwo = NetBitConverter.ToUInt16(compressedData, 0);
+
+            switch (alg)
+            {
+                case BucketCompressionAlgorithm.GZip:
+                    Assert.AreEqual(0x1F8B, firstTwo, $"Got 0x{firstTwo:x4}");
+                    break;
+                case BucketCompressionAlgorithm.ZLib:
+                    bool isZlib = new ushort[] { 0x7801, 0x789C, 0x78da }.Contains(firstTwo);
+                    Assert.IsTrue(isZlib, $"Got 0x{firstTwo:x4}");
+                    break;
+                case BucketCompressionAlgorithm.Deflate:
+                    // FirstTwo can be anything
+                    break;
+            }
+
+
+            var inner = compressedData.AsBucket();
+            var bb = await inner.Decompress(alg).ReadFullAsync(4096);
+
+            Assert.AreEqual(baseData.Length, bb.Length);
+
+            var decompressed = bb.ToArray();
+
+            Assert.IsTrue(decompressed.SequenceEqual(baseData), "Same data after decompression");
+
+            bb = await inner.ReadFullAsync(4096);
+            Assert.AreEqual(finishData.Length, bb.Length);
+            Assert.IsTrue(bb.ToArray().SequenceEqual(finishData));
+
+
+            if (alg == BucketCompressionAlgorithm.GZip)
+                return; // Not supported yet
+
+            compressed = baseData.AsBucket().Compress(alg);
+
+            await compressed.ReadFullAsync(4096);
+
+
+            var r = await baseData.AsBucket().Compress(alg).ToArrayAsync();
+            Stream rs;
+            switch (alg)
+            {
+                case BucketCompressionAlgorithm.ZLib:
+                    rs = r.AsBucket().Decompress(BucketCompressionAlgorithm.ZLib).AsStream();
+                    break;
+                case BucketCompressionAlgorithm.GZip:
+                    rs = new System.IO.Compression.GZipStream(new MemoryStream(r), System.IO.Compression.CompressionMode.Decompress);
+                    break;
+                case BucketCompressionAlgorithm.Deflate:
+                    rs = new System.IO.Compression.DeflateStream(new MemoryStream(r), System.IO.Compression.CompressionMode.Decompress);
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            byte[] resultBytes = new byte[4096];
+            Assert.AreEqual(baseData.Length, rs.Read(resultBytes, 0, resultBytes.Length));
         }
     }
 }

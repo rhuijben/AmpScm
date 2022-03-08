@@ -169,13 +169,13 @@ namespace AmpScm.Buckets
             switch (algorithm)
             {
                 case BucketCompressionAlgorithm.ZLib:
-                    return new ZLibBucket(self); // Implemented non-eager, using the zlib framing, as required by Git
+                    return new ZLibBucket(self, algorithm, CompressionMode.Decompress);
                 case BucketCompressionAlgorithm.Deflate:
                     // Could be optimized like zlib, but currently unneeded
-                    return new CompressionBucket(self, (inner) => new DeflateStream(inner, CompressionMode.Decompress));
+                    return new ZLibBucket(self, algorithm, CompressionMode.Decompress);
                 case BucketCompressionAlgorithm.GZip:
                     // Could be optimized like zlib, but currently unneeded
-                    return new CompressionBucket(self, (inner) => new GZipStream(inner, CompressionMode.Decompress));
+                    return new ZLibBucket(self, algorithm, CompressionMode.Decompress);
                 case BucketCompressionAlgorithm.Brotli:
 #if !NETFRAMEWORK
                     // Available starting with .Net Core
@@ -192,10 +192,8 @@ namespace AmpScm.Buckets
             switch (algorithm)
             {
                 case BucketCompressionAlgorithm.ZLib:
-                    return new ZLibBucket(self, ZLibLevel.Maximum);
                 case BucketCompressionAlgorithm.Deflate:
-                    // Could be optimized like zlib, but currently unneeded
-                    return new CompressionBucket(self, (inner) => new DeflateStream(inner, CompressionMode.Compress));
+                    return new ZLibBucket(self, algorithm, CompressionMode.Compress);
                 case BucketCompressionAlgorithm.GZip:
                     // Could be optimized like zlib, but currently unneeded
                     return new CompressionBucket(self, (inner) => new GZipStream(inner, CompressionMode.Compress));

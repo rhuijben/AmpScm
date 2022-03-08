@@ -10,6 +10,8 @@
     <RootNamespace>AmpScm.Buckets.Git</RootNamespace>
     <NoWarn>1701;1702;1591;0628</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <PropertyGroup>

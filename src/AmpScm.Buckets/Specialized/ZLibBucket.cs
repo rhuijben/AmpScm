@@ -23,6 +23,7 @@ namespace AmpScm.Buckets.Specialized
         int? _windowBits;
         ZLibLevel? _level;
         readonly IBucketPoll? innerPoll;
+        int? _headerLeft;
 
         public ZLibBucket(Bucket inner)
             : this(inner, 15 /* 15 for zlib. -15 for deflate and 31 for gzip */)
@@ -33,7 +34,7 @@ namespace AmpScm.Buckets.Specialized
         private ZLibBucket(Bucket inner, int windowBits)
             : base(inner)
         {
-            _z = new ();
+            _z = new();
             _z.InflateInit(windowBits);
             write_data = new byte[8192];
             _windowBits = windowBits;
@@ -48,15 +49,81 @@ namespace AmpScm.Buckets.Specialized
             _level = level;
         }
 
+        internal ZLibBucket(Bucket inner, BucketCompressionAlgorithm zlibAlgorithm, CompressionMode mode)
+            : base(inner)
+        {
+            _z = new ZStream();
+            switch ((zlibAlgorithm, mode))
+            {
+                case (BucketCompressionAlgorithm.ZLib, CompressionMode.Decompress):
+                    _windowBits = 15;
+                    _z.InflateInit(_windowBits.Value);
+                    break;
+                case (BucketCompressionAlgorithm.ZLib, CompressionMode.Compress):
+                    _level = (ZLibLevel)ZlibConst.ZDEFAULTCOMPRESSION;
+                    _windowBits = 15;
+                    _z.DeflateInit(ZlibConst.ZBESTCOMPRESSION, _windowBits.Value);
+                    break;
+                case (BucketCompressionAlgorithm.Deflate, CompressionMode.Decompress):
+                    _windowBits = -15;
+                    _z.InflateInit(_windowBits.Value);
+                    break;
+                case (BucketCompressionAlgorithm.Deflate, CompressionMode.Compress):
+                    _level = (ZLibLevel)ZlibConst.ZDEFAULTCOMPRESSION;
+                    _windowBits = -15;
+                    _z.DeflateInit(ZlibConst.ZBESTCOMPRESSION, _windowBits.Value);
+                    break;
+                case (BucketCompressionAlgorithm.GZip, CompressionMode.Decompress):
+                    _windowBits = -15;
+                    _z.InflateInit(_windowBits.Value);
+                    _headerLeft = 10;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(zlibAlgorithm));
+            }
+            write_data = new byte[8192];
+        }
+
         public override string Name => "ZLib>" + Inner.Name;
 
-        async ValueTask<bool> Refill(bool forPeek, int requested=int.MaxValue)
+        async ValueTask<bool> Refill(bool forPeek, int requested = int.MaxValue)
         {
             bool retry_refill;
             do
             {
                 retry_refill = false;
                 int to_read = 0;
+
+                if (_headerLeft.HasValue && _headerLeft != 0)
+                {
+                    int left = Math.Abs(_headerLeft.Value);
+                    while (left > 0)
+                    {
+                        if (forPeek)
+                            return false;
+
+                        var bb = await Inner.ReadAsync(left).ConfigureAwait(false);
+
+                        if (bb.IsEof)
+                            throw new InvalidOperationException($"Unexpected EOF in GZip header on {Inner.Name}");
+
+                        int n = bb.Length;
+                        if (n > 0)
+                        {
+                            left -= n;
+                        }
+                    }
+
+                    if (_headerLeft > 0)
+                        _headerLeft = 0;
+                    else
+                    {
+                        _eof = true;
+                        _headerLeft = null;
+                        return true;
+                    }
+                }
+
 
                 if (!_readEof && read_buffer.IsEmpty)
                 {
@@ -148,7 +215,13 @@ namespace AmpScm.Buckets.Specialized
                 if (r == ZlibConst.ZSTREAMEND)
                 {
                     _readEof = true;
-                    _eof = true;
+
+                    if (_headerLeft.HasValue)
+                    {
+                        _headerLeft = -8;
+                    }
+                    else
+                        _eof = true;
                 }
                 //else if (r == zlibConst.Z_BUF_ERROR && _readEof && _z.next_out_index == 0)
                 //{
@@ -171,7 +244,7 @@ namespace AmpScm.Buckets.Specialized
 
                     var now_read = await Inner.ReadAsync(to_read).ConfigureAwait(false);
                     if (now_read.Length != to_read)
-                            throw new InvalidOperationException($"Read on {Inner.Name} did not complete as promissed by peek");
+                        throw new BucketException($"Read on {Inner.Name} did not complete as promissed by peek");
                 }
                 else
                     read_buffer = read_buffer.Slice(_z.NextInIndex - rb_offs);

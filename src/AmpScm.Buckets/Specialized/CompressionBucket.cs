@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
@@ -15,7 +16,7 @@ namespace AmpScm.Buckets.Specialized
 
         public CompressionBucket(Bucket inner, Func<Stream, Stream> compressor) : base(inner)
         {
-            Src = Inner.AsStream();
+            Src = Inner.AsStream(new Writer(this));
             Processed = compressor(Src);
         }
 
@@ -71,6 +72,25 @@ namespace AmpScm.Buckets.Specialized
                     _offset = _valid = 0;
                     _eof = true;
                 }
+            }
+        }
+
+        private class Writer : IBucketWriter
+        {
+            CompressionBucket Bucket { get; }
+
+            public Writer(CompressionBucket bucket)
+            {
+                Bucket = bucket;
+            }
+            public ValueTask ShutdownAsync()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Write(Bucket bucket)
+            {
+                throw new NotImplementedException();
             }
         }
     }

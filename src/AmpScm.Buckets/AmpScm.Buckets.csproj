@@ -11,6 +11,8 @@
     <NoWarn>1701;1702;1591</NoWarn>
     <WarningLevel>5</WarningLevel>
     <PublishTrimmed>true</PublishTrimmed>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <PropertyGroup>
