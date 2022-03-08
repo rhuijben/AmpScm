@@ -459,12 +459,12 @@ namespace AmpScm.Git.Repository
             var (exitCode, output) = r.GetAwaiter().GetResult();
             bool gotUser = false;
             bool gotPass = false;
-            string username = null;
-            string password = null;
+            string? username = null;
+            string? password = null;
 
-            foreach(var l in output.Split('\n'))
+            foreach (var l in output.Split('\n'))
             {
-                var kv = l.Split(new[] { '=' },2);
+                var kv = l.Split(new[] { '=' }, 2);
 
                 if ("username".Equals(kv[0], StringComparison.OrdinalIgnoreCase))
                 {
@@ -486,7 +486,7 @@ namespace AmpScm.Git.Repository
             {
                 e.Username = username;
                 e.Password = password;
-                e.Succeeded += async(_,_) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
+                e.Succeeded += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
                 e.Failed += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "reject" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
             }
         }

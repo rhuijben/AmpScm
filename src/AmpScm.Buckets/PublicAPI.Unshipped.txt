@@ -35,6 +35,7 @@ AmpScm.Buckets.Client.BucketWebClient.CreateRequest(string! url) -> AmpScm.Bucke
 AmpScm.Buckets.Client.BucketWebClient.CreateRequest(System.Uri! requestUri) -> AmpScm.Buckets.Client.BucketWebRequest!
 AmpScm.Buckets.Client.BucketWebClient.Dispose() -> void
 AmpScm.Buckets.Client.BucketWebRequest
+AmpScm.Buckets.Client.BucketWebRequest.BasicAuthentication -> System.EventHandler<AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs!>?
 AmpScm.Buckets.Client.BucketWebRequest.BucketWebRequest(AmpScm.Buckets.Client.BucketWebClient! client, System.Uri! requestUri) -> void
 AmpScm.Buckets.Client.BucketWebRequest.Client.get -> AmpScm.Buckets.Client.BucketWebClient!
 AmpScm.Buckets.Client.BucketWebRequest.ContentLength.get -> long?

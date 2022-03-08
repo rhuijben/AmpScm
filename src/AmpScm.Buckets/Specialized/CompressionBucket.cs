@@ -92,7 +92,7 @@ namespace AmpScm.Buckets.Specialized
                     }
                     else
                     {
-#if NET5_0_OR_GREATER
+#if !NETFRAMEWORK
                         await Processed.WriteAsync(bb.Memory).ConfigureAwait(false);
 #else
                         var bytes = bb.ToArray();

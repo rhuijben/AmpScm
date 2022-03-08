@@ -92,7 +92,7 @@ namespace AmpScm.Buckets.Client
 
         public event EventHandler<BasicBucketAuthenticationEventArgs>? BasicAuthentication;
 
-        internal EventHandler<BasicBucketAuthenticationEventArgs> GetBasicAuthenticationHandlers()
+        internal EventHandler<BasicBucketAuthenticationEventArgs>? GetBasicAuthenticationHandlers()
         {
             return BasicAuthentication + Client.GetBasicAuthenticationHandlers();
         }
