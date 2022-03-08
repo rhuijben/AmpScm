@@ -35,7 +35,6 @@ AmpScm.Buckets.Client.BucketWebClient.CreateRequest(string! url) -> AmpScm.Bucke
 AmpScm.Buckets.Client.BucketWebClient.CreateRequest(System.Uri! requestUri) -> AmpScm.Buckets.Client.BucketWebRequest!
 AmpScm.Buckets.Client.BucketWebClient.Dispose() -> void
 AmpScm.Buckets.Client.BucketWebRequest
-AmpScm.Buckets.Client.BucketWebRequest.BasicAuthentication -> System.EventHandler<AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs!>!
 AmpScm.Buckets.Client.BucketWebRequest.BucketWebRequest(AmpScm.Buckets.Client.BucketWebClient! client, System.Uri! requestUri) -> void
 AmpScm.Buckets.Client.BucketWebRequest.Client.get -> AmpScm.Buckets.Client.BucketWebClient!
 AmpScm.Buckets.Client.BucketWebRequest.ContentLength.get -> long?
@@ -56,6 +55,7 @@ AmpScm.Buckets.Client.Http.HttpResponseBucket.HttpStatus.get -> int?
 AmpScm.Buckets.Client.Http.HttpResponseBucket.HttpVersion.get -> string?
 AmpScm.Buckets.Client.Http.HttpResponseBucket.ReadStatusAsync() -> System.Threading.Tasks.ValueTask<int>
 AmpScm.Buckets.Client.Http.HttpResponseBucket.Request.get -> AmpScm.Buckets.Client.Protocols.HttpBucketRequest!
+AmpScm.Buckets.Client.Protocols.HttpBucketRequest
 AmpScm.Buckets.Client.ResponseBucket
 AmpScm.Buckets.Client.ResponseBucket.Request.get -> AmpScm.Buckets.Client.BucketWebRequest!
 AmpScm.Buckets.Client.ResponseBucket.ResponseBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Buckets.Client.BucketWebRequest! request) -> void
@@ -158,7 +158,7 @@ override AmpScm.Buckets.AggregateBucket.DisposeAsyncCore() -> System.Threading.T
 override AmpScm.Buckets.AggregateBucket.DuplicateAsync(bool reset) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Bucket!>
 override AmpScm.Buckets.AggregateBucket.Peek() -> AmpScm.Buckets.BucketBytes
 override AmpScm.Buckets.AggregateBucket.Position.get -> long?
-override AmpScm.Buckets.AggregateBucket.ReadAsync(int requested = -1) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.AggregateBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.AggregateBucket.ReadRemainingBytesAsync() -> System.Threading.Tasks.ValueTask<long?>
 override AmpScm.Buckets.AggregateBucket.ReadSkipAsync(int requested) -> System.Threading.Tasks.ValueTask<int>
 override AmpScm.Buckets.AggregateBucket.ResetAsync() -> System.Threading.Tasks.ValueTask

@@ -40,7 +40,7 @@ namespace AmpScm.Buckets.Client.Http
                 case DechunkState.Eof:
                     return BucketBytes.Eof;
                 default:
-                    Advance(false).GetAwaiter().GetResult(); // Never waits!
+                    Advance(false).AsTask().GetAwaiter().GetResult(); // Never waits!
 
                     if (_state == DechunkState.Chunk)
                         goto case DechunkState.Chunk;

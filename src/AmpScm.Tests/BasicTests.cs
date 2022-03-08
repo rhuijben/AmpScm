@@ -664,9 +664,13 @@ namespace AmpScm.Tests
         [DataRow(BucketCompressionAlgorithm.ZLib)]
         [DataRow(BucketCompressionAlgorithm.Deflate)]
         [DataRow(BucketCompressionAlgorithm.GZip)]
+#if NET6_0_OR_GREATER
+        [DataRow(BucketCompressionAlgorithm.Brotli)]
+#endif
         [TestMethod]
         public async Task CompressionTest(BucketCompressionAlgorithm alg)
         {
+            bool overshoot = false;
             var baseStream = new MemoryStream();
             for (int i = 0; i < 10; i++)
             {
@@ -719,11 +723,25 @@ namespace AmpScm.Tests
                         compressed = ms.ToArray().AsBucket();
                         break;
                     }
+#if NET6_0_OR_GREATER
+                case BucketCompressionAlgorithm.Brotli:
+                    {
+                        var ms = new MemoryStream();
+                        var zs = new System.IO.Compression.BrotliStream(ms, System.IO.Compression.CompressionLevel.Optimal);
+
+                        zs.Write(baseData, 0, baseData.Length);
+                        zs.Close();
+                        compressed = ms.ToArray().AsBucket();
+
+                        overshoot = true;
+                        break;
+                    }
+#endif
                 default:
                     throw new InvalidOperationException();
             }
 
-            var finishData = Guid.NewGuid().ToByteArray();
+            var finishData = overshoot ? Array.Empty<byte>() : Guid.NewGuid().ToByteArray();
             var compressedData = await compressed.Append(finishData.AsBucket()).ToArrayAsync();
 
             ushort firstTwo = NetBitConverter.ToUInt16(compressedData, 0);
@@ -756,15 +774,6 @@ namespace AmpScm.Tests
             Assert.AreEqual(finishData.Length, bb.Length);
             Assert.IsTrue(bb.ToArray().SequenceEqual(finishData));
 
-
-            if (alg == BucketCompressionAlgorithm.GZip)
-                return; // Not supported yet
-
-            compressed = baseData.AsBucket().Compress(alg);
-
-            await compressed.ReadFullAsync(4096);
-
-
             var r = await baseData.AsBucket().Compress(alg).ToArrayAsync();
             Stream rs;
             switch (alg)
@@ -778,6 +787,11 @@ namespace AmpScm.Tests
                 case BucketCompressionAlgorithm.Deflate:
                     rs = new System.IO.Compression.DeflateStream(new MemoryStream(r), System.IO.Compression.CompressionMode.Decompress);
                     break;
+#if NET6_0_OR_GREATER
+                case BucketCompressionAlgorithm.Brotli:
+                    rs = new System.IO.Compression.BrotliStream(new MemoryStream(r), System.IO.Compression.CompressionMode.Decompress);
+                    break;
+#endif
                 default:
                     throw new InvalidOperationException();
             }
