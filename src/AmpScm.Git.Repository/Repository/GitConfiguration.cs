@@ -448,12 +448,12 @@ namespace AmpScm.Git.Repository
             }
         }
 
-        static object _extraHeader = new object();
+        static readonly object _extraHeaderSetTag = new();
         public void BasicAuthenticationHandler(object? sender, BasicBucketAuthenticationEventArgs e)
         {
-            if (e.Items[_extraHeader] is null && (e.Uri?.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ?? false))
+            if (e.Items[_extraHeaderSetTag] is null && (e.Uri?.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ?? false))
             {
-                e.Items[_extraHeader] = _extraHeader;
+                e.Items[_extraHeaderSetTag] = _extraHeaderSetTag;
 
                 // GitHub action uses $ git.exe config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
                 var extraHeader = GetString($"http.{e.Uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}/", "extraheader") ?? GetString($"http", "extraheader");

@@ -256,7 +256,7 @@ namespace AmpScm.Buckets.Client.Http
                     }
                 }
             }
-            else
+            else if (handlers is not null)
                 hlrs.Add(handlers);
 
             foreach (var h in hlrs)
