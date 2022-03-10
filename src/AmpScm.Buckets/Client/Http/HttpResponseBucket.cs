@@ -233,6 +233,7 @@ namespace AmpScm.Buckets.Client.Http
         {
             var handlers = Request.GetBasicAuthenticationHandlers();
             List<BasicHandler> hlrs = new List<BasicHandler>();
+            var items = new System.Collections.Hashtable();
 
             if (handlers is MulticastDelegate md)
             {
@@ -263,7 +264,7 @@ namespace AmpScm.Buckets.Client.Http
                 BasicBucketAuthenticationEventArgs? e;
                 do
                 {
-                    e = new BasicBucketAuthenticationEventArgs(uri, realm);
+                    e = new BasicBucketAuthenticationEventArgs(uri, realm, items);
                     h.Invoke(this, e);
 
                     if (e.Handled)

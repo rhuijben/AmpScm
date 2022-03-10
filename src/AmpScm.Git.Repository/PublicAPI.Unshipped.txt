@@ -39,6 +39,7 @@ AmpScm.Git.GitRemote.ReadAsync() -> System.Threading.Tasks.ValueTask
 AmpScm.Git.GitRemote.Url.get -> System.Uri?
 AmpScm.Git.GitRepository
 AmpScm.Git.GitRepository.Blobs.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitBlob!>!
+AmpScm.Git.GitRepository.Branches.get -> AmpScm.Git.Sets.GitNamedSet<AmpScm.Git.GitBranch!>!
 AmpScm.Git.GitRepository.Commits.get -> AmpScm.Git.Sets.GitCommitsSet!
 AmpScm.Git.GitRepository.Configuration.get -> AmpScm.Git.Repository.GitConfiguration!
 AmpScm.Git.GitRepository.Dispose() -> void
@@ -53,6 +54,7 @@ AmpScm.Git.GitRepository.ReferenceRepository.get -> AmpScm.Git.References.GitRef
 AmpScm.Git.GitRepository.References.get -> AmpScm.Git.Sets.GitReferencesSet!
 AmpScm.Git.GitRepository.Remotes.get -> AmpScm.Git.Sets.GitRemotesSet!
 AmpScm.Git.GitRepository.TagObjects.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTagObject!>!
+AmpScm.Git.GitRepository.Tags.get -> AmpScm.Git.Sets.GitNamedSet<AmpScm.Git.GitTag!>!
 AmpScm.Git.GitRepository.Trees.get -> AmpScm.Git.Sets.GitSet<AmpScm.Git.GitTree!>!
 AmpScm.Git.GitRepositoryException
 AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message) -> void
@@ -102,8 +104,6 @@ AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue(int generat
 AmpScm.Git.Objects.GitCommitGenerationValue.HasValue.get -> bool
 AmpScm.Git.Objects.GitCommitGenerationValue.Value.get -> ulong
 AmpScm.Git.Objects.GitObjectRepository
-AmpScm.Git.Objects.GitObjectRepository.GitObjectRepository(AmpScm.Git.GitRepository! repository) -> void
-AmpScm.Git.Objects.GitObjectRepository.Repository.get -> AmpScm.Git.GitRepository!
 AmpScm.Git.References.GitReferenceRepository
 AmpScm.Git.References.GitReferenceRepository.GetAsync(string! name) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 AmpScm.Git.References.GitReferenceRepository.GitDir.get -> string!

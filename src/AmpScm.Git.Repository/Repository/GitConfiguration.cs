@@ -448,8 +448,47 @@ namespace AmpScm.Git.Repository
             }
         }
 
+        static object _extraHeader = new object();
         public void BasicAuthenticationHandler(object? sender, BasicBucketAuthenticationEventArgs e)
         {
+            if (e.Items[_extraHeader] is null && (e.Uri?.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ?? false))
+            {
+                e.Items[_extraHeader] = _extraHeader;
+
+                // GitHub action uses $ git.exe config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+                var extraHeader = GetString($"http.{e.Uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped)}/", "extraheader") ?? GetString($"http", "extraheader");
+
+                if (!string.IsNullOrEmpty(extraHeader) && extraHeader.StartsWith("Authorization: Basic ", StringComparison.OrdinalIgnoreCase))
+                {
+                    var p = extraHeader.Split(new char[] { ' ' }, 3)[2];
+
+                    try
+                    {
+                        var userPass = Encoding.UTF8.GetString(Convert.FromBase64String(p));
+
+                        string[] parts = userPass.Split(new char[] { ':' }, 2);
+
+                        e.Username = parts[0];
+                        e.Password = parts[1];
+                        e.Continue = true; // If failed, fall through in next code
+                        e.Handled = true;
+                        return;
+                    }
+                    catch (FormatException)
+                    {
+                        // Fall through to normal auth
+                    }
+                    catch (DecoderFallbackException)
+                    {
+                        // Fall through to normal auth
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Fall through to normal auth
+                    }
+                }
+            }
+
             e.Continue = false; // Only run this handler once!
 
             // BUG: Somehow the first line gets corrupted, so we write an ignored first line to make sure the required fields get through correctly

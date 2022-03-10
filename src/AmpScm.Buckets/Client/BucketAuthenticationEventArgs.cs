@@ -8,10 +8,11 @@ namespace AmpScm.Buckets.Client
 {
     public class BucketAuthenticationEventArgs : EventArgs
     {
-        internal BucketAuthenticationEventArgs(Uri uri, string realm)
+        internal BucketAuthenticationEventArgs(Uri uri, string realm, System.Collections.Hashtable items)
         {
             Uri = uri;
             Realm = realm;
+            Items = items;
         }
 
         public string Realm { get; }
@@ -26,12 +27,14 @@ namespace AmpScm.Buckets.Client
         internal void OnSucceeded() => Succeeded?.Invoke(this, this);
 
         internal void OnFailed() => Failed?.Invoke(this, this);
+
+        public System.Collections.Hashtable Items { get; }
     }
 
     public class BasicBucketAuthenticationEventArgs : BucketAuthenticationEventArgs
     {
-        internal BasicBucketAuthenticationEventArgs(Uri uri, string realm)
-            : base(uri, realm)
+        internal BasicBucketAuthenticationEventArgs(Uri uri, string realm, System.Collections.Hashtable items)
+            : base(uri, realm, items)
         {
         }
 

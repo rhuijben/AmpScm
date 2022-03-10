@@ -78,7 +78,7 @@ namespace AmpScm.Git.Sets
 
         internal GitRevisionSet AddReference(GitReference gitReference)
         {
-            if (gitReference?.Commit is var q)
+            if (gitReference?.Commit is GitCommit q)
                 return AddCommit(q);
 
             return this;

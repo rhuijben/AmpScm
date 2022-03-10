@@ -15,7 +15,7 @@ namespace AmpScm.Git.Objects
     {
         protected GitRepository Repository { get; }
 
-        protected GitObjectRepository(GitRepository repository, string key)
+        private protected GitObjectRepository(GitRepository repository, string key)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             Key = key ?? throw new ArgumentNullException(nameof(key));

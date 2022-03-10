@@ -16,7 +16,7 @@ namespace AmpScm.Git.References
         {
         }
 
-        public async override ValueTask ReadAsync()
+        public override async ValueTask ReadAsync()
         {
             string body;
 
