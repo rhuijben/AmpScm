@@ -33,9 +33,19 @@ namespace AmpScm.Git.References
 
         protected internal abstract ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic);
 
+        public virtual IAsyncEnumerable<GitReferenceChange>? GetChanges(GitReference reference)
+        {
+            return default;
+        }
+
         static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 
-        public virtual ValueTask<GitReference?> ResolveByOid(GitId arg)
+        public virtual ValueTask<GitReference?> ResolveByOidAsync(GitId arg)
+        {
+            return default;
+        }
+
+        protected internal virtual ValueTask<GitReference?> ResolveAsync(GitReference gitReference)
         {
             return default;
         }

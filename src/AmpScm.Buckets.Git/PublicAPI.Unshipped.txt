@@ -3,6 +3,25 @@ AmpScm.Buckets.Git.Buckets.GitPacketBucket
 AmpScm.Buckets.Git.Buckets.GitPacketBucket.CurrentPacketLength.get -> int
 AmpScm.Buckets.Git.Buckets.GitPacketBucket.GitPacketBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.Buckets.GitPacketBucket.ReadFullPacket() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+AmpScm.Buckets.Git.Buckets.GitReferenceLogBucket
+AmpScm.Buckets.Git.Buckets.GitReferenceLogBucket.GitReferenceLogBucket(AmpScm.Buckets.Bucket! inner) -> void
+AmpScm.Buckets.Git.Buckets.GitReferenceLogBucket.ReadGitReferenceLogRecordAsync() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord?>
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Original.get -> AmpScm.Git.GitId!
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Original.init -> void
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Signature.get -> AmpScm.Buckets.Git.Buckets.GitSignatureRecord!
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Signature.init -> void
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Summary.get -> string?
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Summary.init -> void
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Target.get -> AmpScm.Git.GitId!
+AmpScm.Buckets.Git.Buckets.GitReferenceLogRecord.Target.init -> void
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord.Email.get -> string!
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord.Email.init -> void
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord.Name.get -> string!
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord.Name.init -> void
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord.When.get -> System.DateTimeOffset
+AmpScm.Buckets.Git.Buckets.GitSignatureRecord.When.init -> void
 AmpScm.Buckets.Git.GitBucket
 AmpScm.Buckets.Git.GitBucket.GitBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.GitBucketException
@@ -44,14 +63,10 @@ AmpScm.Buckets.Git.GitPackHeaderBucket.GitPackHeaderBucket(AmpScm.Buckets.Bucket
 AmpScm.Buckets.Git.GitPackHeaderBucket.GitType.get -> string?
 AmpScm.Buckets.Git.GitPackHeaderBucket.ObjectCount.get -> uint?
 AmpScm.Buckets.Git.GitPackHeaderBucket.Version.get -> int?
-AmpScm.Buckets.Git.Objects.GitTreeElement
-AmpScm.Buckets.Git.Objects.GitTreeElement.GitTreeElement() -> void
-AmpScm.Buckets.Git.Objects.GitTreeElement.Id.get -> AmpScm.Git.GitId!
-AmpScm.Buckets.Git.Objects.GitTreeElement.Id.set -> void
-AmpScm.Buckets.Git.Objects.GitTreeElement.Name.get -> string!
-AmpScm.Buckets.Git.Objects.GitTreeElement.Name.set -> void
-AmpScm.Buckets.Git.Objects.GitTreeElement.Type.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
-AmpScm.Buckets.Git.Objects.GitTreeElement.Type.set -> void
+AmpScm.Buckets.Git.Objects.GitTreeElementRecord
+AmpScm.Buckets.Git.Objects.GitTreeElementRecord.Id.get -> AmpScm.Git.GitId!
+AmpScm.Buckets.Git.Objects.GitTreeElementRecord.Name.get -> string!
+AmpScm.Buckets.Git.Objects.GitTreeElementRecord.Type.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 AmpScm.Buckets.Git.Objects.GitTreeElementType
 AmpScm.Buckets.Git.Objects.GitTreeElementType.Directory = 16384 -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 AmpScm.Buckets.Git.Objects.GitTreeElementType.File = 33188 -> AmpScm.Buckets.Git.Objects.GitTreeElementType
@@ -61,7 +76,7 @@ AmpScm.Buckets.Git.Objects.GitTreeElementType.None = 0 -> AmpScm.Buckets.Git.Obj
 AmpScm.Buckets.Git.Objects.GitTreeElementType.SymbolicLink = 40960 -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket.GitTreeReadBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType idType) -> void
-AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadTreeElement() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.ValueOrEof<AmpScm.Buckets.Git.Objects.GitTreeElement>>
+AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadTreeElementRecord() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.Objects.GitTreeElementRecord!>
 AmpScm.Git.GitException
 AmpScm.Git.GitException.GitException() -> void
 AmpScm.Git.GitException.GitException(string! message) -> void
@@ -87,6 +102,7 @@ AmpScm.Git.GitObjectType.None = 0 -> AmpScm.Git.GitObjectType
 AmpScm.Git.GitObjectType.Tag = 4 -> AmpScm.Git.GitObjectType
 AmpScm.Git.GitObjectType.Tree = 2 -> AmpScm.Git.GitObjectType
 override AmpScm.Buckets.Git.Buckets.GitPacketBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.Buckets.GitReferenceLogBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.Git.GitConfigurationItem.ToString() -> string!
 override AmpScm.Buckets.Git.GitConfigurationReaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.Git.GitDeltaBucket.CanReset.get -> bool

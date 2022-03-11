@@ -7,14 +7,15 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Git;
 using AmpScm.Git.Implementation;
 
 namespace AmpScm.Git.Sets
 {
-    public class GitNamedSet<T> : GitSet<T>, IGitAsyncQueryable<T>
-        where T : class, IGitNamedObject
+    public class GitObjectSet<T> : GitSet<T>, IGitAsyncQueryable<T>
+        where T : GitObject
     {
-        internal GitNamedSet(GitRepository repository, Expression<Func<GitNamedSet<T>>> rootExpression)
+        internal GitObjectSet(GitRepository repository, Expression<Func<GitObjectSet<T>>> rootExpression)
             : base(repository)
         {
             Expression = (rootExpression?.Body as MemberExpression) ?? throw new ArgumentNullException();
@@ -22,22 +23,22 @@ namespace AmpScm.Git.Sets
 
         public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return Repository.SetQueryProvider.GetNamedAsyncEnumerable<T>(cancellationToken).GetAsyncEnumerator(cancellationToken);
+            return Repository.SetQueryProvider.GetAsyncEnumerator<T>(cancellationToken);
         }
 
         public override IEnumerator<T> GetEnumerator()
         {
-            return Repository.SetQueryProvider.GetNamedEnumerable<T>().GetEnumerator();
+            return Repository.SetQueryProvider.GetEnumerable<T>().GetEnumerator();
         }
 
-        public ValueTask<T?> GetAsync(string name)
+        public ValueTask<T?> GetAsync(GitId id)
         {
-            return Repository.SetQueryProvider.GetNamedAsync<T>(name);
+            return Repository.SetQueryProvider.GetAsync<T>(id);
         }
 
-        public T? this[string name]
+        public T? this[GitId id]
         {
-            get => Repository.SetQueryProvider.GetNamedAsync<T>(name).Result;
+            get => Repository.SetQueryProvider.GetAsync<T>(id).AsTask().Result;
         }
     }
 }

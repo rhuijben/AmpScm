@@ -1,48 +1,41 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using AmpScm.Git.Implementation;
-using AmpScm.Git.References;
 using AmpScm.Git.Sets.Walker;
 
 namespace AmpScm.Git.Sets
 {
-    public class GitRevisionSet : GitSet, IGitAsyncQueryable<GitRevision>, IListSource
+    public class GitRevisionSet : GitSet<GitRevision>, IGitAsyncQueryable<GitRevision>
     {
-        protected GitRepository Repository { get; }
-        GitRevisionSetOptions _options;
+        readonly GitRevisionSetOptions _options;
 
         internal GitRevisionSet(GitRepository repository)
             : this(repository, null)
         {
+            _options = new GitRevisionSetOptions();
+            Expression = Expression.Call(Expression.Property(Expression.Constant(Repository),
+                                GetProperty<GitRepository>(x => x.NoRevisions)),
+                                GetMethod(x => x.SetOptions(null!)),
+                                Expression.Constant(_options));
         }
 
         internal GitRevisionSet(GitRepository repository, GitRevisionSetOptions? options)
+            : base(repository)
         {
-            Repository = repository;
             _options = options ?? new GitRevisionSetOptions();
+            Expression = Expression.Call(Expression.Property(Expression.Constant(Repository),
+                                GetProperty<GitRepository>(x => x.NoRevisions)),
+                                GetMethod(x => x.SetOptions(null!)),
+                                Expression.Constant(_options));
         }
-
-        Type IQueryable.ElementType => typeof(GitRevision);
 
         static System.Reflection.PropertyInfo GetProperty<T>(Expression<Func<T, object>> pr)
             => (System.Reflection.PropertyInfo)((MemberExpression)pr.Body).Member;
 
         static System.Reflection.MethodInfo GetMethod(Expression<Func<GitRevisionSet, object>> pr)
             => ((MethodCallExpression)pr.Body).Method;
-
-        Expression IQueryable.Expression => Expression.Call(Expression.Property(Expression.Constant(Repository),
-            GetProperty<GitRepository>(x => x.NoRevisions)),
-            GetMethod(x => x.SetOptions(null!)),
-            Expression.Constant(_options));
-
-        IQueryProvider IQueryable.Provider => Repository.SetQueryProvider;
 
         IAsyncEnumerator<GitRevision> IAsyncEnumerable<GitRevision>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
@@ -59,21 +52,9 @@ namespace AmpScm.Git.Sets
             }
         }
 
-        public IEnumerator<GitRevision> GetEnumerator()
+        public override IEnumerator<GitRevision> GetEnumerator()
         {
             return this.AsNonAsyncEnumerable().GetEnumerator();
-        }
-
-        IList IListSource.GetList()
-        {
-            return new List<GitRevision>(this);
-        }
-
-        bool IListSource.ContainsListCollection => false;
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         internal GitRevisionSet AddReference(GitReference gitReference)

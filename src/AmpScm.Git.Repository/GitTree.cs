@@ -45,19 +45,19 @@ namespace AmpScm.Git
                     return;
             }
 
-            var el = await rdr.ReadTreeElement();
+            var el = await rdr.ReadTreeElementRecord();
 
-            if (el.IsEof)
+            if (el is null)
             {
                 _rdr = null;
                 await rdr.DisposeAsync();
                 return;
             }
 
-            _entries.Add(NewGitTreeEntry(el.Value));
+            _entries.Add(NewGitTreeEntry(el));
         }
 
-        private GitTreeEntry NewGitTreeEntry(GitTreeElement value)
+        private GitTreeEntry NewGitTreeEntry(GitTreeElementRecord value)
         {
             if (value.Type == GitTreeElementType.Directory)
                 return new GitDirectoryTreeEntry(this, value.Name, value.Id);

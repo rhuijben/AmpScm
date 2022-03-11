@@ -24,7 +24,7 @@ namespace AmpScm.Git.Objects
             ObjectsDir = objectsDir;
             _idType = GitIdType.Sha1;
 
-            _repositories = new Lazy<GitObjectRepository[]>(() => GetRepositories().ToArray());            
+            _repositories = new Lazy<GitObjectRepository[]>(() => GetRepositories().ToArray());
         }
 
         Lazy<GitObjectRepository[]> _repositories;
@@ -85,14 +85,14 @@ namespace AmpScm.Git.Objects
             {
                 // TODO: Check if length matches hashtype?
                 yield return new PackObjectRepository(Repository, pack, _idType);
-            }            
+            }
 
             yield return new FileObjectRepository(Repository, ObjectsDir);
 
             var alternatesFile = Path.Combine(ObjectsDir, "info/alternates");
             if (File.Exists(alternatesFile))
             {
-                foreach(var line in File.ReadAllLines(alternatesFile))
+                foreach (var line in File.ReadAllLines(alternatesFile))
                 {
                     var l = line.Trim();
                     if (string.IsNullOrWhiteSpace(l))
@@ -121,9 +121,28 @@ namespace AmpScm.Git.Objects
         {
             HashSet<GitId> returned = new HashSet<GitId>();
 
+            if (typeof(TGitObject) == typeof(GitTagObject))
+            {
+                // Tag is such an uncommon object that finding it globally is very
+                // expensive, while the most common usecase is testsuites.
+                //
+                // Let's walk references of type tag first, as there should
+                // be a reference pointing towards them anyway
+
+                await foreach (var v in Repository.References.Where(x => x.IsTag))
+                {
+                    if (v.Object is GitTagObject tag)
+                    {
+                        yield return (TGitObject)(object)tag;
+
+                        returned.Add(tag.Id);
+                    }
+                }
+            }
+
             foreach (var p in Sources)
             {
-                await foreach(var v in p.GetAll<TGitObject>())
+                await foreach (var v in p.GetAll<TGitObject>())
                 {
                     if (!returned.Contains(v.Id!))
                     {

@@ -24,7 +24,7 @@ namespace AmpScm.Git
         GitSignature? _author;
         GitSignature? _committer;
 
-        internal GitCommit(GitRepository repository, GitBucket rdr, GitId id)
+        internal GitCommit(GitRepository repository, GitObjectBucket rdr, GitId id)
             : base(repository, id)
         {
             _tree = rdr;

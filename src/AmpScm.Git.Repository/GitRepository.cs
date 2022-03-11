@@ -32,11 +32,11 @@ namespace AmpScm.Git
             _container = new ServiceContainer();
 
             SetQueryProvider = new GitQueryProvider(this);
-            Objects = new GitSet<GitObject>(this, () => this.Objects!);
+            Objects = new GitObjectSet<GitObject>(this, () => this.Objects!);
             Commits = new GitCommitsSet(this, () => this.Commits!);
-            Blobs = new GitSet<GitBlob>(this, () => this.Blobs!);
-            TagObjects = new GitSet<GitTagObject>(this, () => this.TagObjects!);
-            Trees = new GitSet<GitTree>(this, () => this.Trees!);
+            Blobs = new GitObjectSet<GitBlob>(this, () => this.Blobs!);
+            TagObjects = new GitObjectSet<GitTagObject>(this, () => this.TagObjects!);
+            Trees = new GitObjectSet<GitTree>(this, () => this.Trees!);
             References = new GitReferencesSet(this, () => this.References!);
             Remotes = new GitRemotesSet(this, () => this.Remotes!);
             _gitConfiguration = new Lazy<GitConfiguration>(LoadConfig);
@@ -79,11 +79,11 @@ namespace AmpScm.Git
             ReferenceRepository = new References.GitRepositoryReferenceRepository(this, GitDir);
         }
 
-        public GitSet<GitObject> Objects { get; }
+        public GitObjectSet<GitObject> Objects { get; }
         public GitCommitsSet Commits { get; }
-        public GitSet<GitTree> Trees { get; }
-        public GitSet<GitBlob> Blobs { get; }
-        public GitSet<GitTagObject> TagObjects { get; }
+        public GitObjectSet<GitTree> Trees { get; }
+        public GitObjectSet<GitBlob> Blobs { get; }
+        public GitObjectSet<GitTagObject> TagObjects { get; }
 
         public GitNamedSet<GitBranch> Branches { get; }
 
@@ -157,9 +157,14 @@ namespace AmpScm.Git
             return SetQueryProvider.GetAsync<TResult>(id);
         }
 
-        IQueryable<GitRevision> IGitQueryRoot.GetRevisions(GitRevisionSet p)
+        IQueryable<GitRevision> IGitQueryRoot.GetRevisions(GitRevisionSet set)
         {
-            return SetQueryProvider.GetRevisions(p);
+            return SetQueryProvider.GetRevisions(set);
+        }
+
+        IQueryable<GitReferenceChange> IGitQueryRoot.GetAllReferenceChanges(GitReferenceChangeSet set)
+        {
+            return SetQueryProvider.GetAllReferenceChanges(set);
         }
 
         object? IServiceProvider.GetService(Type serviceType)

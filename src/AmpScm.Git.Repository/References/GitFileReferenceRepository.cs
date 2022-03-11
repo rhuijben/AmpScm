@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AmpScm.Buckets;
+using AmpScm.Buckets.Git.Buckets;
 using AmpScm.Git.Repository.Implementation;
 
 namespace AmpScm.Git.References
@@ -44,6 +46,45 @@ namespace AmpScm.Git.References
             return new GitReference(this, name, new GitAsyncLazy<GitId?>(async () => await LoadOidFromFile(fileName)));
         }
 
+        protected internal override async ValueTask<GitReference?> ResolveAsync(GitReference gitReference)
+        {
+            string fileName = Path.Combine(GitDir, gitReference.Name);
+
+            if (!File.Exists(fileName))
+                return null;
+
+            string body;
+            try
+            {
+#if NETFRAMEWORK
+                body = File.ReadAllText(fileName);
+#else
+                body = await File.ReadAllTextAsync(fileName);
+#endif
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
+
+            if (body.Length > 256)
+                return null; // Auch...
+
+            if (body.StartsWith("ref:"))
+            {
+                try
+                {
+                    var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim());
+
+                    if (ob is not null)
+                        return ob;
+                }
+                catch { }
+            }
+            
+            return gitReference; // Not symbolic, and exists. Or error and exists
+        }
+
         async ValueTask<GitId?> LoadOidFromFile(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -82,6 +123,28 @@ namespace AmpScm.Git.References
             }
 
             return null;
+        }
+
+        public override IAsyncEnumerable<GitReferenceChange>? GetChanges(GitReference reference)
+        {
+            string fileName = Path.Combine(GitDir, "logs", reference.Name);
+
+            if (File.Exists(fileName))
+                return GetChangesFromRefLogFile(fileName);
+
+            return null;
+        }
+
+        private async IAsyncEnumerable<GitReferenceChange>? GetChangesFromRefLogFile(string fileName)
+        {
+            using var fb = FileBucket.OpenRead(fileName);
+
+            using var gr = new GitReferenceLogBucket(fb);
+
+            while(await gr.ReadGitReferenceLogRecordAsync() is GitReferenceLogRecord lr)
+            {
+                yield return new GitReferenceChange(lr);
+            }
         }
     }
 }

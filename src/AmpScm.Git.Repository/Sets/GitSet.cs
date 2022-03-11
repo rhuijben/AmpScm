@@ -14,60 +14,40 @@ namespace AmpScm.Git.Sets
 {
     public class GitSet
     {
-        internal GitSet()
-        { }
-    }
-
-    public class GitSet<T> : GitSet, IGitAsyncQueryable<T>, IListSource
-        where T : GitObject
-    {
         protected GitRepository Repository { get; }
-        protected MemberExpression RootExpression {get;}
 
-        internal GitSet(GitRepository repository, Expression<Func<GitSet<T>>> rootExpression)
+        internal GitSet(GitRepository repository)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            RootExpression = (rootExpression?.Body as MemberExpression) ?? throw new ArgumentNullException();
+        }
+    }
+
+    public abstract class GitSet<T> : GitSet, IEnumerable<T>, IQueryable, IListSource
+        where T : class, IGitObject
+    {
+        protected Expression Expression { get; set; } = default!;
+        internal GitSet(GitRepository repository) : base(repository)
+        {
         }
 
-        internal GitQueryProvider Provider => Repository.SetQueryProvider;
-
-        public Type ElementType => typeof(T);
-
-        Expression IQueryable.Expression => RootExpression;
-
-        bool IListSource.ContainsListCollection => false;
+        Type IQueryable.ElementType => typeof(T);
 
         IQueryProvider IQueryable.Provider => Repository.SetQueryProvider;
 
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            return Repository.SetQueryProvider.GetAsyncEnumerator<T>(cancellationToken);
-        }
+        Expression IQueryable.Expression => Expression;
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return Repository.SetQueryProvider.GetEnumerable<T>().GetEnumerator();
-        }
+        bool IListSource.ContainsListCollection => false;
 
-        public IList GetList()
-        {
-            return Repository.SetQueryProvider.GetList<T>();
-        }
+        public abstract IEnumerator<T> GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
-        public ValueTask<T?> GetAsync(GitId id)
+        IList IListSource.GetList()
         {
-            return Repository.SetQueryProvider.GetAsync<T>(id);
-        }
-
-        public T? this[GitId id]
-        {
-            get => Repository.SetQueryProvider.GetAsync<T>(id).AsTask().Result;
+            return this.ToList();
         }
     }
 }

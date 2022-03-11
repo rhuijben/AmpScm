@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Git.Buckets;
 
 namespace AmpScm.Git
 {
@@ -12,9 +13,16 @@ namespace AmpScm.Git
         string? _email;
         DateTimeOffset _when;
 
-        public GitSignature(string author, string email, DateTime now)
+        internal GitSignature(GitSignatureRecord signature)
         {
-            _value = author ?? throw new ArgumentNullException(nameof(author));
+            _value = signature.Name;
+            _email = signature.Email;
+            _when = signature.When;
+        }
+
+        public GitSignature(string name, string email, DateTimeOffset now)
+        {
+            _value = name ?? throw new ArgumentNullException(nameof(name));
             _email = email ?? throw new ArgumentNullException(nameof(email));
             _when = now;
             if (email.IndexOfAny(new[] { '<', '>' }) >= 0)
@@ -71,16 +79,16 @@ namespace AmpScm.Git
 
             int nS = _value.LastIndexOf('<');
             int nF = _value.IndexOf('>', nS + 1);
-            
+
             _email = _value.Substring(nS + 1, nF - nS - 1);
             string[] time = _value.Substring(nF + 2).Split(new[] { ' ' }, 2);
 
             if (int.TryParse(time[0], out var unixtime) && int.TryParse(time[1], out var offset))
             {
-                _when = DateTimeOffset.FromUnixTimeSeconds(unixtime).ToOffset(TimeSpan.FromHours(offset/100));
+                _when = DateTimeOffset.FromUnixTimeSeconds(unixtime).ToOffset(TimeSpan.FromMinutes((offset / 100) * 60 + (offset % 100)));
             }
 
-            while (nS > 0 && char.IsWhiteSpace(_value, nS-1))
+            while (nS > 0 && char.IsWhiteSpace(_value, nS - 1))
                 nS--;
 
             _value = _value.Substring(0, nS);

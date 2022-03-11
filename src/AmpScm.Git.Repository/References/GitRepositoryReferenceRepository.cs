@@ -45,6 +45,37 @@ namespace AmpScm.Git.References
             }
         }
 
+        public override IAsyncEnumerable<GitReferenceChange> GetChanges(GitReference reference)
+        {
+            foreach (var v in Sources)
+            {
+                var r = v.GetChanges(reference);
+
+                if (r is not null)
+                    return r;
+            }
+
+            return AsyncEnumerable.Empty<GitReferenceChange>();
+        }
+
+        protected internal override async ValueTask<GitReference?> ResolveAsync(GitReference gitReference)
+        {
+            foreach (var v in Sources)
+            {
+                var r = await v.ResolveAsync(gitReference);
+
+                if (r is not null)
+                    return r;
+            }
+
+            return null;
+        }
+
+        public override ValueTask<GitReference?> ResolveByOidAsync(GitId arg)
+        {
+            return base.ResolveByOidAsync(arg);
+        }
+
         public GitSymbolicReference? HeadReference { get; private set; }
         protected async internal override ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
         {

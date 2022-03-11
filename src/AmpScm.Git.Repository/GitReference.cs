@@ -16,6 +16,7 @@ namespace AmpScm.Git
         object? _commit;
         Lazy<GitId?>? _resolver;
         string? _shortName;
+        GitReference? _resolved;
 
         internal GitReference(GitReferenceRepository repository, string name, Lazy<GitId?> resolver)
         {
@@ -142,6 +143,8 @@ namespace AmpScm.Git
 
         public GitRevisionSet Revisions => new GitRevisionSet(Repository.Repository).AddReference(this);
 
+        public GitReferenceChangeSet ReferenceChanges => new GitReferenceChangeSet(Repository.Repository, this);
+
         internal bool IsBranch => Name.StartsWith("refs/heads/") || Name == "HEAD";
         internal bool IsTag => Name.StartsWith("refs/tags/");
 
@@ -201,5 +204,19 @@ namespace AmpScm.Git
             }
             return true;
         }
+
+        public async ValueTask<GitReference> ResolveAsync()
+        {
+            _resolved ??= (await Repository.ResolveAsync(this)) ?? this;
+
+            return _resolved;
+        }
+
+        public GitReference Resolved
+        {
+            get => ResolveAsync().AsTask().Result;
+        }
+
     }
 }
+

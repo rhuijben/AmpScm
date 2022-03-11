@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -58,7 +59,9 @@ namespace AmpScm.Git.Implementation
                             newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetRevisions(null!)), newArguments[i]);
                         else if (typeof(GitRemote).IsAssignableFrom(elementType))
                             newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAllNamed<GitRemote>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
-                        else
+                        else if (typeof(GitReferenceChange).IsAssignableFrom(elementType))
+                            newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAllReferenceChanges(null!)), newArguments[i]);
+                        else 
                             newArguments[i] = Expression.Call(_defaultRoot, GetMethod<IGitQueryRoot>(x => x.GetAllNamed<GitReference>()).GetGenericMethodDefinition().MakeGenericMethod(elementType!));
 
                         node = node.Update(node.Object!, newArguments);
@@ -69,7 +72,7 @@ namespace AmpScm.Git.Implementation
             return base.VisitMethodCall(node);
         }
 
-        private bool IsSafeQueryableType(Type paramType, out Type? elementType)
+        private bool IsSafeQueryableType(Type paramType, [NotNullWhen(true)] out Type elementType)
         {
             if (GitQueryProvider.GetElementType(paramType) is Type elType)
             {
@@ -78,7 +81,7 @@ namespace AmpScm.Git.Implementation
 
                 return paramType.IsAssignableFrom(queryableType);
             }
-            elementType = null;
+            elementType = null!;
             return false;
         }
     }

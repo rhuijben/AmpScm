@@ -40,11 +40,11 @@ namespace AmpScm.Buckets.Git.Objects
         GitCommitLink = 0xE000,
     }
 
-    public struct GitTreeElement
+    public record GitTreeElementRecord
     {
-        public GitTreeElementType Type { get; set; }
-        public string Name { get; set; }
-        public GitId Id { get; set; }
+        public GitTreeElementType Type { get; internal init; }
+        public string Name { get; internal init; } = default!;
+        public GitId Id { get; internal init; } = default!;
     }
 
     public class GitTreeReadBucket : GitBucket
@@ -59,7 +59,7 @@ namespace AmpScm.Buckets.Git.Objects
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            while (!(await ReadTreeElement()).IsEof)
+            while (await ReadTreeElementRecord() != null)
             {
 
             }
@@ -67,7 +67,7 @@ namespace AmpScm.Buckets.Git.Objects
             return BucketBytes.Eof;
         }
 
-        public async ValueTask<ValueOrEof<GitTreeElement>> ReadTreeElement()
+        public async ValueTask<GitTreeElementRecord> ReadTreeElementRecord()
         {
             if (!_checkedType && Inner is GitObjectBucket gobb)
             {
@@ -82,7 +82,7 @@ namespace AmpScm.Buckets.Git.Objects
             var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.Zero, null);
 
             if (bb.IsEof)
-                return new ValueOrEof<GitTreeElement>(true);
+                return null;
 
             if (eol != BucketEol.Zero)
                 throw new GitBucketException("Truncated tree");
@@ -103,7 +103,7 @@ namespace AmpScm.Buckets.Git.Objects
 
             var val = Convert.ToInt32(mask, 8);
 
-            return new GitTreeElement { Name = name, Type = (GitTreeElementType)val, Id = id };
+            return new GitTreeElementRecord { Name = name, Type = (GitTreeElementType)val, Id = id };
         }
     }
 }

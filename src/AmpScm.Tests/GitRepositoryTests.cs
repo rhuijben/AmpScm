@@ -206,6 +206,48 @@ namespace AmpScm.Tests
         }
 
         [TestMethod]
+        public async Task WalkRefLogHead()
+        {
+            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
+            int n = 0;
+
+            await foreach (var c in repo.Head.ReferenceChanges)
+            {
+                TestContext.WriteLine($"{c.OriginalId} {c.TargetId} {c.Signature}\t{c.Summary}");
+                Assert.IsNotNull(c.OriginalId);
+                Assert.IsNotNull(c.TargetId);
+                Assert.IsNotNull(c.Signature);
+                Assert.IsNotNull(c.Summary);
+                n++;
+            }
+
+            Assert.IsTrue(repo.Head.ReferenceChanges.Last().Signature.When >= repo.Head.Commit!.Committer!.When);
+
+            Assert.IsTrue(n > 0);
+        }
+
+        [TestMethod]
+        public async Task WalkRefLogMaster()
+        {
+            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
+            int n = 0;
+
+            await foreach (var c in repo.Head.Resolved.ReferenceChanges)
+            {
+                TestContext.WriteLine($"{c.OriginalId} {c.TargetId} {c.Signature}\t{c.Summary}");
+                Assert.IsNotNull(c.OriginalId);
+                Assert.IsNotNull(c.TargetId);
+                Assert.IsNotNull(c.Signature);
+                Assert.IsNotNull(c.Summary);
+                n++;
+            }
+
+            Assert.IsTrue(repo.Head.Resolved.ReferenceChanges.Last().Signature.When >= repo.Head.Commit!.Committer!.When);
+
+            Assert.IsTrue(n > 0);
+        }
+
+        [TestMethod]
         public void WalkOne()
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
@@ -322,7 +364,7 @@ namespace AmpScm.Tests
                 {
                     typeof(GitRepositoryTests).GetMethod("WalkSets_TestSet")!.MakeGenericMethod(typeof(T), v.ElementType).Invoke(this, new object[] { v, prop, walked });
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     throw new TargetInvocationException($"When trying the {typeof(T).Name}.{prop.Name} property", e);
                 }
@@ -358,6 +400,15 @@ namespace AmpScm.Tests
         public void WalkSetsEmptyRepository()
         {
             using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Nothing"));
+            HashSet<Type> walked = new HashSet<Type>();
+
+            WalkSets_TestType(repo, walked);
+        }
+
+        [TestMethod]
+        public void WalkSetsDevRepository()
+        {
+            using var repo = GitRepository.Open(Environment.CurrentDirectory);
             HashSet<Type> walked = new HashSet<Type>();
 
             WalkSets_TestType(repo, walked);

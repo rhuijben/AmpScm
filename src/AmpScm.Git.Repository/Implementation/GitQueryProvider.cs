@@ -51,7 +51,7 @@ namespace AmpScm.Git.Implementation
             return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
         }
 
-        internal IAsyncEnumerable<T> GetNamedAsyncEnumerable<T>(CancellationToken cancellationToken=default)
+        internal IAsyncEnumerable<T> GetNamedAsyncEnumerable<T>(CancellationToken cancellationToken = default)
         {
             if (typeof(T) == typeof(GitReference))
                 return (IAsyncEnumerable<T>)Repository.ReferenceRepository.GetAll();
@@ -140,14 +140,20 @@ namespace AmpScm.Git.Implementation
             return default;
         }
 
-        public IQueryable<GitRevision> GetRevisions(GitRevisionSet p)
+        public IQueryable<GitRevision> GetRevisions(GitRevisionSet set)
         {
-            return WrapEnumerable(p).AsQueryable();
+            return WrapEnumerable(set).AsQueryable();
         }
+
+        public IQueryable<GitReferenceChange> GetAllReferenceChanges(GitReferenceChangeSet set)
+        {
+            return WrapEnumerable(set).AsQueryable();
+        }
+
 
         static IEnumerable<T> WrapEnumerable<T>(IEnumerable<T> r)
         {
-            foreach(var v in r)
+            foreach (var v in r)
                 yield return v;
         }
     }
