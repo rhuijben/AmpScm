@@ -49,7 +49,7 @@ namespace AmpScm.Buckets.Git
             }
         }
 
-        protected async override ValueTask DisposeAsyncCore()
+        protected override async ValueTask DisposeAsyncCore()
         {
             if (!DontDisposeInner)
                 await BaseBucket.DisposeAsync();
@@ -62,7 +62,7 @@ namespace AmpScm.Buckets.Git
         static int PopCount(uint value)
         {
 #if NETFRAMEWORK
-            value = value - ((value >> 1) & 0x55555555);
+            value -= ((value >> 1) & 0x55555555);
             value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
             return (int)((((value + (value >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24);
 #else
@@ -290,7 +290,7 @@ namespace AmpScm.Buckets.Git
             throw new InvalidOperationException();
         }
 
-        public async override ValueTask<int> ReadSkipAsync(int requested)
+        public override async ValueTask<int> ReadSkipAsync(int requested)
         {
             int skipped = 0;
             while (requested > 0)
@@ -434,7 +434,7 @@ namespace AmpScm.Buckets.Git
 
         public override string Name => "GitDelta[" + Inner.Name + "]>" + BaseBucket.Name;
 
-        public async override ValueTask ResetAsync()
+        public override async ValueTask ResetAsync()
         {
             if (!CanReset)
                 throw new InvalidOperationException($"Reset not supported on {Name} bucket");

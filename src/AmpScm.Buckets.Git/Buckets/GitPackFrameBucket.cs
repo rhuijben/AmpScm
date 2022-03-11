@@ -16,7 +16,7 @@ namespace AmpScm.Buckets.Git
         long position;
         long frame_position;
         long delta_position;
-        GitIdType _oidType;
+        readonly GitIdType _oidType;
         Func<GitId, ValueTask<GitObjectBucket>>? _oidResolver;
         byte[]? _deltaId;
 
@@ -298,6 +298,7 @@ namespace AmpScm.Buckets.Git
                     DeltaCount = 1;
 
                 reader = new GitDeltaBucket(reader!, base_reader);
+                _oidResolver = null;
             }
 
             return true;
@@ -321,7 +322,7 @@ namespace AmpScm.Buckets.Git
                 return body_size - reader!.Position;
         }
 
-        public async override ValueTask ResetAsync()
+        public override async ValueTask ResetAsync()
         {
             if (state < frame_state.body)
                 return; // Nothing to reset

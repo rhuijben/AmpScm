@@ -15,7 +15,7 @@ namespace AmpScm.Git.References
             _repositories = new Lazy<GitReferenceRepository[]>(() => GetRepositories().ToArray());
         }
 
-        Lazy<GitReferenceRepository[]> _repositories;
+        readonly Lazy<GitReferenceRepository[]> _repositories;
 
         private IEnumerable<GitReferenceRepository> GetRepositories()
         {
@@ -77,7 +77,7 @@ namespace AmpScm.Git.References
         }
 
         public GitSymbolicReference? HeadReference { get; private set; }
-        protected async internal override ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
+        protected internal override async ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
         {
             if (findSymbolic && name == Head)
                 return HeadReference ??= new GitSymbolicReference(this, Head);

@@ -11,7 +11,7 @@ namespace AmpScm.Buckets.Specialized
         {
         }
 
-        public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
+        public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             var v = await Inner.ReadAsync(requested).ConfigureAwait(false);
 
@@ -19,7 +19,7 @@ namespace AmpScm.Buckets.Specialized
             return v;
         }
 
-        public async override ValueTask<int> ReadSkipAsync(int requested)
+        public override async ValueTask<int> ReadSkipAsync(int requested)
         {
             var v = await Inner.ReadSkipAsync(requested).ConfigureAwait(false);
 
@@ -27,7 +27,7 @@ namespace AmpScm.Buckets.Specialized
             return v;
         }
 
-        public async override ValueTask ResetAsync()
+        public override async ValueTask ResetAsync()
         {
             await base.ResetAsync().ConfigureAwait(false);
             _position = 0;

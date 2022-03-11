@@ -220,7 +220,7 @@ namespace AmpScm.Git.Objects
             throw new GitRepositoryException("Unsupported pack version");
         }
 
-        public async override ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
             where TGitObject : class
         {
             Init();
@@ -285,7 +285,7 @@ namespace AmpScm.Git.Objects
                 throw new GitBucketException($"Header has {phr.ObjectCount} records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
-        public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
             where TGitObject : class
         {
             Init();

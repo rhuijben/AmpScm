@@ -18,7 +18,7 @@ namespace AmpScm.Tests
         public TestContext TestContext { get; set; } = null!;
 
 
-        static string[] ignored = new[] { "for-each-repo" }; // Experimental, and 100% unneeded for our usecase
+        static readonly string[] ignored = new[] { "for-each-repo" }; // Experimental, and 100% unneeded for our usecase
 
         [TestMethod]
         public async Task GitHelpToPlumbing()
@@ -110,7 +110,7 @@ namespace AmpScm.Tests
             return mif.Name + "-" + mm?.DeclaringType?.Name + "." + mm?.Name;
         }
 
-        static Regex reArgument = new Regex(@"--?[a-z0-9][a-z0-9-]*(\s*\<[^>]+\>)?(\s*[,|]\s*--?[a-z0-9][a-z0-9-]*\s*(\<[^>]+\>)?)*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex reArgument = new Regex(@"--?[a-z0-9][a-z0-9-]*(\s*\<[^>]+\>)?(\s*[,|]\s*--?[a-z0-9][a-z0-9-]*\s*(\<[^>]+\>)?)*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         [TestMethod]
         [DynamicData(nameof(PlumbingCommandArgs), DynamicDataDisplayName = nameof(PlumbingCommandName))]

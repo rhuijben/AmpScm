@@ -34,7 +34,7 @@ namespace AmpScm.Buckets
 
     partial class Bucket
     {
-        public async virtual ValueTask<(BucketBytes, BucketEol)> ReadUntilEolAsync(BucketEol acceptableEols, int requested = int.MaxValue)
+        public virtual async ValueTask<(BucketBytes, BucketEol)> ReadUntilEolAsync(BucketEol acceptableEols, int requested = int.MaxValue)
         {
             if ((acceptableEols & ~BucketEol.EolMask) != 0)
                 throw new ArgumentOutOfRangeException(nameof(acceptableEols));

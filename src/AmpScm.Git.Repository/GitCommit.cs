@@ -18,7 +18,6 @@ namespace AmpScm.Git
         object? _tree;
         object? _parent;
         Dictionary<string, string>? _headers;
-        string? _encoding;
         string? _message;
         string? _summary;
         GitSignature? _author;
@@ -30,7 +29,7 @@ namespace AmpScm.Git
             _tree = rdr;
         }
 
-        public override sealed GitObjectType Type => GitObjectType.Commit;
+        public sealed override GitObjectType Type => GitObjectType.Commit;
 
         public GitTree Tree
         {
@@ -47,7 +46,7 @@ namespace AmpScm.Git
 
                     try
                     {
-                        var t = Repository.ObjectRepository.Get<GitTree>(oid).Result; // BAD async
+                        var t = Repository.ObjectRepository.Get<GitTree>(oid).AsTask().Result; // BAD async
 
                         if (t != null)
                         {
@@ -102,7 +101,7 @@ namespace AmpScm.Git
             else
                 return null;
 
-            return SetParent(index, Repository.ObjectRepository.Get<GitCommit>(id).Result);
+            return SetParent(index, Repository.ObjectRepository.Get<GitCommit>(id).AsTask().Result);
         }
         private GitId? GetParentId(int index, bool viaIndex = true)
         {
@@ -158,7 +157,7 @@ namespace AmpScm.Git
         {
             get
             {
-                return _summary ?? (_summary = GitTools.CreateSummary(Message));
+                return _summary ??= GitTools.CreateSummary(Message);
             }
         }
 
@@ -186,7 +185,7 @@ namespace AmpScm.Git
 
         private void Read()
         {
-            ReadAsync().GetAwaiter().GetResult();
+            ReadAsync().AsTask().GetAwaiter().GetResult();
         }
 
         public override async ValueTask ReadAsync()
@@ -234,9 +233,6 @@ namespace AmpScm.Git
                             break;
                         case "committer":
                             _committer = new GitSignature(parts[1]);
-                            break;
-                        case "encoding":
-                            _encoding = parts[1];
                             break;
                         case "mergetag":
                             break;
@@ -299,9 +295,7 @@ namespace AmpScm.Git
 
             public IEnumerator<GitId> GetEnumerator()
             {
-                object[]? parents = Commit._parent as object[];
-
-                if (parents != null)
+                if (Commit._parent is object[] parents)
                 {
                     for (int i = 0; i < parents.Length; i++)
                     {
@@ -344,9 +338,7 @@ namespace AmpScm.Git
 
             public IEnumerator<GitCommit> GetEnumerator()
             {
-                object[]? parents = Commit._parent as object[];
-
-                if (parents != null)
+                if (Commit._parent is object[] parents)
                 {
                     for (int i = 0; i < parents.Length; i++)
                     {

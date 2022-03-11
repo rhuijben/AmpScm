@@ -19,7 +19,7 @@ namespace AmpScm.Buckets.Git
             return BucketBytes.Empty;
         }
 
-        public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
+        public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (!_header.HasResult)
             {

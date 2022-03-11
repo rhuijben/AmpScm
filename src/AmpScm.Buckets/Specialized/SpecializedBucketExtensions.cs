@@ -32,7 +32,7 @@ namespace AmpScm.Buckets.Specialized
             return new CreateHashBucket(self, CreateHashBucket.Crc32.Create(), (v) => created(NetBitConverter.ToInt32(v, 0)));
         }
 
-        public async static ValueTask ReadSkipUntilEofAsync(this Bucket self)
+        public static async ValueTask ReadSkipUntilEofAsync(this Bucket self)
         {
             if (self == null)
                 throw new ArgumentNullException(nameof(self));
@@ -41,7 +41,7 @@ namespace AmpScm.Buckets.Specialized
             { }
         }
 
-        public async static ValueTask<BucketBytes> ReadFullAsync(this Bucket self, int requested)
+        public static async ValueTask<BucketBytes> ReadFullAsync(this Bucket self, int requested)
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
@@ -69,7 +69,7 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        public async static ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, BucketEolState? eolState, int requested = int.MaxValue)
+        public static async ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, BucketEolState? eolState, int requested = int.MaxValue)
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
@@ -170,7 +170,7 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        public async static ValueTask<BucketBytes> ReadUntilAsync(this Bucket self, byte b)
+        public static async ValueTask<BucketBytes> ReadUntilAsync(this Bucket self, byte b)
         {
             IEnumerable<byte>? result = null;
 

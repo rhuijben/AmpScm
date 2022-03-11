@@ -305,7 +305,7 @@ namespace AmpScm.Tests
             {
                 try
                 {
-                    ae.AnyAsync().GetAwaiter().GetResult();
+                    ae.AnyAsync().AsTask().GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {
@@ -326,7 +326,7 @@ namespace AmpScm.Tests
 
                 try
                 {
-                    aq.AnyAsync().GetAwaiter().GetResult();
+                    aq.AnyAsync().AsTask().GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {

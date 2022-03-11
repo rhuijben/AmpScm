@@ -12,7 +12,7 @@ namespace AmpScm.Buckets
     {
         Bucket?[] _buckets;
         int _n;
-        bool _keepOpen;
+        readonly bool _keepOpen;
         long _position;
 
         object LockOn => this;
@@ -241,7 +241,7 @@ namespace AmpScm.Buckets
             get => _position;
         }
 
-        public async override ValueTask<Bucket> DuplicateAsync(bool reset)
+        public override async ValueTask<Bucket> DuplicateAsync(bool reset)
         {
             if (!_keepOpen)
                 throw new NotSupportedException();

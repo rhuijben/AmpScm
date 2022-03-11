@@ -78,7 +78,7 @@ namespace AmpScm.Buckets.Git
             }
         }
 
-        public async override ValueTask<long?> ReadRemainingBytesAsync()
+        public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
             await ReadTypeAsync();
 
@@ -108,7 +108,7 @@ namespace AmpScm.Buckets.Git
 
         public override bool CanReset => Inner.CanReset;
 
-        public async override ValueTask ResetAsync()
+        public override async ValueTask ResetAsync()
         {
             await base.ResetAsync();
 

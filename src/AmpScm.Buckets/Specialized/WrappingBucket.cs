@@ -6,7 +6,7 @@ namespace AmpScm.Buckets.Specialized
     public abstract class WrappingBucket : Bucket
     {
         protected Bucket Inner { get; }
-        internal protected bool DontDisposeInner { get; internal set; }
+        protected internal bool DontDisposeInner { get; internal set; }
 
         protected WrappingBucket(Bucket inner)
         {
@@ -29,7 +29,7 @@ namespace AmpScm.Buckets.Specialized
                 Inner.Dispose();
         }
 
-        protected async override ValueTask DisposeAsyncCore()
+        protected override async ValueTask DisposeAsyncCore()
         {
             if (!DontDisposeInner)
                 await Inner.DisposeAsync().ConfigureAwait(false);

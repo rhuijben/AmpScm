@@ -14,13 +14,13 @@ namespace AmpScm.Buckets.Specialized
 {
     public class TlsBucket : WrappingBucket, IBucketWriter, IBucketWriterStats
     {
-        byte[] _inputBuffer;
+        readonly byte[] _inputBuffer;
         BucketBytes _unread;
         readonly SslStream _stream;
         bool _writeEof, _readEof;
         Task? _writing;
         bool _authenticated;
-        string _targetHost;
+        readonly string _targetHost;
         long _bytesRead;
 
         IBucketWriter InnerWriter { get; }
@@ -72,7 +72,7 @@ namespace AmpScm.Buckets.Specialized
             return _unread;
         }
 
-        public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
+        public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (!_authenticated)
             {

@@ -15,15 +15,13 @@ namespace AmpScm.Git.Objects
         readonly string _fileName;
         GitIdType _idType;
         FileStream? _fs;
-        bool _initialized;
 
         public CommitGraphRepository(GitRepository repository, string chainFile) : base(repository, "CommitGraph:"+chainFile)
         {
             _fileName = chainFile ?? throw new ArgumentNullException(nameof(chainFile));
-            _initialized = false;
         }
 
-        public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
         {
             if (!typeof(TGitObject).IsAssignableFrom(typeof(GitCommit)))
                 yield break;
@@ -62,7 +60,7 @@ namespace AmpScm.Git.Objects
 
         async ValueTask Init()
         {
-            if (_initialized)
+            if (_fanOut is not null)
                 return;
 
             await Task.Yield();

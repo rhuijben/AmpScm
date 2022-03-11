@@ -14,12 +14,12 @@ namespace AmpScm.Git
 {
     partial class GitRepository
     {
-        internal protected ValueTask<int> RunPlumbingCommand(string command, params string[] args)
+        protected internal ValueTask<int> RunPlumbingCommand(string command, params string[] args)
         {
             return RunPlumbingCommand(command, args, stdinText: null, expectedResults: null);
         }
 
-        internal protected async ValueTask<int> RunPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        protected internal async ValueTask<int> RunPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
@@ -46,8 +46,8 @@ namespace AmpScm.Git
             StringBuilder? outputText = null;
             StringBuilder? errorText = null;
 
-            p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
-            p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
+            p.OutputDataReceived += (sender, e) => { lock (startInfo) (outputText ??= new StringBuilder()).AppendLine(e.Data); };
+            p.ErrorDataReceived += (sender, e) => { lock (startInfo) (errorText ??= new StringBuilder()).AppendLine(e.Data); };
 
             if (!string.IsNullOrEmpty(stdinText))
                 p.StandardInput.Write(stdinText);
@@ -64,7 +64,7 @@ namespace AmpScm.Git
             return p.ExitCode;
         }
 
-        internal protected async ValueTask<(int ExitCode, string OutputText)> RunPlumbingCommandOut(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        protected internal async ValueTask<(int ExitCode, string OutputText)> RunPlumbingCommandOut(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
@@ -91,8 +91,8 @@ namespace AmpScm.Git
             StringBuilder? outputText = null;
             StringBuilder? errorText = null;
 
-            p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
-            p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
+            p.OutputDataReceived += (sender, e) => { lock (startInfo) (outputText ??= new StringBuilder()).AppendLine(e.Data); };
+            p.ErrorDataReceived += (sender, e) => { lock (startInfo) (errorText ??= new StringBuilder()).AppendLine(e.Data); };
 
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
@@ -109,10 +109,13 @@ namespace AmpScm.Git
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
 
-            return (p.ExitCode, outputText?.ToString() ?? "");
+            lock (startInfo)
+            {
+                return (p.ExitCode, outputText?.ToString() ?? "");
+            }
         }
 
-        internal protected IAsyncEnumerable<string> WalkPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        protected internal IAsyncEnumerable<string> WalkPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {
@@ -151,7 +154,7 @@ namespace AmpScm.Git
             bool _eof;
             string? _current;
             StringBuilder? _errText;
-            int[]? _expectedResults;
+            readonly int[]? _expectedResults;
 
             public StdOutputWalker(Process p, int[]? expectedResults)
             {
@@ -257,7 +260,7 @@ namespace AmpScm.Git
         }
 #endif
 
-        internal protected async ValueTask<(int ExitCode, string OutputText, string ErrorText)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
+        protected internal async ValueTask<(int ExitCode, string OutputText, string ErrorText)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
             {

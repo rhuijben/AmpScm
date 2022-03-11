@@ -16,7 +16,8 @@ namespace AmpScm.Git.Repository
     public class GitConfiguration
     {
         protected GitRepository Repository { get; }
-        string _gitDir;
+
+        readonly string _gitDir;
         bool _loaded;
         int _repositoryFormatVersion;
         readonly Dictionary<(string, string?, string), string> _config = new Dictionary<(string, string?, string), string>();
@@ -139,7 +140,7 @@ namespace AmpScm.Git.Repository
         internal IEnumerable<(string, string)> GetGroup(string group, string? subGroup)
         {
             if (!_loaded)
-                LoadAsync().GetAwaiter().GetResult();
+                LoadAsync().AsTask().GetAwaiter().GetResult();
 
             group = group.ToLowerInvariant();
 
@@ -155,14 +156,14 @@ namespace AmpScm.Git.Repository
         public IEnumerable<string> GetSubGroups(string group)
         {
             if (!_loaded)
-                LoadAsync().GetAwaiter().GetResult();
+                LoadAsync().AsTask().GetAwaiter().GetResult();
 
             group = group.ToLowerInvariant();
             HashSet<string> subGroups = new HashSet<string>();
 
             foreach (var v in _config)
             {
-                var (g, s, k) = v.Key;
+                var (g, s, _) = v.Key;
 
                 if (s == null)
                     continue;
@@ -229,7 +230,7 @@ namespace AmpScm.Git.Repository
 
         internal int? GetInt(string group, string key)
         {
-            return GetIntAsync(group, key).Result;
+            return GetIntAsync(group, key).AsTask().Result;
         }
 
         public async ValueTask<string?> GetStringAsync(string group, string key)
@@ -252,7 +253,7 @@ namespace AmpScm.Git.Repository
 
         internal string? GetString(string group, string key)
         {
-            return GetStringAsync(group, key).Result;
+            return GetStringAsync(group, key).AsTask().Result;
         }
 
 
@@ -300,16 +301,16 @@ namespace AmpScm.Git.Repository
 
         public bool? GetBool(string group, string key)
         {
-            return GetBoolAsync(group, key).Result;
+            return GetBoolAsync(group, key).AsTask().Result;
         }
 
         internal class GitLazyConfig
         {
             GitConfiguration Configuration { get; }
-            Lazy<bool> _repositoryIsLazy;
-            Lazy<bool> _repositoryIsShallow;
-            Lazy<bool> _repositoryCommitGraph;
-            Lazy<int> _autoGCBlobs;
+            readonly Lazy<bool> _repositoryIsLazy;
+            readonly Lazy<bool> _repositoryIsShallow;
+            readonly Lazy<bool> _repositoryCommitGraph;
+            readonly Lazy<int> _autoGCBlobs;
 
             public GitLazyConfig(GitConfiguration config)
             {
@@ -358,7 +359,7 @@ namespace AmpScm.Git.Repository
             public int AutoGCBlobs => _autoGCBlobs.Value;
         }
 
-        Lazy<GitLazyConfig> _lazy;
+        readonly Lazy<GitLazyConfig> _lazy;
 
         internal GitLazyConfig Lazy => _lazy.Value;
 
@@ -371,11 +372,13 @@ namespace AmpScm.Git.Repository
         {
             try
             {
-                var psi = new ProcessStartInfo(Environment.NewLine == "\n" ? "which" : "where", "git");
-                psi.RedirectStandardInput = true;
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                psi.UseShellExecute = false;
+                var psi = new ProcessStartInfo(Environment.NewLine == "\n" ? "which" : "where", "git")
+                {
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
 
                 string outputText = "";
                 using var ps = Process.Start(psi);

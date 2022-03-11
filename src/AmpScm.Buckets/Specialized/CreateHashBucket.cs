@@ -24,7 +24,7 @@ namespace AmpScm.Buckets.Specialized
             _onResult = hashCreated;
         }
 
-        public async override ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
+        public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             var r = await Inner.ReadAsync(requested).ConfigureAwait(false);
 
@@ -70,7 +70,7 @@ namespace AmpScm.Buckets.Specialized
 
         public override ValueTask<Bucket> DuplicateAsync(bool reset) => Inner.DuplicateAsync(reset);
 
-        public async override ValueTask ResetAsync()
+        public override async ValueTask ResetAsync()
         {
             await Inner.ResetAsync().ConfigureAwait(false);
             _hasher?.Initialize();

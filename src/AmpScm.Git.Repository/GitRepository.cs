@@ -24,7 +24,7 @@ namespace AmpScm.Git
         public bool IsShallow => Configuration.Lazy.RepositoryIsShallow;
         readonly Lazy<GitConfiguration> _gitConfiguration;
 
-        internal protected string GitDir { get; }
+        protected internal string GitDir { get; }
 
         // Not directly creatable for now
         private GitRepository()

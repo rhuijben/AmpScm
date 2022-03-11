@@ -83,7 +83,7 @@ namespace AmpScm.Buckets.Specialized
             return base.ReadSkipAsync(requested);
         }
 
-        public async override ValueTask<long?> ReadRemainingBytesAsync()
+        public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
             long pos = Position!.Value;
 
