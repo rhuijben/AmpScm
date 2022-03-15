@@ -46,30 +46,48 @@ namespace AmpScm.Buckets.Specialized
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
 
-            IEnumerable<byte>? result = null;
-
+            byte[]? resultBuffer = null;
+            int collected = 0;
             while (true)
             {
                 var bb = await self.ReadAsync(requested).ConfigureAwait(false);
 
-                if (bb.IsEof)
-                    return (result != null) ? result.ToArray() : bb;
+                if (collected == 0)
+                {
+                    if (bb.Length == requested || bb.IsEof)
+                        return bb;
+
+                    resultBuffer = bb.ToArray();
+                    collected = bb.Length;
+                }
+                else if (collected == resultBuffer!.Length)
+                {
+                    if (bb.IsEof)
+                        return resultBuffer;
+
+                    var newBuffer = new byte[requested + collected];
+                    Array.Copy(resultBuffer, newBuffer, collected);
+                    bb.CopyTo(new Memory<byte>(newBuffer, collected, bb.Length));
+
+                    resultBuffer = newBuffer;
+                    collected += bb.Length;
+                }
+                else
+                {
+                    if (bb.IsEof)
+                        return new BucketBytes(resultBuffer, 0, collected);
+
+                    bb.CopyTo(new Memory<byte>(resultBuffer, collected, bb.Length));
+                    collected += bb.Length;
+                }
+                if (requested == bb.Length)
+                    return resultBuffer;
 
                 requested -= bb.Length;
-
-                if (result == null)
-                    result = bb.ToArray();
-                else
-                    result = result.Concat(bb.ToArray());
-
-                if (requested == 0)
-                {
-                    return (result as byte[]) ?? result.ToArray();
-                }
             }
         }
 
-        public static async ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, BucketEolState? eolState, int requested = int.MaxValue)
+        public static async ValueTask<(BucketBytes, BucketEol)> ReadUntilEolFullAsync(this Bucket self, BucketEol acceptableEols, BucketEolState? eolState = null, int requested = int.MaxValue)
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));

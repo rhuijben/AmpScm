@@ -359,12 +359,14 @@ namespace AmpScm.Buckets.Client.Http
 
             Uri? newUri;
             if (headers[HttpResponseHeader.Location] is string location
-                && Uri.TryCreate(Request.RequestUri, location, out newUri))
+                && Uri.TryCreate(location, UriKind.RelativeOrAbsolute, out var locationUri)
+                && Uri.TryCreate(Request.RequestUri, locationUri, out newUri))
             {
                 //
             }
             else if (headers[HttpResponseHeader.ContentLocation] is string location2
-                && Uri.TryCreate(Request.RequestUri, location2, out newUri))
+                && Uri.TryCreate(location2, UriKind.RelativeOrAbsolute, out var location2Uri)
+                && Uri.TryCreate(Request.RequestUri, location2Uri, out newUri))
             {
                 //
             }

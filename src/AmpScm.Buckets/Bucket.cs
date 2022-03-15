@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-[assembly:CLSCompliant(true)]
+[assembly: CLSCompliant(true)]
 
 namespace AmpScm.Buckets
 {
@@ -19,6 +19,11 @@ namespace AmpScm.Buckets
         }
 
         public virtual string Name
+        {
+            get => BaseName;
+        }
+
+        internal string BaseName
         {
             get
             {

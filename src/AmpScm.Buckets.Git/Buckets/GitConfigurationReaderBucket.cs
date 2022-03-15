@@ -53,7 +53,7 @@ namespace AmpScm.Buckets.Git
         {
             while (true)
             {
-                var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.AnyEol, _state ??= new BucketEolState());
+                var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.AnyEol, _state ??= new BucketEolState()).ConfigureAwait(false);
 
                 if (bb.IsEof)
                     return null;

@@ -54,6 +54,21 @@ namespace AmpScm.Buckets
                 socket.EndConnect, null);
         }
 #endif
+
+#if NETFRAMEWORK
+        internal static Task<int> SendAsync(this Socket socket, IList<ArraySegment<byte>> buffers, SocketFlags socketFlags)
+        {
+            if (socket == null)
+                throw new ArgumentNullException(nameof(socket));
+
+            return Task<int>.Factory.FromAsync(
+                (AsyncCallback cb, object? state) =>
+                {
+                    return socket.BeginSend(buffers, socketFlags, cb, state);
+                },
+                socket.EndReceive, null);
+        }
+#endif
     }
 
 }
