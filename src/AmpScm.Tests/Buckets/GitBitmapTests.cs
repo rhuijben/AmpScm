@@ -95,6 +95,48 @@ namespace AmpScm.Tests.Buckets
             }
         }
 
+        [TestMethod]
+        public async Task Read4BitmapsXor()
+        {
+            string bmpFile = FindResource("*.bitmap");
+
+            var fb = FileBucket.OpenRead(bmpFile);
+
+
+            var headers = await fb.ReadFullAsync(32); // Skip headers
+
+            uint count = NetBitConverter.ToUInt32(headers, 8);
+
+            Assert.AreEqual(106u, count);
+
+            List<GitEwahBitmapBucket> buckets = new List<GitEwahBitmapBucket>();
+            for(int i = 0; i < 4; i++)
+            {
+                buckets.Add(new GitEwahBitmapBucket(await fb.DuplicateAsync(false)));
+
+                await fb.ReadNetworkUInt32Async(); // Bitlength
+                uint u2 = await fb.ReadNetworkUInt32Async(); // Compressed length
+
+                for (uint n = 0; n < u2; n++)
+                {
+                    await fb.ReadNetworkUInt64Async();
+                }
+                await fb.ReadNetworkUInt32Async(); // Last RLW start
+            }
+
+            var allXor = new BitwiseXorBucket(new BitwiseXorBucket(buckets[0], buckets[1]), new BitwiseXorBucket(buckets[2], buckets[3]));
+
+            int maxBits = buckets.Max(x => x.ReadBitLengthAsync().GetAwaiter().GetResult());
+
+            Assert.AreEqual(2369, maxBits);
+            var bb = await allXor.ReadFullAsync((maxBits + 7) / 8);
+
+            for (int i = 0; i < bb.Length - 1; i++)
+            {
+                Assert.AreEqual((byte)0xFF, bb[i]);
+            }
+        }
+
         private string FindResource(string pattern)
         {
             string dir = Path.GetDirectoryName(typeof(GitTests).Assembly.Location)!;

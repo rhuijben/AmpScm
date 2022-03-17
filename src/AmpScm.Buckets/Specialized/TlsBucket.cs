@@ -76,13 +76,7 @@ namespace AmpScm.Buckets.Specialized
         {
             if (!_authenticated)
             {
-#if !NETFRAMEWORK
                 await _stream.AuthenticateAsClientAsync(_targetHost).ConfigureAwait(false);
-#else
-                await _stream.AuthenticateAsClientAsync(_targetHost, clientCertificates: null, 
-                        SslProtocols.Tls11 | SslProtocols.Tls12,
-                        false).ConfigureAwait(false);
-#endif
 
                 _authenticated = true;
             }
