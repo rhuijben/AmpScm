@@ -92,5 +92,16 @@ namespace AmpScm.Tests.Buckets
 
             Assert.IsTrue(orResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Concat(Enumerable.Range(0, 300).Select(x => 0)).Zip(Enumerable.Range(0, 600).Reverse().Select(x => x * 31), (x, y) => x | y)));
         }
+
+        [TestMethod]
+        public void VerifyBitwiseNot()
+        {
+            var left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+
+            var notResult = new BitwiseNotBucket(left).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+
+            Assert.IsTrue(notResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => ~(x * 27))));
+        }
     }
 }
