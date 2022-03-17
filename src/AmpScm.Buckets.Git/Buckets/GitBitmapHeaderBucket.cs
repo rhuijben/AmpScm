@@ -1,16 +1,19 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
-using AmpScm.Buckets;
 
 namespace AmpScm.Buckets.Git
 {
-    [DebuggerDisplay("{GitType}, Version={Version}, ObjectCount={ObjectCount}")]
-    public class GitPackHeaderBucket : GitBucket
+    [DebuggerDisplay("{GitType}, Version={Version}, Flags={Flags}, ObjectCount={ObjectCount}")]
+    public class GitBitmapHeaderBucket : GitBucket
     {
         BucketStructCollector<GitPackHeader> _header = new BucketStructCollector<GitPackHeader>();
 
-        public GitPackHeaderBucket(Bucket inner) : base(inner)
+        public GitBitmapHeaderBucket(Bucket inner) : base(inner)
         {
         }
 
@@ -26,20 +29,26 @@ namespace AmpScm.Buckets.Git
             return BucketBytes.Eof;
         }
 
-        public string? GitType => _header.HasResult ? new string(_header.Result?.GitType!) : null;
+        public string? BitmapType => _header.HasResult ? new string(_header.Result?.BitmapType!) : null;
         public int? Version => _header.Result?.Version;
-        public long? ObjectCount => _header.Result?.ObjectCount;
+        public int? Flags => _header.Result?.Flags;
+        public int? ObjectCount => _header.Result?.ObjectCount;
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         struct GitPackHeader
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public char[] GitType;
+            public char[] BitmapType;
             [NetworkOrder]
-            public int Version;
+            public short Version;
             [NetworkOrder]
-            public uint ObjectCount;
+            public short Flags;
+            [NetworkOrder]
+            public int ObjectCount;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+            public byte[] Checksum;
         }
     }
 }

@@ -15,15 +15,35 @@ namespace AmpScm.Git.Objects
         readonly string _packFile;
         readonly GitIdType _idType;
         FileStream? _fIdx;
-        Bucket? _fb;
+        FileBucket? _packBucket;
+        FileBucket? _bitmapBucket;
+        FileBucket? _revIdxBucket;
         int _ver;
         uint[]? _fanOut;
+        bool _hasReverseIndex;
+        bool _hasBitmap;
 
         public PackObjectRepository(GitRepository repository, string packFile, GitIdType idType)
             : base(repository, "Pack:" + packFile)
         {
             _packFile = packFile ?? throw new ArgumentNullException(nameof(packFile));
             _idType = idType;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (disposing)
+                {
+                    _packBucket?.Dispose();
+                    _bitmapBucket?.Dispose();
+                }
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }
         }
 
         void Init()
@@ -74,6 +94,9 @@ namespace AmpScm.Git.Objects
                             _fanOut[i] = NetBitConverter.ToUInt32(fanOut, i * 4);
                         }
                     }
+
+                    _hasBitmap = File.Exists(Path.ChangeExtension(_packFile, ".bitmap"));
+                    _hasReverseIndex = _hasBitmap && File.Exists(Path.ChangeExtension(_packFile, ".rev"));
                 }
             }
         }
@@ -242,12 +265,12 @@ namespace AmpScm.Git.Objects
 
                 await OpenPackIfNecessary();
 
-                var rdr = await _fb!.DuplicateAsync(true);
+                var rdr = await _packBucket!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-                GitObject ob = await GitObject.FromBucket(Repository, pf, oid);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, oid);
 
                 if (ob is TGitObject tg)
                     return tg;
@@ -259,13 +282,13 @@ namespace AmpScm.Git.Objects
 
         private async Task OpenPackIfNecessary()
         {
-            if (_fb == null)
+            if (_packBucket == null)
             {
                 var fb = FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
 
                 await VerifyPack(fb);
 
-                _fb = fb;
+                _packBucket = fb;
             }
         }
 
@@ -285,10 +308,26 @@ namespace AmpScm.Git.Objects
                 throw new GitBucketException($"Header has {phr.ObjectCount} records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
-        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
             where TGitObject : class
         {
             Init();
+
+            if (typeof(TGitObject) != typeof(GitObject) && _hasBitmap)
+            {
+                return GetAllViaBitmap<TGitObject>();
+            }
+            else
+            {
+                return GetAllAll<TGitObject>();
+            }
+        }
+
+
+        async IAsyncEnumerable<TGitObject> GetAllAll<TGitObject>()
+            where TGitObject : class
+        {
+            await OpenPackIfNecessary();
 
             if (_fanOut is null || _fanOut[255] == 0)
                 yield break;
@@ -296,27 +335,122 @@ namespace AmpScm.Git.Objects
             uint count = _fanOut[255];
 
             byte[] oids = GetOidArray(0, count);
-            byte[] offsets = GetOffsetArray(0, count, oids);
-
-            await OpenPackIfNecessary();
+            byte[] offsets = GetOffsetArray(0, count, oids);            
 
             for (int i = 0; i < count; i++)
             {
                 GitId objectId = GetOid(oids, i);
                 long offset = GetOffset(offsets, i);
 
-                var rdr = await _fb!.DuplicateAsync(true);
+                var rdr = await _packBucket!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-                GitObject ob = await GitObject.FromBucket(Repository, pf, objectId);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, objectId);
 
                 if (ob is TGitObject one)
                     yield return one;
                 else
                     await pf.DisposeAsync();
             }
+        }
+
+        async IAsyncEnumerable<TGitObject> GetAllViaBitmap<TGitObject>()
+            where TGitObject : class
+        {
+            await OpenPackIfNecessary();
+
+            if (_fanOut is null || _fanOut[255] == 0)
+                yield break;
+
+            if (_bitmapBucket == null)
+            {
+                var bmp = FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".bitmap"));
+
+                await VerifyBitmap(bmp);
+                _bitmapBucket = bmp;
+            }
+            await _bitmapBucket.ResetAsync();
+            await _bitmapBucket.ReadSkipAsync(32);
+
+            GitEwahBitmapBucket? ewahBitmap = null;
+
+            // This is how the bitmaps are ordered in a V1 bitmap file
+            foreach (Type tp in new Type[] { typeof(GitCommit), typeof(GitTree), typeof(GitBlob), typeof(GitTagObject) })
+            {
+                var ew = new GitEwahBitmapBucket(_bitmapBucket);
+
+                if (tp == typeof(TGitObject))
+                {
+                    ewahBitmap = ew;
+                    break;
+                }
+                else
+                {
+                    await ew.ReadSkipUntilEofAsync();
+                }
+            }
+
+            if (ewahBitmap == null)
+                throw new InvalidOperationException();
+
+            int bit = 0;
+            int? bitLength = null;
+            while (await ewahBitmap.NextByteAsync() is byte b)
+            {
+                if (b != 0)
+                {
+                    for (int n = 0; n < 8; n++)
+                    {
+                        if ((b & (1 << n)) != 0)
+                        {
+                            if (bit + n < (bitLength ??= await ewahBitmap.ReadBitLengthAsync()))
+                            {
+                                yield return await GetOneViaPackOffset<TGitObject>(bit + n);
+                            }
+                        }
+                    }
+                }
+                bit += 8;
+            }
+        }
+
+        private async ValueTask<TGitObject> GetOneViaPackOffset<TGitObject>(int v) 
+            where TGitObject : class
+        {
+            _revIdxBucket ??= FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".rev"));
+            await _revIdxBucket.ResetAsync();
+            await _revIdxBucket.ReadSkipAsync(12 + sizeof(uint) * v);
+            var indexOffs = await _revIdxBucket.ReadNetworkUInt32Async();
+
+            byte[] oids = GetOidArray(indexOffs, 1);
+            byte[] offsets = GetOffsetArray(indexOffs, 1, oids);
+
+            GitId objectId = GitId.FromByteArrayOffset(_idType, oids, 0);
+
+            var rdr = await _packBucket!.DuplicateAsync(true);
+            await rdr.ReadSkipAsync(GetOffset(offsets, 0));
+
+            GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+
+            return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId);
+        }
+
+        private async ValueTask VerifyBitmap(FileBucket bmp)
+        {
+            using var bhr = new GitBitmapHeaderBucket(bmp.NoClose());
+
+            var bb = await bhr.ReadAsync();
+
+            if (!bb.IsEof)
+                throw new GitBucketException("Error during reading of pack header");
+            else if (bhr.BitmapType != "BITM")
+                throw new GitBucketException($"Error during reading of pack header, type='{bhr.BitmapType}");
+            else if (bhr.Version != 1)
+                throw new GitBucketException($"Unexpected bitmap version '{bhr.Version}, expected version 1");
+            else if (_fanOut != null && bhr.ObjectCount > _fanOut[255])
+                throw new GitBucketException($"Bitmap Header has {bhr.ObjectCount} commit records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
         internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
@@ -340,7 +474,7 @@ namespace AmpScm.Git.Objects
 
                 await OpenPackIfNecessary();
 
-                var rdr = await _fb!.DuplicateAsync(true);
+                var rdr = await _packBucket!.DuplicateAsync(true);
                 await rdr.ReadSkipAsync(offset);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);

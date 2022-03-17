@@ -35,7 +35,7 @@ namespace AmpScm.Git.Objects
             {
                 var rdr = new GitObjectFileBucket(fileReader);
 
-                GitObject ob = await GitObject.FromBucket(Repository, rdr, oid);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, oid);
 
                 if (ob is TGitObject tg)
                     return tg;
@@ -81,7 +81,7 @@ namespace AmpScm.Git.Objects
 
                     var rdr = new GitObjectFileBucket(fileReader);
 
-                    GitObject ob = await GitObject.FromBucket(Repository, rdr, id);
+                    GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, id);
 
                     if (ob is TGitObject tg)
                         yield return tg;

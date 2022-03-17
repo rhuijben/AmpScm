@@ -348,6 +348,7 @@ static AmpScm.Buckets.Specialized.NetBitConverter.ToUInt64(AmpScm.Buckets.Bucket
 static AmpScm.Buckets.Specialized.NetBitConverter.ToUInt64(byte[]! value, int startOffset) -> ulong
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.Crc32(this AmpScm.Buckets.Bucket! self, System.Action<int>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.MD5(this AmpScm.Buckets.Bucket! self, System.Action<byte[]!>! created) -> AmpScm.Buckets.Specialized.CreateHashBucket!
+static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.NextByteAsync(this AmpScm.Buckets.Bucket! self) -> System.Threading.Tasks.ValueTask<byte?>
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadFullAsync(this AmpScm.Buckets.Bucket! self, int requested) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadNetworkInt32Async(this AmpScm.Buckets.Bucket! self) -> System.Threading.Tasks.ValueTask<int>
 static AmpScm.Buckets.Specialized.SpecializedBucketExtensions.ReadNetworkInt64Async(this AmpScm.Buckets.Bucket! self) -> System.Threading.Tasks.ValueTask<long>

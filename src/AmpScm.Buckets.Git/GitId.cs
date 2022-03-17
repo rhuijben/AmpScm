@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
+[assembly: CLSCompliant(true)]
+
 namespace AmpScm.Git
 {
     public enum GitIdType

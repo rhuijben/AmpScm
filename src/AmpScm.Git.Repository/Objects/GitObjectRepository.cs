@@ -11,8 +11,10 @@ using AmpScm.Git.Objects;
 
 namespace AmpScm.Git.Objects
 {
-    public abstract class GitObjectRepository
+    public abstract class GitObjectRepository : IDisposable
     {
+        private bool disposedValue;
+
         protected GitRepository Repository { get; }
 
         private protected GitObjectRepository(GitRepository repository, string key)
@@ -61,6 +63,35 @@ namespace AmpScm.Git.Objects
                 return GitObjectType.Tag;
             else
                 return null;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~GitObjectRepository()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

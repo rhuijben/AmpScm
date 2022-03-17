@@ -29,7 +29,7 @@ namespace AmpScm.Tests
 
             Assert.AreEqual("PACK", gh.GitType);
             Assert.AreEqual(2, gh.Version);
-            Assert.AreEqual(70u, gh.ObjectCount);
+            Assert.AreEqual(70L, gh.ObjectCount);
 
             for (int i = 0; i < gh.ObjectCount; i++)
             {

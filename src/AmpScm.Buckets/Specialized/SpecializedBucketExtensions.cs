@@ -234,6 +234,17 @@ namespace AmpScm.Buckets.Specialized
             return NetBitConverter.ToInt32(bb, 0);
         }
 
+
+        public static async ValueTask<byte?> NextByteAsync(this Bucket self)
+        {
+            var bb = await self.ReadFullAsync(1).ConfigureAwait(false);
+
+            if (bb.Length != 1)
+                return null;
+
+            return bb[0];
+        }
+
         [CLSCompliant(false)]
         public static async ValueTask<uint> ReadNetworkUInt32Async(this Bucket self)
         {

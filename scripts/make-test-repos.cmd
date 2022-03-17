@@ -21,5 +21,6 @@ for /d %%1 in (*-cs) do (
 )
 
 pushd libgit2-bmp
+git config --local pack.writeReverseIndex true
 git repack -a -b -d
 popd

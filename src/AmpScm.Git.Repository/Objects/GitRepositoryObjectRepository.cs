@@ -27,6 +27,27 @@ namespace AmpScm.Git.Objects
             _repositories = new Lazy<GitObjectRepository[]>(() => GetRepositories().ToArray());
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (disposing)
+                {
+                    if (_repositories.IsValueCreated)
+                    {
+                        foreach(var v in Sources)
+                        {
+                            v.Dispose();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }
+        }
+
         Lazy<GitObjectRepository[]> _repositories;
 
         private IEnumerable<GitObjectRepository> GetRepositories()
