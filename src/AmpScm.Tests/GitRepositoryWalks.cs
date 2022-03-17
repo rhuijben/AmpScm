@@ -121,5 +121,19 @@ namespace AmpScm.Tests
                 Assert.IsTrue(manyParents.Parent!.ParentCount > 3);
             }
         }
+
+
+        public static IEnumerable<object[]> TestRepositoryArgsBitmapAndRev => TestRepositoryArgs.Where(x => x[0] is string s && Directory.GetFiles(Path.Combine(s, ".git", "objects", "pack"), "*.bitmap").Any());
+        [TestMethod]
+        [DynamicData(nameof(TestRepositoryArgsBitmapAndRev))]
+        public async Task WalkObjectsViaBitmap(string path)
+        {
+            using var repo = await GitRepository.OpenAsync(path);
+
+            Assert.IsTrue(repo.Commits.Count() > 0);
+            Assert.IsTrue(repo.Trees.Count() > 0);
+            Assert.IsTrue(repo.Blobs.Count() > 0);
+            Assert.IsTrue(repo.TagObjects.Count() > 0);
+        }
     }
 }

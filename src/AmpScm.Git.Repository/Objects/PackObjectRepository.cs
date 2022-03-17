@@ -395,6 +395,7 @@ namespace AmpScm.Git.Objects
             if (ewahBitmap == null)
                 throw new InvalidOperationException();
 
+            GitObjectType gitObjectType = GetGitObjectType(typeof(TGitObject));
             int bit = 0;
             int? bitLength = null;
             while (await ewahBitmap.NextByteAsync() is byte b)
@@ -407,7 +408,7 @@ namespace AmpScm.Git.Objects
                         {
                             if (bit + n < (bitLength ??= await ewahBitmap.ReadBitLengthAsync()))
                             {
-                                yield return await GetOneViaPackOffset<TGitObject>(bit + n);
+                                yield return await GetOneViaPackOffset<TGitObject>(bit + n, gitObjectType);
                             }
                         }
                     }
@@ -416,7 +417,21 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        private async ValueTask<TGitObject> GetOneViaPackOffset<TGitObject>(int v) 
+        static GitObjectType GetGitObjectType(Type type)
+        {
+            if (type == typeof(GitCommit))
+                return GitObjectType.Commit;
+            else if (type == typeof(GitTree))
+                return GitObjectType.Tree;
+            else if (type == typeof(GitBlob))
+                return GitObjectType.Blob;
+            else if (type == typeof(GitTagObject))
+                return GitObjectType.Tag;
+            else
+                throw new InvalidOperationException();
+        }
+
+        private async ValueTask<TGitObject> GetOneViaPackOffset<TGitObject>(int v, GitObjectType gitObjectType) 
             where TGitObject : class
         {
             _revIdxBucket ??= FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".rev"));
@@ -434,7 +449,7 @@ namespace AmpScm.Git.Objects
 
             GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-            return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId);
+            return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId, gitObjectType);
         }
 
         private async ValueTask VerifyBitmap(FileBucket bmp)
