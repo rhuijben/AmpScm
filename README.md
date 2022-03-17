@@ -1,7 +1,7 @@
 # AmpScm - Amplifying your Git Source Code Management
 [![CI](https://github.com/AmpScm/AmpScm/actions/workflows/msbuild.yml/badge.svg)](https://github.com/AmpScm/AmpScm/actions/workflows/msbuild.yml)
 
-This project provides a few layers of tools that allow accessing your repository from .Net without external dependencies.
+This project provides a few layers of tools that allow accessing your repository from .Net without external dependencies. Unlike the libGit2 apis the code is completely managed, 100% Apache 2 Licensed, and uses many optional modern Git optimizations (E.g. commit chains, bitmap indexes, etc.) to improve performance over just scanning the repository.
 
 ## AmpScm.Buckets
 [![latest version](https://img.shields.io/nuget/v/AmpScm.Buckets)](https://www.nuget.org/packages/AmpScm.Buckets)
