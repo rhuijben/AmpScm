@@ -10,6 +10,36 @@ namespace AmpScm.Buckets
         public bool IsEof { get; }
     }
 
+    public struct ValueOrEof : IEquatable<ValueOrEof>
+    {
+        public static ValueOrEof Eof => default;
+
+        public override bool Equals(object obj)
+        {
+            return obj is ValueOrEof;
+        }
+
+        public override int GetHashCode()
+        {
+            return 1;
+        }
+
+        public static bool operator ==(ValueOrEof left, ValueOrEof right)
+        {
+            return true;
+        }
+
+        public static bool operator !=(ValueOrEof left, ValueOrEof right)
+        {
+            return false;
+        }
+
+        public bool Equals(ValueOrEof other)
+        {
+            return true;
+        }
+    }
+
     [DebuggerDisplay("Value={Value}, Eof={IsEof}")]
     public struct ValueOrEof<T> : IValueOrEof<T>, IEquatable<ValueOrEof<T>>
         where T : struct
@@ -23,13 +53,21 @@ namespace AmpScm.Buckets
             _isEof = false;
         }
 
-        public ValueOrEof(bool eof)
+        public ValueOrEof(ValueOrEof eof)
         {
             _value = default;
-            _isEof = eof;
+            _isEof = true;
         }
 
-        public T Value => _value;
+        public T Value
+        {
+            get
+            {
+                if (_isEof)
+                    throw new InvalidOperationException("EOF");
+                return _value;
+            }
+        }
 
         public bool IsEof => _isEof;
 
@@ -61,10 +99,16 @@ namespace AmpScm.Buckets
         {
             return left.Equals(right);
         }
-
         public static bool operator !=(ValueOrEof<T> left, ValueOrEof<T> right)
         {
             return !(left == right);
+        }
+
+#pragma warning disable CA2225 // Operator overloads have named alternates
+        public static implicit operator ValueOrEof<T>(ValueOrEof eof)
+#pragma warning restore CA2225 // Operator overloads have named alternates
+        {
+            return new ValueOrEof<T>(eof);
         }
     }
 }

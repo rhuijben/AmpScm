@@ -20,43 +20,74 @@ namespace AmpScm.Buckets.Specialized
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
+            if (requested > _buffer.Length)
+                requested = _buffer.Length;
+
             if (!_bbLeft.IsEmpty || !_bbRight.IsEmpty)
             {
-                if (_bbLeft.IsEmpty)
+                if (_bbLeft.IsEmpty && !_bbLeft.IsEof)
                     _bbLeft = await Left.ReadAsync(Math.Max(_bbRight.Length, 1)).ConfigureAwait(false);
 
-                if (_bbRight.IsEmpty)
+                if (_bbRight.IsEmpty && !_bbRight.IsEof)
                     _bbRight = await Right.ReadAsync(Math.Max(_bbRight.Length, 1)).ConfigureAwait(false);
             }
             else
             {
-                _bbLeft = await Left.ReadAsync(Math.Min(_buffer.Length, requested)).ConfigureAwait(false);
-                _bbRight = await Right.ReadAsync(Math.Max(_bbLeft.Length, 1)).ConfigureAwait(false);
+                _bbLeft = await Left.ReadAsync(requested).ConfigureAwait(false);
+                _bbRight = await Right.ReadAsync(_bbLeft.IsEmpty ? requested : _bbLeft.Length).ConfigureAwait(false);
             }
 
             if (_bbLeft.IsEof)
             {
-                if (!_bbRight.IsEof)
-                    throw new BucketException($"Left stream of {Name} got EOF before right stream");
-                else
+                if (_bbRight.IsEof)
                     return BucketBytes.Eof;
+
+                // Assume left is all 0, so we can return right
+                if (requested >= _bbRight.Length)
+                {
+                    var r = _bbRight;
+                    _bbRight = BucketBytes.Empty;
+                    return r;
+                }
+                else
+                {
+                    var r = _bbRight.Slice(0, requested);
+                    _bbRight = _bbRight.Slice(requested);
+                    return r;
+                }
             }
             else if (_bbRight.IsEof)
-                throw new BucketException($"Right stream of {Name} got EOF before right stream");
-
-            int got = Process();
-
-            if (got == _bbLeft.Length)
-                _bbLeft = BucketBytes.Empty;
+            {
+                // Assume right is all 0, so we can return left
+                if (requested >= _bbLeft.Length)
+                {
+                    var r = _bbLeft;
+                    _bbLeft = BucketBytes.Empty;
+                    return r;
+                }
+                else
+                {
+                    var r = _bbLeft.Slice(0, requested);
+                    _bbLeft = _bbLeft.Slice(requested);
+                    return r;
+                }
+            }
             else
-                _bbLeft = _bbLeft.Slice(got);
+            {
+                int got = Process();
 
-            if (got == _bbRight.Length)
-                _bbRight = BucketBytes.Empty;
-            else
-                _bbRight = _bbRight.Slice(got);
+                if (got == _bbLeft.Length)
+                    _bbLeft = BucketBytes.Empty;
+                else
+                    _bbLeft = _bbLeft.Slice(got);
 
-            return new BucketBytes(_buffer, 0, got);
+                if (got == _bbRight.Length)
+                    _bbRight = BucketBytes.Empty;
+                else
+                    _bbRight = _bbRight.Slice(got);
+
+                return new BucketBytes(_buffer, 0, got);
+            }
         }
 
         public override BucketBytes Peek()
@@ -94,15 +125,15 @@ namespace AmpScm.Buckets.Specialized
             _bbLeft = _bbRight = BucketBytes.Empty;
         }
 
-        public override long? Position => Left.Position;
+        public override long? Position => null;
 
         public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
             var l1 = await Left.ReadRemainingBytesAsync().ConfigureAwait(false);
             var l2 = await Right.ReadRemainingBytesAsync().ConfigureAwait(false);
 
-            if (l1 == l2)
-                return l1;
+            if (l1.HasValue && l2.HasValue)
+                return Math.Max(l1.Value, l2.Value);
             else
                 return null;
         }

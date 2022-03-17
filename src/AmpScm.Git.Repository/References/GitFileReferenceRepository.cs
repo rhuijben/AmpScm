@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
-using AmpScm.Buckets.Git.Buckets;
+using AmpScm.Buckets.Git;
 using AmpScm.Git.Repository.Implementation;
 
 namespace AmpScm.Git.References

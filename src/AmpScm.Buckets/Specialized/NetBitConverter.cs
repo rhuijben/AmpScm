@@ -169,9 +169,29 @@ namespace AmpScm.Buckets.Specialized
             return FromNetwork(BitConverter.ToInt32(value, startOffset));
         }
 
+        public static int ToInt32(BucketBytes value, int startOffset)
+        {
+#if NETFRAMEWORK
+            var b = value.Span.Slice(startOffset, sizeof(uint)).ToArray();
+            return FromNetwork(BitConverter.ToInt32(b, 0));
+#else
+            return FromNetwork(BitConverter.ToInt32(value.Span.Slice(startOffset)));
+#endif
+        }
+
         public static long ToInt64(byte[] value, int startOffset)
         {
             return FromNetwork(BitConverter.ToInt64(value, startOffset));
+        }
+
+        public static long ToInt64(BucketBytes value, int startOffset)
+        {
+#if NETFRAMEWORK
+            var b = value.Span.Slice(startOffset, sizeof(ulong)).ToArray();
+            return FromNetwork(BitConverter.ToInt64(b, 0));
+#else
+            return FromNetwork(BitConverter.ToInt64(value.Span[startOffset..]));
+#endif
         }
 
         [CLSCompliant(false)]
@@ -187,9 +207,31 @@ namespace AmpScm.Buckets.Specialized
         }
 
         [CLSCompliant(false)]
+        public static uint ToUInt32(BucketBytes value, int startOffset)
+        {
+#if NETFRAMEWORK
+            var b = value.Span.Slice(startOffset, sizeof(uint)).ToArray();
+            return FromNetwork(BitConverter.ToUInt32(b, 0));
+#else
+            return FromNetwork(BitConverter.ToUInt32(value.Span.Slice(startOffset)));
+#endif
+        }
+
+        [CLSCompliant(false)]
         public static ulong ToUInt64(byte[] value, int startOffset)
         {
             return FromNetwork(BitConverter.ToUInt64(value, startOffset));
+        }
+
+        [CLSCompliant(false)]
+        public static ulong ToUInt64(BucketBytes value, int startOffset)
+        {
+#if NETFRAMEWORK
+            var b = value.Span.Slice(startOffset, sizeof(ulong)).ToArray();
+            return FromNetwork(BitConverter.ToUInt64(b, 0));
+#else
+            return FromNetwork(BitConverter.ToUInt64(value.Span[startOffset..]));
+#endif
         }
     }
 }

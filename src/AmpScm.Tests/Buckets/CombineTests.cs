@@ -14,27 +14,83 @@ namespace AmpScm.Tests.Buckets
     public class CombineTests
     {
         [TestMethod]
-        public async Task VerifyXor()
+        public void VerifyXor()
         {
             var left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
             var right = Enumerable.Range(0, 300).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
 
-            var xOr = new BitwiseXorBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+            var xorResult = new BitwiseXorBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
 
 
-            Assert.IsTrue(xOr.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31), (x,y)=> x^y)));
+            Assert.IsTrue(xorResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31), (x,y)=> x^y)));
+
+
+            left = Enumerable.Range(0, 600).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            right = Enumerable.Range(0, 300).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            xorResult = new BitwiseXorBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+            Assert.IsTrue(xorResult.SequenceEqual(Enumerable.Range(0, 600).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31).Concat(Enumerable.Range(0,300).Select(x=>0)), (x, y) => x ^ y)));
+
+
+            left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            right = Enumerable.Range(0, 600).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            xorResult = new BitwiseXorBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+            Assert.IsTrue(xorResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Concat(Enumerable.Range(0, 300).Select(x => 0)).Zip(Enumerable.Range(0, 600).Reverse().Select(x => x * 31), (x, y) => x ^ y)));
         }
 
         [TestMethod]
-        public async Task VerifyAnd()
+        public void VerifyAnd()
         {
             var left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
             var right = Enumerable.Range(0, 300).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
 
-            var xOr = new BitwiseAndBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+            var andResult = new BitwiseAndBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
 
 
-            Assert.IsTrue(xOr.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31), (x, y) => x & y)));
+            Assert.IsTrue(andResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31), (x, y) => x & y)));
+
+            left = Enumerable.Range(0, 600).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            right = Enumerable.Range(0, 300).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            andResult = new BitwiseAndBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+            Assert.IsTrue(andResult.SequenceEqual(Enumerable.Range(0, 600).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31).Concat(Enumerable.Range(0, 300).Select(x => 0)), (x, y) => x & y)));
+
+            left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            right = Enumerable.Range(0, 600).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            andResult = new BitwiseAndBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+            Assert.IsTrue(andResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Concat(Enumerable.Range(0, 300).Select(x => 0)).Zip(Enumerable.Range(0, 600).Reverse().Select(x => x * 31), (x, y) => x & y)));
+        }
+
+        [TestMethod]
+        public void VerifyOr()
+        {
+            var left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            var right = Enumerable.Range(0, 300).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            var orResult = new BitwiseOrBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+
+            Assert.IsTrue(orResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31), (x, y) => x | y)));
+
+            left = Enumerable.Range(0, 600).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            right = Enumerable.Range(0, 300).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            orResult = new BitwiseOrBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+            Assert.IsTrue(orResult.SequenceEqual(Enumerable.Range(0, 600).Select(x => x * 27).Zip(Enumerable.Range(0, 300).Reverse().Select(x => x * 31).Concat(Enumerable.Range(0, 300).Select(x => 0)), (x, y) => x | y)));
+
+            left = Enumerable.Range(0, 300).SelectMany(x => BitConverter.GetBytes(x * 27)).ToArray().AsBucket();
+            right = Enumerable.Range(0, 600).Reverse().SelectMany(x => BitConverter.GetBytes(x * 31)).ToArray().AsBucket();
+
+            orResult = new BitwiseOrBucket(left, right).ToArray().SelectPer(4).Select(x => BitConverter.ToInt32(x, 0));
+
+            Assert.IsTrue(orResult.SequenceEqual(Enumerable.Range(0, 300).Select(x => x * 27).Concat(Enumerable.Range(0, 300).Select(x => 0)).Zip(Enumerable.Range(0, 600).Reverse().Select(x => x * 31), (x, y) => x | y)));
         }
     }
 }

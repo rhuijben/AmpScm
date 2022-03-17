@@ -1,123 +1,182 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Specialized;
 
-namespace AmpScm.Buckets.Git.Buckets
+namespace AmpScm.Buckets.Git
 {
     public class GitEwahBitmapBucket : GitBucket
     {
-        int _state;
-        uint _position;
-        uint _compressedSize;
-        uint _lengthBits;
+        enum ewah_state
+        {
+            init = 0,
+            start,
+            same,
+            raw,
+            footer,
+            done
+        }
+        BucketBytes _readable;
+        ewah_state _state;
+        uint _repCount;
+        int _rawCount;
+        int _compressedSize;
+        uint? _lengthBits;
+        int _left;
         byte[] _buffer;
-        BucketBytes _remaining;
-        ulong _op;
-        long _bitsLeft;
-        uint _wpos;
+        int _wpos;
+        bool _repBit;
+        int _position;
 
         public GitEwahBitmapBucket(Bucket inner)
             : base(inner)
         {
-            _state = -8; // Need 8 bytes before starting
+            _state = ewah_state.init;
             _buffer = new byte[4096];
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            if (_state < 0)
+            while (true)
             {
-                int rq = -_state;
-                var bb = await Inner.ReadFullAsync(rq);
-                var info = bb.ToArray();
-
-                _lengthBits = NetBitConverter.ToUInt32(info, 0);
-                _compressedSize = NetBitConverter.ToUInt32(info, 4);
-                _state = 0;
-            }
-
-            await Refill(true);
-
-            if (_remaining.Length > 0)
-            {
-                if (_remaining.Length >= requested)
+                BucketBytes bb;
+                if (!_readable.IsEmpty)
                 {
-                    var r = _remaining;
-                    _remaining = BucketBytes.Empty;
-                    return r;
+                    if (requested > _readable.Length)
+                    {
+                        bb = _readable;
+                        _readable = BucketBytes.Empty;
+                        _position += bb.Length;
+                        return bb;
+                    }
+
+                    bb = _readable.Slice(0, requested);
+                    _readable = _readable.Slice(requested);
+                    _position += bb.Length;
+                    return bb;
                 }
-                else
-                {
-                    var r = _remaining.Slice(0, requested);
-                    _remaining = _remaining.Slice(requested);
-                    return r;
-                }
+
+                if (!await RefillAsync(true))
+                    return BucketBytes.Eof;
             }
-            else
-                return BucketBytes.Empty;
         }
 
         public override BucketBytes Peek()
         {
-            if (_remaining.Length > 0)
-                return _remaining;
+            if (_readable.IsEmpty)
+                return _readable;
 
-            Refill(false).AsTask().GetAwaiter().GetResult();
+            RefillAsync(false).AsTask().GetAwaiter().GetResult();
 
-            return _remaining;
+            return _readable;
         }
 
-        void WriteBit(bool on)
+        public async ValueTask<int> ReadBitLengthAsync()
         {
-            if (on)
-                _buffer[_wpos >> 3] |= (byte)(1 << (7 - ((int)_wpos & 0x7)));
-            _wpos++;
-        }
-
-        private ValueTask Refill(bool allowWait)
-        {
-            if (_state < 0)
-                return default;
-
-            if (_remaining.Length > 0)
-                return default;
-
-            while (_wpos / 8 < _buffer.Length)
+            if (_lengthBits is null)
             {
-                // Align written bits to byte boundary
-                while (((_wpos & 0x7) != 0) && _bitsLeft > 7 && _wpos / 8 < _buffer.Length)
-                {
-                    WriteBit((_op & 0x8000000000000000) != 0UL);
-                    _bitsLeft--;
-                }
-                // Write all bytes with same value
-                while ((_bitsLeft >= 7 + 8) && _wpos / 8 < _buffer.Length)
-                {
-                    _buffer[_wpos / 8] = ((_op & 0x8000000000000000) != 0) ? (byte)0xFF : (byte)0;
-                    _wpos += 8;
-                    _bitsLeft -= 8;
-                }
-                // Write remaining bits
-                while (((_wpos & 0x7) != 0) && _bitsLeft > 7 && _wpos / 8 < _buffer.Length)
-                {
-                    WriteBit((_op & 0x8000000000000000) != 0UL);
-                    _bitsLeft--;
-                }
-
-                if (_wpos / 7 >= _buffer.Length)
-                {
-                    _remaining = _buffer;
-                    return default;
-                }
-
-                //throw new NotImplementedException();
-                return default;
+                await RefillAsync(true);
             }
 
-            return default;
+            return (int)_lengthBits!.Value;
+        }
+
+        private async ValueTask<bool> RefillAsync(bool allowWait)
+        {
+            if (_state <= ewah_state.start && !allowWait && Inner.Peek().IsEmpty)
+                return false;
+
+            if (_lengthBits is null)
+            {
+                var bb = await Inner.ReadFullAsync(4 + 4);
+                _lengthBits = NetBitConverter.ToUInt32(bb, 0);
+                _compressedSize = NetBitConverter.ToInt32(bb, 4);
+
+                _left = _compressedSize;
+                _state = ewah_state.start;
+            }
+
+            int peekLength = Inner.Peek().Length / sizeof(ulong);
+            _wpos = 0;
+
+            switch (_state)
+            {
+                case ewah_state.start:
+                    ulong curOp = await Inner.ReadNetworkUInt64Async();
+
+                    _repBit = (curOp & 1UL) != 0;
+                    _repCount = (uint)(curOp >> 1);
+                    _rawCount = (int)(curOp >> 33);
+
+                    _left--;
+                    peekLength--;
+                    _state = ewah_state.same;
+                    goto case ewah_state.same;
+
+                case ewah_state.same:
+                    byte val = _repBit ? (byte)0xFF : (byte)0;
+                    while (_repCount > 0 && _wpos + 8 < _buffer.Length)
+                    {
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _buffer[_wpos++] = val;
+                        _repCount--;
+                    }
+                    if (_repCount > 0)
+                    {
+                        _readable = new BucketBytes(_buffer, 0, _wpos);
+                        return true;
+                    }
+
+                    _state = ewah_state.raw;
+                    goto case ewah_state.raw;
+
+                case ewah_state.raw:
+                    while (_rawCount > 0)
+                    {
+                        if ((_wpos > 8 && peekLength < 8) || (_wpos + 8 >= _buffer.Length))
+                        {
+                            // Avoid new reads if we already have something. Return result
+                            _readable = new BucketBytes(_buffer, 0, _wpos);
+                            return true;
+                        }
+
+                        var bb = await Inner.ReadFullAsync(sizeof(ulong));
+
+                        if (bb.Length != sizeof(ulong))
+                            throw new BucketException("Unexpected EOF");
+
+                        peekLength--;
+                        _left--;
+                        _rawCount--;
+
+                        for (int i = bb.Length-1; i >= 0; i--)
+                        {
+                            _buffer[_wpos++] = bb[i];
+                        }
+                    }
+
+                    if (_left == 0)
+                    {
+                        _state = ewah_state.footer;
+                        _readable = new BucketBytes(_buffer, 0, _wpos);
+                        return true;
+                    }
+
+                    _state = ewah_state.start;
+                    goto case ewah_state.start;
+                case ewah_state.footer:
+                    await Inner.ReadNetworkUInt32Async();
+                    _state = ewah_state.done;
+                    goto case ewah_state.done;
+                case ewah_state.done:
+                default:
+                    return false;
+            }
         }
 
         public override bool CanReset => Inner.CanReset;
@@ -125,12 +184,19 @@ namespace AmpScm.Buckets.Git.Buckets
         public override async ValueTask ResetAsync()
         {
             await Inner.ResetAsync();
-            _state = -8;
+            _state = ewah_state.init;
+            _wpos = 0;
+            _position = 0;
         }
 
         public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
-            return (_state < 0) ? null : (_compressedSize + 7) / 8 - _position;
+            if (_lengthBits is null)
+                await RefillAsync(true);
+
+            return ((_lengthBits + 8 * sizeof(ulong) - 1) / (8 * sizeof(ulong))) * 8 - _position;
         }
+
+        public override long? Position => _position;
     }
 }

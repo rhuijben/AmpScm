@@ -23,10 +23,10 @@ namespace AmpScm.Git
         GitSignature? _author;
         GitSignature? _committer;
 
-        internal GitCommit(GitRepository repository, GitObjectBucket rdr, GitId id)
+        internal GitCommit(GitRepository repository, GitObjectBucket objectReader, GitId id)
             : base(repository, id)
         {
-            _tree = rdr;
+            _tree = objectReader;
         }
 
         public sealed override GitObjectType Type => GitObjectType.Commit;

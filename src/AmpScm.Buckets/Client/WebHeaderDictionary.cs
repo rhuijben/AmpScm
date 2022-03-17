@@ -58,7 +58,7 @@ namespace AmpScm.Buckets.Client
         {
             foreach(string s in BaseWhc.Keys)
             {
-                yield return s;
+                yield return s!;
             }
         }
 
@@ -224,7 +224,7 @@ namespace AmpScm.Buckets.Client
             {
                 foreach(string v in BaseWhc)
                 {
-                    array[arrayIndex++] = BaseWhc[v]!;
+                    array[arrayIndex++] = BaseWhc[v!]!;
                 }
             }
 

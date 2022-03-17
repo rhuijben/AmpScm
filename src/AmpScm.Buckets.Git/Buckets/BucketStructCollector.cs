@@ -40,7 +40,7 @@ namespace AmpScm.Buckets.Git
                     _pos += rd.Length;
                 }
                 else if (rd.IsEof)
-                    return new ValueOrEof<TRead>(true);
+                    return ValueOrEof.Eof;
             }
             while (_pos < bytes.Length);
 

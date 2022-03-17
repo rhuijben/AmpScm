@@ -20,4 +20,10 @@
     <ProjectReference Include="..\AmpScm.Git.Repository\AmpScm.Git.Repository.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="cases\pack-b5a9cccacd266c9fcbdedb43ff509b02aa185b5c.bitmap">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

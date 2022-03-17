@@ -263,5 +263,15 @@ namespace AmpScm.Buckets
             return encoding.GetString(bytes.ToArray());
         }
 #endif
+
+        public static int CharCount(this BucketEol eol)
+        {
+            return eol switch
+            {
+                BucketEol.CRLF => 2,
+                BucketEol.None => 0,
+                _ => 1,
+            };
+        }
     }
 }

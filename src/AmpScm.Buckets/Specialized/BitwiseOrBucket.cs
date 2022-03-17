@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Buckets.Specialized
 {
-    public class BitwiseAndBucket : CombineBucket
+    public class BitwiseOrBucket : CombineBucket
     {
         readonly byte[] _buffer;
         BucketBytes _bbLeft;
         BucketBytes _bbRight;
-
-        public BitwiseAndBucket(Bucket left, Bucket right) : base(left, right)
+        
+        public BitwiseOrBucket(Bucket left, Bucket right) : base(left, right)
         {
             _buffer = new byte[4096];
         }
@@ -42,21 +42,35 @@ namespace AmpScm.Buckets.Specialized
                 if (_bbRight.IsEof)
                     return BucketBytes.Eof;
 
-                // Assume left is all 0, so we can return all zeros
-                requested = Math.Min(requested, _bbRight.Length);
-                Array.Clear(_buffer, 0, requested);
-                var r = new BucketBytes(_buffer, 0, _bbRight.Length);
-                _bbRight = _bbRight.Slice(requested);
-                return r;
+                // Assume left is all 0, so we can return right
+                if (requested >= _bbRight.Length)
+                {
+                    var r = _bbRight;
+                    _bbRight = BucketBytes.Empty;
+                    return r;
+                }
+                else
+                {
+                    var r = _bbRight.Slice(0, requested);
+                    _bbRight = _bbRight.Slice(requested);
+                    return r;
+                }
             }
             else if (_bbRight.IsEof)
             {
-                // Assume return is all 0, so we can return all zeros
-                requested = Math.Min(requested, _bbLeft.Length);
-                Array.Clear(_buffer, 0, requested);
-                var r = new BucketBytes(_buffer, 0, _bbLeft.Length);
-                _bbLeft = _bbLeft.Slice(requested);
-                return r;
+                // Assume right is all 0, so we can return left
+                if (requested >= _bbLeft.Length)
+                {
+                    var r = _bbLeft;
+                    _bbLeft = BucketBytes.Empty;
+                    return r;
+                }
+                else
+                {
+                    var r = _bbLeft.Slice(0, requested);
+                    _bbLeft = _bbLeft.Slice(requested);
+                    return r;
+                }
             }
             else
             {
@@ -94,7 +108,7 @@ namespace AmpScm.Buckets.Specialized
 
             // TODO: Optimize with vector operations...
             for (int i = 0; i < got; i++)
-                _buffer[i] = (byte)(_bbLeft[i] & _bbRight[i]);
+                _buffer[i] = (byte)(_bbLeft[i] | _bbRight[i]);
 
             return got;
         }

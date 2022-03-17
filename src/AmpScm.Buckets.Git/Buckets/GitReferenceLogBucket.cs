@@ -7,7 +7,7 @@ using AmpScm.Buckets;
 using AmpScm.Buckets.Specialized;
 using AmpScm.Git;
 
-namespace AmpScm.Buckets.Git.Buckets
+namespace AmpScm.Buckets.Git
 {
     public record GitReferenceLogRecord
     {
@@ -61,8 +61,8 @@ namespace AmpScm.Buckets.Git.Buckets
 
             return new GitReferenceLogRecord
             {
-                Original = ReadGitId(bb, 0),
-                Target = ReadGitId(bb, _idLength.Value + 1),
+                Original = ReadGitId(bb, 0) ?? throw new GitBucketException($"Bad {nameof(GitReferenceLogRecord.Original)} OID in RefLog line from {Inner.Name}"),
+                Target = ReadGitId(bb, _idLength.Value + 1) ?? throw new GitBucketException($"Bad {nameof(GitReferenceLogRecord.Target)} OID in RefLog line from {Inner.Name}"),
                 Signature = ReadSignature(bb.Slice(0, prefix).Slice(2 * (_idLength.Value + 1))),
                 Summary = bb.Slice(prefix + 1).ToUTF8String(eol)
             };

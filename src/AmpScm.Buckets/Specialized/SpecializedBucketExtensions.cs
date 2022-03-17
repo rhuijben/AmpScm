@@ -224,12 +224,46 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        public static int CharCount(this BucketEol eol)
-            => eol switch
-            {
-                BucketEol.CRLF => 2,
-                BucketEol.None => 0,
-                _ => 1,
-            };
+        public static async ValueTask<int> ReadNetworkInt32Async(this Bucket self)
+        {
+            var bb = await self.ReadFullAsync(sizeof(int)).ConfigureAwait(false);
+
+            if (bb.Length != sizeof(uint))
+                throw new BucketException($"Unexpected EOF while reading from {self.Name} bucket");
+
+            return NetBitConverter.ToInt32(bb, 0);
+        }
+
+        [CLSCompliant(false)]
+        public static async ValueTask<uint> ReadNetworkUInt32Async(this Bucket self)
+        {
+            var bb = await self.ReadFullAsync(sizeof(uint)).ConfigureAwait(false);
+
+            if (bb.Length != sizeof(uint))
+                throw new BucketException($"Unexpected EOF while reading from {self.Name} bucket");
+
+            return NetBitConverter.ToUInt32(bb, 0);
+        }
+
+        public static async ValueTask<long> ReadNetworkInt64Async(this Bucket self)
+        {
+            var bb = await self.ReadFullAsync(sizeof(long)).ConfigureAwait(false);
+
+            if (bb.Length != sizeof(ulong))
+                throw new BucketException($"Unexpected EOF while reading from {self.Name} bucket");
+
+            return NetBitConverter.ToInt64(bb, 0);
+        }
+
+        [CLSCompliant(false)]
+        public static async ValueTask<ulong> ReadNetworkUInt64Async(this Bucket self)
+        {
+            var bb = await self.ReadFullAsync(sizeof(ulong)).ConfigureAwait(false);
+
+            if (bb.Length != sizeof(ulong))
+                throw new BucketException($"Unexpected EOF while reading from {self.Name} bucket");
+
+            return NetBitConverter.ToUInt64(bb, 0);
+        }
     }
 }
