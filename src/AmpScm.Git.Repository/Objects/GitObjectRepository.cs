@@ -73,7 +73,7 @@ namespace AmpScm.Git.Objects
         internal virtual bool ProvidesCommitInfo => true;
         internal virtual bool ProvidesGetObject => true;
 
-        internal GitObjectType? ObjectType<TGitObject>() where TGitObject : GitObject
+        internal static GitObjectType? ObjectType<TGitObject>() where TGitObject : GitObject
         {
             if (typeof(TGitObject) == typeof(GitBlob))
                 return GitObjectType.Blob;

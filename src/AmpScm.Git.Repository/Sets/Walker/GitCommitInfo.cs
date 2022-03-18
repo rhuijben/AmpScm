@@ -73,6 +73,11 @@ namespace AmpScm.Git.Sets.Walker
             }
         }
 
+        public override bool Equals(object? obj)
+        {
+            return (obj is GitCommitInfo other) && Equals(other);
+        }
+
         public bool Equals(GitCommitInfo? other)
         {
             return other?.Id == Id;

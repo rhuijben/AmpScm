@@ -70,7 +70,7 @@ namespace AmpScm.Git.References
             if (body.Length > 256)
                 return null; // Auch...
 
-            if (body.StartsWith("ref:"))
+            if (body.StartsWith("ref:", StringComparison.Ordinal))
             {
                 try
                 {
@@ -111,7 +111,7 @@ namespace AmpScm.Git.References
                 return oid;
             else if (GitId.TryParse(body.Trim(), out oid))
                 return oid;
-            else if (body.StartsWith("ref:"))
+            else if (body.StartsWith("ref:", StringComparison.Ordinal))
             {
                 try
                 {

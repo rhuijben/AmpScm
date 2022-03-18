@@ -46,7 +46,7 @@ namespace AmpScm.Git.Objects
             }
             catch
             {
-                fileReader.Dispose();
+                await fileReader.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
         }
@@ -94,7 +94,9 @@ namespace AmpScm.Git.Objects
         internal override async ValueTask<(T? Result, bool Success)> DoResolveIdString<T>(string idString, GitId baseGitId)
             where T : class
         {
+#pragma warning disable CA1308 // Normalize strings to uppercase
             string idLow = idString.ToLowerInvariant();
+#pragma warning restore CA1308 // Normalize strings to uppercase
 
             string pf = idLow.Substring(0, 2);
             string subDir = Path.Combine(_objectsDir, pf);

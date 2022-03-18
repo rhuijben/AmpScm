@@ -36,14 +36,14 @@ namespace AmpScm.Git
             }
         }
 
-        public string? RawUrl
+        internal string? RawUrl
         {
             get
             {
                 if (_rawUrl == null)
                     _rawUrl = Repository.Configuration.GetString("remote." + Name, "url") ?? "";
 
-                return (_rawUrl is string s) ? s : _rawUrl?.ToString();
+                return (_rawUrl is string s) ? s : _rawUrl.ToString();
             }
         }
 

@@ -25,7 +25,7 @@ namespace AmpScm.Git.Sets
         {
             Stack<(IAsyncEnumerator<GitTreeEntry>, string)>? inside = null;
 
-            IAsyncEnumerator<GitTreeEntry> cur = gitTree.GetAsyncEnumerator();
+            IAsyncEnumerator<GitTreeEntry> cur = gitTree.GetAsyncEnumerator(cancellationToken);
             string path = "";
 
             do
@@ -43,7 +43,7 @@ namespace AmpScm.Git.Sets
 
                         await dir.ReadAsync().ConfigureAwait(false);
 
-                        var t = dir.Tree?.GetAsyncEnumerator();
+                        var t = dir.Tree?.GetAsyncEnumerator(cancellationToken);
 
                         if (t != null)
                         {
@@ -84,7 +84,7 @@ namespace AmpScm.Git.Sets
         }
     }
 
-    public struct GitTreeItem
+    public struct GitTreeItem : IEquatable<GitTreeItem>
     {
         public GitTreeItem(string path, GitTreeEntry entry) : this()
         {
@@ -96,5 +96,30 @@ namespace AmpScm.Git.Sets
         public string EntryName => Entry.EntryName;
         public string Path { get; }
         public GitTreeEntry Entry { get; }
+
+        public override bool Equals(object obj)
+        {
+            return (obj is GitTreeItem other) && Equals(other);
+        }
+
+        public bool Equals(GitTreeItem other)
+        {
+            return Entry.Equals(other.Entry);
+        }
+
+        public override int GetHashCode()
+        {
+            return Entry.GetHashCode();
+        }
+
+        public static bool operator ==(GitTreeItem left, GitTreeItem right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GitTreeItem left, GitTreeItem right)
+        {
+            return !(left == right);
+        }
     }
 }

@@ -30,6 +30,7 @@ namespace AmpScm.Git.Sets
         {
         }
 
+#pragma warning disable CA1033 // Interface methods should be callable by child types
         Type IQueryable.ElementType => typeof(T);
 
         IQueryProvider IQueryable.Provider => Repository.SetQueryProvider;
@@ -37,6 +38,7 @@ namespace AmpScm.Git.Sets
         Expression IQueryable.Expression => Expression;
 
         bool IListSource.ContainsListCollection => false;
+#pragma warning restore CA1033 // Interface methods should be callable by child types
 
         public abstract IEnumerator<T> GetEnumerator();
 

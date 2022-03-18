@@ -42,7 +42,9 @@ namespace AmpScm.Git.Sets
             return Repository.ObjectRepository.ResolveIdString<T>(idString);
         }
 
+#pragma warning disable CA1043 // Use Integral Or String Argument For Indexers
         public T? this[GitId id]
+#pragma warning restore CA1043 // Use Integral Or String Argument For Indexers
         {
             get => Repository.SetQueryProvider.GetByIdAsync<T>(id).AsTask().Result;
         }

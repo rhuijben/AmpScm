@@ -10,6 +10,10 @@ namespace AmpScm.Git
     [Serializable]
     public class GitRepositoryException : GitException
     {
+        public GitRepositoryException()
+        {
+
+        }
         public GitRepositoryException(string message) : base(message)
         {
         }

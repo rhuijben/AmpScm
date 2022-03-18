@@ -50,7 +50,7 @@ namespace AmpScm.Git
             p.ErrorDataReceived += (sender, e) => { lock (startInfo) (errorText ??= new StringBuilder()).AppendLine(e.Data); };
 
             if (!string.IsNullOrEmpty(stdinText))
-                p.StandardInput.Write(stdinText);
+                await p.StandardInput.WriteAsync(stdinText).ConfigureAwait(false);
 
             p.StandardInput.Close();
             p.BeginErrorReadLine();
@@ -98,9 +98,7 @@ namespace AmpScm.Git
             p.BeginOutputReadLine();
 
             if (!string.IsNullOrEmpty(stdinText))
-            {
-                p.StandardInput.Write(stdinText);
-            }
+                await p.StandardInput.WriteAsync(stdinText).ConfigureAwait(false);
 
             p.StandardInput.Close();
 
@@ -111,7 +109,9 @@ namespace AmpScm.Git
 
             lock (startInfo)
             {
+#pragma warning disable CA1508 // Avoid dead conditional code
                 return (p.ExitCode, outputText?.ToString() ?? "");
+#pragma warning restore CA1508 // Avoid dead conditional code
             }
         }
 
@@ -140,7 +140,9 @@ namespace AmpScm.Git
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
             if (!string.IsNullOrEmpty(stdinText))
+#pragma warning disable CA1849 // Call async methods when in an async method
                 p.StandardInput.Write(stdinText);
+#pragma warning restore CA1849 // Call async methods when in an async method
 
             p.StandardInput.Close();
 
@@ -290,11 +292,8 @@ namespace AmpScm.Git
             p.OutputDataReceived += (sender, e) => (outputText ??= new StringBuilder()).AppendLine(e.Data);
             p.ErrorDataReceived += (sender, e) => (errorText ??= new StringBuilder()).AppendLine(e.Data);
 
-            if (p == null)
-                throw new GitExecCommandException($"Unable to start 'git {command}' operation");
-
             if (!string.IsNullOrEmpty(stdinText))
-                p.StandardInput.Write(stdinText);
+                await p.StandardInput.WriteAsync(stdinText).ConfigureAwait(false);
 
             p.StandardInput.Close();
             p.BeginErrorReadLine();
@@ -305,7 +304,9 @@ namespace AmpScm.Git
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");
 
+#pragma warning disable CA1508 // Avoid dead conditional code
             return (p.ExitCode, outputText?.ToString() ?? "", errorText?.ToString() ?? "");
+#pragma warning restore CA1508 // Avoid dead conditional code
         }
     }
 }

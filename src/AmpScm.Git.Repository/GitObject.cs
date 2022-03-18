@@ -23,17 +23,17 @@ namespace AmpScm.Git
             Id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
-        internal static async ValueTask<GitObject> FromBucketAsync(GitRepository repository, GitObjectBucket rdr, GitId id, GitObjectType ?type = null)
+        internal static async ValueTask<GitObject> FromBucketAsync(GitRepository repository, GitObjectBucket rdr, GitId id, GitObjectType type = GitObjectType.None)
         {
             GitObjectType tp;
 
-            if (type == null)
+            if (type == GitObjectType.None)
             {
                 await rdr.ReadTypeAsync().ConfigureAwait(false);
                 tp = rdr.Type;
             }
             else
-                tp = type.Value;
+                tp = type;
 
             switch (tp)
             {
@@ -46,7 +46,7 @@ namespace AmpScm.Git
                 case GitObjectType.Tag:
                     return new GitTagObject(repository, rdr, id);
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(type));
             }
         }
 

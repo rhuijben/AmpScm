@@ -40,7 +40,7 @@ namespace AmpScm.Tests
 
                 Assert.IsNotNull(repo.Head);
                 Assert.IsNull(repo.Head.Commit);
-                Assert.IsNull(repo.Head.Object);
+                Assert.IsNull(repo.Head.GitObject);
             }
         }
 

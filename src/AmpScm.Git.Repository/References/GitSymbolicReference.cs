@@ -42,7 +42,7 @@ namespace AmpScm.Git.References
                     return;
                 }
 
-                if (body.StartsWith("ref: "))
+                if (body.StartsWith("ref: ", StringComparison.Ordinal))
                 {
                     int n = body.IndexOfAny(new[] { ' ', '\t', '\r', '\n' }, 5);
 
@@ -59,18 +59,18 @@ namespace AmpScm.Git.References
             get
             {
                 if (_reference is null)
-                    ReadAsync().GetAwaiter().GetResult();
+                    ReadAsync().AsTask().GetAwaiter().GetResult();
 
                 if (_reference is string r)
                 {
-                    _reference = Repository.Repository.ReferenceRepository.GetUnsafeAsync(r, false).Result ?? _reference;
+                    _reference = Repository.Repository.ReferenceRepository.GetUnsafeAsync(r, false).AsTask().Result ?? _reference;
                 }
 
                 return _reference as GitReference;
             }
         }
 
-        public override GitObject? Object => Reference?.Object;
+        public override GitObject? GitObject => Reference?.GitObject;
 
         public override GitCommit? Commit => Reference?.Commit;
 

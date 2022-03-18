@@ -38,8 +38,6 @@ namespace AmpScm.Git.References
             return default;
         }
 
-        static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
-
         public virtual ValueTask<GitReference?> ResolveByOidAsync(GitId arg)
         {
             return default;

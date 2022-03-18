@@ -86,7 +86,7 @@ namespace AmpScm.Git
 
             var pp = p as object[];
             if (index < 0 || index >= (pp?.Length ?? ((pp is null && viaIndex) ? 0 : 1)))
-                throw new IndexOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (pp is not null)
                 p = pp[index];
@@ -110,7 +110,7 @@ namespace AmpScm.Git
 
             var pp = p as object[];
             if (index < 0 || index >= (pp?.Length ?? ((pp is null && viaIndex) ? 0 : 1)))
-                throw new IndexOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (pp is not null)
                 p = pp[index];

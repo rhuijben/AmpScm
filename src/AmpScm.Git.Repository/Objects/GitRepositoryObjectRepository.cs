@@ -152,7 +152,7 @@ namespace AmpScm.Git.Objects
 
                 await foreach (var v in Repository.References.Where(x => x.IsTag))
                 {
-                    if (v.Object is GitTagObject tag && v.Id is not null && !returned.Contains(v.Id))
+                    if (v.GitObject is GitTagObject tag && v.Id is not null && !returned.Contains(v.Id))
                     {
                         yield return (TGitObject)(object)tag;
 

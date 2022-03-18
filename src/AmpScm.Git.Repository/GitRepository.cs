@@ -115,6 +115,7 @@ namespace AmpScm.Git
                 {
                     // TODO: dispose managed state (managed objects)
                     ObjectRepository.Dispose();
+                    _container.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

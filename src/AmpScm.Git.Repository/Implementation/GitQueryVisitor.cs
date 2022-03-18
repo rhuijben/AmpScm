@@ -13,7 +13,7 @@ namespace AmpScm.Git.Implementation
     {
         ConstantExpression? _defaultRoot;
 
-        System.Reflection.MethodInfo GetMethod<TOn>(Expression<Func<TOn, object>> callExpression)
+        static System.Reflection.MethodInfo GetMethod<TOn>(Expression<Func<TOn, object>> callExpression)
         {
             return (callExpression.Body as MethodCallExpression)?.Method ?? throw new ArgumentOutOfRangeException(nameof(callExpression));
         }
@@ -72,7 +72,7 @@ namespace AmpScm.Git.Implementation
             return base.VisitMethodCall(node);
         }
 
-        private bool IsSafeQueryableType(Type paramType, [NotNullWhen(true)] out Type elementType)
+        private static bool IsSafeQueryableType(Type paramType, [NotNullWhen(true)] out Type elementType)
         {
             if (GitQueryProvider.GetElementType(paramType) is Type elType)
             {

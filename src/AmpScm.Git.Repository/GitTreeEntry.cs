@@ -31,12 +31,12 @@ namespace AmpScm.Git
 
         public bool Equals(GitTreeEntry? other)
         {
-            return other?.Name == Name && (other?.InTree.Equals(InTree) ?? false);
+            return other?.Name == Name && Id == other.Id;
         }
 
         public override int GetHashCode()
         {
-            return InTree.GetHashCode() ^ Name.GetHashCode();
+            return Id.GetHashCode() ^ Name.GetHashCode();
         }
 
         public abstract ValueTask ReadAsync();
@@ -66,12 +66,14 @@ namespace AmpScm.Git
 
         public sealed override GitObject GitObject => Object;
 
+#pragma warning disable CA1720 // Identifier contains type name
         protected TObject Object
+#pragma warning restore CA1720 // Identifier contains type name
         {
             get
             {
                 if (!_loaded)
-                    ReadAsync().GetAwaiter().GetResult();
+                    ReadAsync().AsTask().GetAwaiter().GetResult();
 
                 return _object!;
             }

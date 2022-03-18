@@ -18,6 +18,6 @@ namespace AmpScm.Git
 
         public override string Name => Reference.ShortName;
 
-        protected override GitObject Object => Reference.Object!;
+        protected override GitObject GitObject => Reference.GitObject!;
     }
 }

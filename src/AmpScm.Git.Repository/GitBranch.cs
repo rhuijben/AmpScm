@@ -17,6 +17,6 @@ namespace AmpScm.Git
             Reference = reference ?? throw new ArgumentNullException(nameof(reference));
         }
 
-        protected override GitCommit Object => Reference.Commit!;
+        protected override GitCommit GitObject => Reference.Commit!;
     }
 }

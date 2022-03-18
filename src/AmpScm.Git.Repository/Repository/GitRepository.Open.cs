@@ -15,7 +15,7 @@ namespace AmpScm.Git
         public static GitRepository Open(string path, bool findGitRoot)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
 
             string rootDir;
 

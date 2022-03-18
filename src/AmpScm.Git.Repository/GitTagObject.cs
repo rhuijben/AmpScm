@@ -26,7 +26,7 @@ namespace AmpScm.Git
 
         public override GitObjectType Type => GitObjectType.Tag;
 
-        public GitObject Object
+        public GitObject GitObject
         {
             get
             {
@@ -41,14 +41,7 @@ namespace AmpScm.Git
 
                     try
                     {
-                        GitObject? t;
-
-                        if (_objType == GitObjectType.Commit)
-                            t = Repository.ObjectRepository.GetByIdAsync<GitCommit>(oid).AsTask().Result; // BAD async
-                        else if (_objType == GitObjectType.Tree)
-                            t = Repository.ObjectRepository.GetByIdAsync<GitTree>(oid).AsTask().Result; // BAD async
-                        else
-                            t = Repository.ObjectRepository.GetByIdAsync<GitObject>(oid).AsTask().Result; // BAD async
+                        GitObject? t = Repository.ObjectRepository.GetByIdAsync<GitObject>(oid).AsTask().Result; // BAD async
 
                         if (t != null)
                         {
@@ -111,7 +104,7 @@ namespace AmpScm.Git
 
         private void Read()
         {
-            ReadAsync().GetAwaiter().GetResult();
+            ReadAsync().AsTask().GetAwaiter().GetResult();
         }
 
         public override async ValueTask ReadAsync()

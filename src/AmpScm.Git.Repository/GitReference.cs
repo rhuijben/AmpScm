@@ -40,13 +40,13 @@ namespace AmpScm.Git
             {
                 if (_shortName == null)
                 {
-                    if (Name.StartsWith("refs/heads/"))
+                    if (Name.StartsWith("refs/heads/", StringComparison.Ordinal))
                         _shortName = Name.Substring(11);
-                    else if (Name.StartsWith("refs/remotes/"))
+                    else if (Name.StartsWith("refs/remotes/", StringComparison.Ordinal))
                         _shortName = Name.Substring(13);
-                    else if (Name.StartsWith("refs/tags/"))
+                    else if (Name.StartsWith("refs/tags/", StringComparison.Ordinal))
                         _shortName = Name.Substring(10);
-                    else if (Name.StartsWith("refs/"))
+                    else if (Name.StartsWith("refs/", StringComparison.Ordinal))
                         _shortName = Name.Substring(5);
                     else
                         _shortName = Name;
@@ -70,12 +70,12 @@ namespace AmpScm.Git
             }
         }
 
-        public virtual GitObject? Object
+        public virtual GitObject? GitObject
         {
             get
             {
-                if (_object is not GitObject)
-                    ReadAsync().GetAwaiter().GetResult();
+                if (_object is not Git.GitObject)
+                    ReadAsync().AsTask().GetAwaiter().GetResult();
 
                 return _object as GitObject;
             }
@@ -86,7 +86,7 @@ namespace AmpScm.Git
             get
             {
                 if (_object == null)
-                    ReadAsync().GetAwaiter().GetResult();
+                    ReadAsync().AsTask().GetAwaiter().GetResult();
 
                 if (_object is GitId oid)
                     return oid;
@@ -106,7 +106,7 @@ namespace AmpScm.Git
                     return commit;
                 else if (_object is GitTagObject tag)
                 {
-                    if (tag.Object is GitCommit c2)
+                    if (tag.GitObject is GitCommit c2)
                     {
                         _commit = c2;
                         return c2;
@@ -119,11 +119,11 @@ namespace AmpScm.Git
                 }
                 else if (_commit is GitId oid)
                 {
-                    c3 = Repository.Repository.GetAsync<GitCommit>(oid).Result!;
+                    c3 = Repository.Repository.GetAsync<GitCommit>(oid).AsTask().Result!;
                     _commit = c3;
                     return c3;
                 }
-                else if (Object is GitObject ob)
+                else if (GitObject is GitObject ob)
                 {
                     if (ob is GitCommit c4)
                     {
@@ -132,7 +132,7 @@ namespace AmpScm.Git
                     }
                     else if (ob is GitTagObject tag2)
                     {
-                        c4 = (tag2.Object as GitCommit)!;
+                        c4 = (tag2.GitObject as GitCommit)!;
                         _commit = c4;
                         return c4;
                     }
@@ -145,8 +145,8 @@ namespace AmpScm.Git
 
         public GitReferenceChangeSet ReferenceChanges => new GitReferenceChangeSet(Repository.Repository, this);
 
-        internal bool IsBranch => Name.StartsWith("refs/heads/") || Name == "HEAD";
-        internal bool IsTag => Name.StartsWith("refs/tags/");
+        internal bool IsBranch => Name.StartsWith("refs/heads/", StringComparison.Ordinal) || Name == "HEAD";
+        internal bool IsTag => Name.StartsWith("refs/tags/", StringComparison.Ordinal);
 
         static HashSet<char> InvalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 

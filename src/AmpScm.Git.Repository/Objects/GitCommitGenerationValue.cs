@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git.Objects
 {
-    public struct GitCommitGenerationValue
+    [CLSCompliant(false)]
+    public struct GitCommitGenerationValue : IEquatable<GitCommitGenerationValue>
     {
         ulong value;
 
@@ -63,5 +64,30 @@ namespace AmpScm.Git.Objects
         public ulong Value => value;
 
         public bool HasValue => value != 0;
+
+        public override bool Equals(object obj)
+        {
+            return (obj is GitCommitGenerationValue other) && Equals(other);
+        }
+
+        public bool Equals(GitCommitGenerationValue other)
+        {
+            return other.Value == Value;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        public static bool operator ==(GitCommitGenerationValue left, GitCommitGenerationValue right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GitCommitGenerationValue left, GitCommitGenerationValue right)
+        {
+            return !(left == right);
+        }
     }
 }

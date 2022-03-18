@@ -58,9 +58,9 @@ namespace AmpScm.Git.Implementation
             else if (typeof(T) == typeof(GitRemote))
                 return (IAsyncEnumerable<T>)Repository.Configuration.GetAllRemotes();
             else if (typeof(T) == typeof(GitBranch))
-                return (IAsyncEnumerable<T>)GetNamedAsyncEnumerable<GitReference>().Where(x => x.IsBranch).Select(x => new GitBranch(x));
+                return (IAsyncEnumerable<T>)GetNamedAsyncEnumerable<GitReference>(cancellationToken).Where(x => x.IsBranch).Select(x => new GitBranch(x));
             else if (typeof(T) == typeof(GitTag))
-                return (IAsyncEnumerable<T>)GetNamedAsyncEnumerable<GitReference>().Where(x => x.IsTag).Select(x => new GitTag(x));
+                return (IAsyncEnumerable<T>)GetNamedAsyncEnumerable<GitReference>(cancellationToken).Where(x => x.IsTag).Select(x => new GitTag(x));
 
             return Enumerable.Empty<T>().ToAsyncEnumerable();
         }
@@ -94,7 +94,7 @@ namespace AmpScm.Git.Implementation
         public IAsyncEnumerator<TResult> GetAsyncEnumerator<TResult>(CancellationToken cancellationToken = default)
             where TResult : GitObject
         {
-            return Repository.ObjectRepository.GetAll<TResult>(new HashSet<GitId>()).GetAsyncEnumerator();
+            return Repository.ObjectRepository.GetAll<TResult>(new HashSet<GitId>()).GetAsyncEnumerator(cancellationToken);
         }
 
         public IEnumerable<TResult> GetEnumerable<TResult>()

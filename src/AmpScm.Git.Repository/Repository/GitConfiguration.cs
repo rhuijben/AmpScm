@@ -96,9 +96,9 @@ namespace AmpScm.Git.Repository
                 return; // No other types documented yet
 
             bool caseInsensitive = false;
-            if (check!.StartsWith("gitdir:"))
+            if (check!.StartsWith("gitdir:", StringComparison.Ordinal))
             { }
-            else if (check.StartsWith("gitdir/i:"))
+            else if (check.StartsWith("gitdir/i:", StringComparison.Ordinal))
             {
                 caseInsensitive = true;
                 check = check.Remove(6, 2);
@@ -119,9 +119,10 @@ namespace AmpScm.Git.Repository
 
         static string ApplyHomeDir(string path)
         {
-            if (path != null && path.StartsWith("~") && UserHomeDirectory is var homeDir && !string.IsNullOrWhiteSpace(homeDir))
+            if (path != null && path.StartsWith("~", StringComparison.Ordinal) 
+                && UserHomeDirectory is var homeDir && !string.IsNullOrWhiteSpace(homeDir))
             {
-                if (path.StartsWith("~/"))
+                if (path.StartsWith("~/", StringComparison.Ordinal))
                     path = homeDir!.TrimEnd(Path.DirectorySeparatorChar) + path.Substring(1);
                 else if (char.IsLetterOrDigit(path, 1))
                     path = Path.GetDirectoryName(homeDir) + path.Substring(1); // Might need more work on linux, but not common
@@ -260,6 +261,9 @@ namespace AmpScm.Git.Repository
 
         public async ValueTask<bool?> GetBoolAsync(string group, string key)
         {
+            if (string.IsNullOrEmpty(group))
+                throw new ArgumentNullException(nameof(group));
+
             await LoadAsync().ConfigureAwait(false);
 
             int n = group.IndexOf('.');
@@ -277,7 +281,7 @@ namespace AmpScm.Git.Repository
                 // The simple no value cases
                 else if (vResult == "\xFF" || vResult is null)
                     return true;
-                else if (vResult != null && vResult.Length == 0)
+                else if (vResult.Length == 0)
                     return false;
 
                 // And other documented ok
@@ -453,7 +457,9 @@ namespace AmpScm.Git.Repository
         }
 
         static readonly object _extraHeaderSetTag = new();
+#pragma warning disable CA2109 // Review visible event handlers
         public void BasicAuthenticationHandler(object? sender, BasicBucketAuthenticationEventArgs e)
+#pragma warning restore CA2109 // Review visible event handlers
         {
             if (e.Items[_extraHeaderSetTag] is null && (e.Uri?.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ?? false))
             {
@@ -602,8 +608,11 @@ namespace AmpScm.Git.Repository
                 && !string.IsNullOrWhiteSpace(homeDrive) && !string.IsNullOrWhiteSpace(homePath))
             {
                 homeDrive += "\\";
-                if (homePath!.StartsWith("\\") || homePath.StartsWith("/"))
+                if (homePath!.StartsWith("\\", StringComparison.Ordinal)
+                    || homePath.StartsWith("/", StringComparison.Ordinal))
+                {
                     homePath = homeDrive + homePath;
+                }
 
                 if (Directory.Exists(home = Path.Combine(homeDrive, homePath!)))
                     return Path.GetFullPath(home);

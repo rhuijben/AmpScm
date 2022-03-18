@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Specialized;
@@ -67,7 +68,7 @@ namespace AmpScm.Git.Objects
             _fs ??= File.OpenRead(_fileName);
             _fs.Seek(0, SeekOrigin.Begin);
             var headerBuffer = new byte[8];
-            if (_fs.Read(headerBuffer, 0, headerBuffer.Length) != headerBuffer.Length)
+            if (await _fs.ReadAsync(headerBuffer, 0, headerBuffer.Length, CancellationToken.None).ConfigureAwait(false) != headerBuffer.Length)
                 return;
 
             if (!new byte[] { (byte)'C', (byte)'G', (byte)'P', (byte)'H', 1 /* version */ }.SequenceEqual(headerBuffer.Take(5)))
@@ -79,7 +80,7 @@ namespace AmpScm.Git.Objects
 
             var chunkTable = new byte[(chunkCount + 1) * (4 + sizeof(long))];
 
-            if (_fs.Read(chunkTable, 0, chunkTable.Length) != chunkTable.Length)
+            if (await _fs.ReadAsync(chunkTable, 0, chunkTable.Length, CancellationToken.None).ConfigureAwait(false) != chunkTable.Length)
                 return;
 
             _chunks = Enumerable.Range(0, chunkCount + 1).Select(i => new Chunk

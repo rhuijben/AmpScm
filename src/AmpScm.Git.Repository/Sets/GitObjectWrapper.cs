@@ -9,11 +9,11 @@ namespace AmpScm.Git.Sets
     public class GitObjectWrapper<TGitObject> : IGitObject
         where TGitObject : GitObject
     {
-        protected virtual TGitObject Object { get; }
+        protected virtual TGitObject GitObject { get; }
 
         private protected GitObjectWrapper(TGitObject obj)
         {
-            this.Object = obj;
+            this.GitObject = obj;
         }
         public virtual ValueTask ReadAsync()
         {
