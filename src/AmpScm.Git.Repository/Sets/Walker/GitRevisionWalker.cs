@@ -26,7 +26,7 @@ namespace AmpScm.Git.Sets.Walker
             AddCommits(options.Commits);
             c = options.Commits.FirstOrDefault();
 
-            await EnsureInfo();
+            await EnsureInfo().ConfigureAwait(false);
 
             while (c != null)
             {
@@ -82,12 +82,12 @@ namespace AmpScm.Git.Sets.Walker
                         if (parents?.Count > 0)
                         {
                             generation = parents.Max(p => p.ChainInfo.Generation) + 1;
-                            correctedTimestamp = Math.Max(parents.Max(p => p.ChainInfo.CorrectedTimeValue) + 1, await c.GetCommitTimeValue());
+                            correctedTimestamp = Math.Max(parents.Max(p => p.ChainInfo.CorrectedTimeValue) + 1, await c.GetCommitTimeValue().ConfigureAwait(false));
                         }
                         else
                         {
                             generation = 1;
-                            correctedTimestamp = await c.GetCommitTimeValue();
+                            correctedTimestamp = await c.GetCommitTimeValue().ConfigureAwait(false);
                         }
 
                         c.SetChainInfo(new Objects.GitCommitGenerationValue(generation, correctedTimestamp));

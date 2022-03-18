@@ -94,13 +94,13 @@ namespace AmpScm.Git.Implementation
         public IAsyncEnumerator<TResult> GetAsyncEnumerator<TResult>(CancellationToken cancellationToken = default)
             where TResult : GitObject
         {
-            return Repository.ObjectRepository.GetAll<TResult>().GetAsyncEnumerator();
+            return Repository.ObjectRepository.GetAll<TResult>(new HashSet<GitId>()).GetAsyncEnumerator();
         }
 
         public IEnumerable<TResult> GetEnumerable<TResult>()
             where TResult : GitObject
         {
-            return Repository.ObjectRepository.GetAll<TResult>().AsNonAsyncEnumerable();
+            return Repository.ObjectRepository.GetAll<TResult>(new HashSet<GitId>()).AsNonAsyncEnumerable();
         }
 
         public IQueryable<TResult> GetAll<TResult>() where TResult : GitObject
@@ -108,9 +108,9 @@ namespace AmpScm.Git.Implementation
             return GetEnumerable<TResult>().AsQueryable();
         }
 
-        public async ValueTask<TResult?> GetAsync<TResult>(GitId oid) where TResult : GitObject
+        public async ValueTask<TResult?> GetByIdAsync<TResult>(GitId oid) where TResult : GitObject
         {
-            return await Repository.ObjectRepository.Get<TResult>(oid);
+            return await Repository.ObjectRepository.GetByIdAsync<TResult>(oid).ConfigureAwait(false);
         }
 
         internal static Type? GetElementType(Type type)
@@ -133,9 +133,9 @@ namespace AmpScm.Git.Implementation
             where TResult : class, IGitNamedObject
         {
             if (typeof(TResult) == typeof(GitReference))
-                return await Repository.ReferenceRepository.GetAsync(name) as TResult;
+                return await Repository.ReferenceRepository.GetAsync(name).ConfigureAwait(false) as TResult;
             else if (typeof(TResult) == typeof(GitRemote))
-                return await Repository.Configuration.GetRemoteAsync(name) as TResult;
+                return await Repository.Configuration.GetRemoteAsync(name).ConfigureAwait(false) as TResult;
 
             return default;
         }

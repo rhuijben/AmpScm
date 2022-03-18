@@ -137,7 +137,7 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
             where TGitObject : class
         {
             HashSet<GitId> returned = new HashSet<GitId>();
@@ -152,7 +152,7 @@ namespace AmpScm.Git.Objects
 
                 await foreach (var v in Repository.References.Where(x => x.IsTag))
                 {
-                    if (v.Object is GitTagObject tag)
+                    if (v.Object is GitTagObject tag && v.Id is not null && !returned.Contains(v.Id))
                     {
                         yield return (TGitObject)(object)tag;
 
@@ -163,19 +163,37 @@ namespace AmpScm.Git.Objects
 
             foreach (var p in Sources)
             {
-                await foreach (var v in p.GetAll<TGitObject>())
+                await foreach (var v in p.GetAll<TGitObject>(returned))
                 {
-                    if (!returned.Contains(v.Id!))
-                    {
-                        yield return v;
-
-                        returned.Add(v.Id!);
-                    }
+                    yield return v;
+                    returned.Add(v.Id);
                 }
             }
         }
 
-        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+        internal override async ValueTask<(T? Result, bool Success)> DoResolveIdString<T>(string idString, GitId baseGitId)
+            where T : class
+        {
+            T? first = null;
+            foreach (var p in Sources)
+            {
+                if (p.ProvidesGetObject)
+                {
+                    var (Result, Success) = await p.DoResolveIdString<T>(idString, baseGitId).ConfigureAwait(false);
+
+                    if (!Success)
+                        return (null, false);
+                    else if (first is not null && Result is not null && Result.Id != first.Id)
+                        return (null, false);
+                    else if (first is null && Result is not null)
+                        first = Result;
+                }
+            }
+
+            return (first, true);
+        }
+
+        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
             where TGitObject : class
         {
             if (oid == null)
@@ -185,7 +203,7 @@ namespace AmpScm.Git.Objects
             {
                 if (p.ProvidesGetObject)
                 {
-                    var r = await p.Get<TGitObject>(oid);
+                    var r = await p.GetByIdAsync<TGitObject>(oid).ConfigureAwait(false);
 
                     if (r != null)
                         return r;
@@ -202,7 +220,7 @@ namespace AmpScm.Git.Objects
 
             foreach (var p in Sources)
             {
-                var r = await p.ResolveByOid(oid);
+                var r = await p.ResolveByOid(oid).ConfigureAwait(false);
 
                 if (r != null)
                     return r;
@@ -220,7 +238,7 @@ namespace AmpScm.Git.Objects
             {
                 if (p.ProvidesCommitInfo)
                 {
-                    var r = await p.GetCommitInfo(oid);
+                    var r = await p.GetCommitInfo(oid).ConfigureAwait(false);
 
                     if (r != null)
                         return r;

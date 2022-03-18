@@ -11,6 +11,8 @@ using AmpScm.Git.Implementation;
 using AmpScm.Git.Repository;
 using AmpScm.Git.Sets;
 
+[assembly: CLSCompliant(true)]
+
 namespace AmpScm.Git
 {
     [DebuggerDisplay("GitRepository {GitDir}")]
@@ -140,10 +142,10 @@ namespace AmpScm.Git
             return SetQueryProvider.GetAllNamed<TResult>();
         }
 
-        ValueTask<TResult?> IGitQueryRoot.GetAsync<TResult>(GitId oid)
+        ValueTask<TResult?> IGitQueryRoot.GetByIdAsync<TResult>(GitId oid)
             where TResult : class
         {
-            return SetQueryProvider.GetAsync<TResult>(oid);
+            return SetQueryProvider.GetByIdAsync<TResult>(oid);
         }
 
         ValueTask<TResult?> IGitQueryRoot.GetNamedAsync<TResult>(string name)
@@ -155,7 +157,7 @@ namespace AmpScm.Git
         internal ValueTask<TResult?> GetAsync<TResult>(GitId id)
             where TResult : GitObject
         {
-            return SetQueryProvider.GetAsync<TResult>(id);
+            return SetQueryProvider.GetByIdAsync<TResult>(id);
         }
 
         IQueryable<GitRevision> IGitQueryRoot.GetRevisions(GitRevisionSet set)

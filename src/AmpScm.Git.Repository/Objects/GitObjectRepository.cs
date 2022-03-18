@@ -25,14 +25,14 @@ namespace AmpScm.Git.Objects
 
         internal virtual string Key { get; }
 
-        public virtual IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public virtual IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
             where TGitObject : GitObject
         {
             return AsyncEnumerable.Empty<TGitObject>();
         }
 
 
-        public virtual ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+        public virtual ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
             where TGitObject : GitObject
         {
             return default;
@@ -46,6 +46,28 @@ namespace AmpScm.Git.Objects
         internal virtual ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
         {
             return default;
+        }
+
+        internal async ValueTask<T?> ResolveIdString<T>(string idString)
+            where T : GitObject
+        {
+            if (string.IsNullOrEmpty(idString))
+                throw new ArgumentNullException(nameof(idString));
+            else if (idString.Length <= 2)
+                throw new ArgumentOutOfRangeException(nameof(idString), "Need at least two characters for id resolving");
+
+            string idBase = idString.PadRight(40, '0');
+
+            if (GitId.TryParse(idBase, out var baseGitId))
+                return (await DoResolveIdString<T>(idString, baseGitId).ConfigureAwait(false)).Result;
+            else
+                return null;
+        }
+
+        internal virtual ValueTask<(T? Result, bool Success)> DoResolveIdString<T>(string idString, GitId baseGitId)
+            where T : GitObject
+        {
+            return new ValueTask< (T? Result, bool Success)>((null, true));
         }
 
         internal virtual bool ProvidesCommitInfo => true;

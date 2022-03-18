@@ -60,13 +60,13 @@ namespace AmpScm.Git
         {
             if (_object is null)
             {
-                _object ??= _resolver?.Value;
-                _object ??= await Repository.Repository.References.GetAsync(Name);
+                _object = _resolver?.Value;
+                _object ??= await Repository.Repository.References.GetAsync(Name).ConfigureAwait(false);
             }
 
             if (_object is GitId oid)
             {
-                _object = await Repository.Repository.GetAsync<GitObject>(oid) ?? _object;
+                _object = await Repository.Repository.GetAsync<GitObject>(oid).ConfigureAwait(false) ?? _object;
             }
         }
 
@@ -81,7 +81,7 @@ namespace AmpScm.Git
             }
         }
 
-        public GitId? ObjectId
+        public virtual GitId? Id
         {
             get
             {
@@ -207,7 +207,7 @@ namespace AmpScm.Git
 
         public async ValueTask<GitReference> ResolveAsync()
         {
-            _resolved ??= (await Repository.ResolveAsync(this)) ?? this;
+            _resolved ??= (await Repository.ResolveAsync(this).ConfigureAwait(false)) ?? this;
 
             return _resolved;
         }

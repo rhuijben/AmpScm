@@ -107,7 +107,7 @@ namespace AmpScm.Git.Client.Plumbing
                 args.AddRange(a.Commits!);
             }
 
-            return c.Repository.WalkPlumbingCommandAsync("rev-list", args.ToArray()).AsTask().Result.Select(x => GitId.TryParse(x, out var oid) ? oid : null!);
+            return c.Repository.WalkPlumbingCommand("rev-list", args.ToArray()).Select(x => GitId.TryParse(x, out var oid) ? oid : null!);
         }
     }
 }

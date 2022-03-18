@@ -43,7 +43,7 @@ namespace AmpScm.Git.References
             if (!File.Exists(fileName))
                 return null;
 
-            return new GitReference(this, name, new GitAsyncLazy<GitId?>(async () => await LoadOidFromFile(fileName)));
+            return new GitReference(this, name, new GitAsyncLazy<GitId?>(async () => await LoadOidFromFile(fileName).ConfigureAwait(false)));
         }
 
         protected internal override async ValueTask<GitReference?> ResolveAsync(GitReference gitReference)
@@ -59,7 +59,7 @@ namespace AmpScm.Git.References
 #if NETFRAMEWORK
                 body = File.ReadAllText(fileName);
 #else
-                body = await File.ReadAllTextAsync(fileName);
+                body = await File.ReadAllTextAsync(fileName).ConfigureAwait(false);
 #endif
             }
             catch (FileNotFoundException)
@@ -74,7 +74,7 @@ namespace AmpScm.Git.References
             {
                 try
                 {
-                    var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim());
+                    var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim()).ConfigureAwait(false);
 
                     if (ob is not null)
                         return ob;
@@ -96,7 +96,7 @@ namespace AmpScm.Git.References
 #if NETFRAMEWORK
                 body = File.ReadAllText(fileName);
 #else
-                body = await File.ReadAllTextAsync(fileName);
+                body = await File.ReadAllTextAsync(fileName).ConfigureAwait(false);
 #endif
             }
             catch (FileNotFoundException)
@@ -115,9 +115,9 @@ namespace AmpScm.Git.References
             {
                 try
                 {
-                    var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim());
+                    var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim()).ConfigureAwait(false);
 
-                    return ob?.ObjectId;
+                    return ob?.Id;
                 }
                 catch { }
             }
@@ -141,7 +141,7 @@ namespace AmpScm.Git.References
 
             using var gr = new GitReferenceLogBucket(fb);
 
-            while(await gr.ReadGitReferenceLogRecordAsync() is GitReferenceLogRecord lr)
+            while(await gr.ReadGitReferenceLogRecordAsync().ConfigureAwait(false) is GitReferenceLogRecord lr)
             {
                 yield return new GitReferenceChange(lr);
             }

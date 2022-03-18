@@ -33,7 +33,7 @@ namespace AmpScm.Git.References
 
             _peelRefs = new Dictionary<string, GitRefPeel>();
 
-            await ReadRefs();
+            await ReadRefs().ConfigureAwait(false);
         }
 
         private protected virtual async ValueTask ReadRefs()
@@ -50,7 +50,7 @@ namespace AmpScm.Git.References
                 var idLength = GitId.HashLength(Repository.InternalConfig.IdType) * 2;
 
                 GitRefPeel? last = null;
-                while (await sr.ReadLineAsync() is string line)
+                while (await sr.ReadLineAsync().ConfigureAwait(false) is string line)
                 {
                     ParseLineToPeel(line, ref last, idLength);
                 }
@@ -88,7 +88,7 @@ namespace AmpScm.Git.References
 
         public override async IAsyncEnumerable<GitReference> GetAll()
         {
-            await Read();
+            await Read().ConfigureAwait(false);
 
             foreach (var v in _peelRefs!.Values)
             {
@@ -98,7 +98,7 @@ namespace AmpScm.Git.References
 
         protected internal override async ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
         {
-            await Read();
+            await Read().ConfigureAwait(false);
 
             if (_peelRefs!.TryGetValue(name, out var v))
                 return new GitReference(this, v.Name, v.Oid).SetPeeled(v.Peeled);

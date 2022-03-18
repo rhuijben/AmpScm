@@ -12,20 +12,20 @@ namespace AmpScm.Git.Objects
 {
     internal sealed class FileObjectRepository : GitObjectRepository
     {
-        private string objectsDir;
+        readonly string _objectsDir;
 
         public FileObjectRepository(GitRepository repository, string objectsDir)
             : base(repository, "Blobs:" + objectsDir)
         {
-            this.objectsDir = objectsDir;
+            _objectsDir = objectsDir;
         }
 
-        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
             where TGitObject : class
         {
             var name = oid.ToString();
 
-            string path = Path.Combine(objectsDir, name.Substring(0, 2), name.Substring(2));
+            string path = Path.Combine(_objectsDir, name.Substring(0, 2), name.Substring(2));
 
             if (!File.Exists(path))
                 return null;
@@ -35,12 +35,12 @@ namespace AmpScm.Git.Objects
             {
                 var rdr = new GitObjectFileBucket(fileReader);
 
-                GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, oid);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, oid).ConfigureAwait(false);
 
                 if (ob is TGitObject tg)
                     return tg;
 
-                await rdr.DisposeAsync();
+                await rdr.DisposeAsync().ConfigureAwait(false);
 
                 return null;
             }
@@ -55,7 +55,7 @@ namespace AmpScm.Git.Objects
         {
             var name = oid.ToString();
 
-            string path = Path.Combine(objectsDir, name.Substring(0, 2), name.Substring(2));
+            string path = Path.Combine(_objectsDir, name.Substring(0, 2), name.Substring(2));
 
             if (!File.Exists(path))
                 return default;
@@ -64,9 +64,9 @@ namespace AmpScm.Git.Objects
             return new ValueTask<GitObjectBucket?>(new GitObjectFileBucket(fileReader));
         }
 
-        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
         {
-            foreach (string dir in Directory.GetDirectories(objectsDir, "??"))
+            foreach (string dir in Directory.GetDirectories(_objectsDir, "??"))
             {
                 string prefix = Path.GetFileName(dir);
 
@@ -81,14 +81,35 @@ namespace AmpScm.Git.Objects
 
                     var rdr = new GitObjectFileBucket(fileReader);
 
-                    GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, id);
+                    GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, id).ConfigureAwait(false);
 
                     if (ob is TGitObject tg)
                         yield return tg;
                     else
-                        await rdr.DisposeAsync();
+                        await rdr.DisposeAsync().ConfigureAwait(false);
                 }
             }
+        }
+
+        internal override async ValueTask<(T? Result, bool Success)> DoResolveIdString<T>(string idString, GitId baseGitId)
+            where T : class
+        {
+            string idLow = idString.ToLowerInvariant();
+
+            string pf = idLow.Substring(0, 2);
+            string subDir = Path.Combine(_objectsDir, pf);
+
+            if (!Directory.Exists(subDir))
+                return (null, true); // No matches
+
+            string[] files = Directory.GetFiles(subDir, idLow.Substring(2) + "*");
+
+            if (files.Length == 0)
+                return (null, true); // No matches
+            else if (files.Length == 1)
+                return (await GetByIdAsync<T>(GitId.Parse(pf + Path.GetFileName(files[0]))).ConfigureAwait(false), true);
+            else
+                return (null, false); // Multiple matches
         }
 
         internal override bool ProvidesCommitInfo => false;

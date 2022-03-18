@@ -67,7 +67,7 @@ namespace AmpScm.Buckets.Git.Objects
             return BucketBytes.Eof;
         }
 
-        public async ValueTask<GitTreeElementRecord> ReadTreeElementRecord()
+        public async ValueTask<GitTreeElementRecord?> ReadTreeElementRecord()
         {
             if (!_checkedType && Inner is GitObjectBucket gobb)
             {

@@ -27,7 +27,7 @@ namespace AmpScm.Git.References
 #if NETFRAMEWORK
                     body = File.ReadAllText(Path.Combine(Repository.Repository.GitDir, Name));
 #else
-                    body = await File.ReadAllTextAsync(Path.Combine(Repository.GitDir, Name));
+                    body = await File.ReadAllTextAsync(Path.Combine(Repository.GitDir, Name)).ConfigureAwait(false);
 #endif
                 }
                 catch (FileNotFoundException)
@@ -73,5 +73,7 @@ namespace AmpScm.Git.References
         public override GitObject? Object => Reference?.Object;
 
         public override GitCommit? Commit => Reference?.Commit;
+
+        public override GitId? Id => Reference?.Id;
     }
 }

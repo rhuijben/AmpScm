@@ -109,12 +109,18 @@ namespace AmpScm.Git
 
         public static bool TryParse(string oidString, out GitId oid)
         {
-            if (oidString?.Length == 40)
+            if (oidString is null)
+                throw new ArgumentNullException(nameof(oidString));
+
+            if ((oidString.Length & 0x3) != 0 && (char.IsWhiteSpace(oidString, 0) || char.IsWhiteSpace(oidString, oidString.Length - 1)))
+                oidString = oidString.Trim();
+
+            if (oidString.Length == 40)
             {
                 oid = new GitId(GitIdType.Sha1, StringToByteArray(oidString));
                 return true;
             }
-            else if (oidString?.Length == 64)
+            else if (oidString.Length == 64)
             {
                 oid = new GitId(GitIdType.Sha256, StringToByteArray(oidString));
                 return true;

@@ -13,6 +13,7 @@ using AmpScm.Git.Sets;
 
 namespace AmpScm.Git.Repository
 {
+#pragma warning disable CA1308 // Normalize strings to uppercase
     public class GitConfiguration
     {
         protected GitRepository Repository { get; }
@@ -40,12 +41,12 @@ namespace AmpScm.Git.Repository
 
             foreach (string path in GetGitConfigurationFilePaths())
             {
-                await LoadConfigAsync(path);
+                await LoadConfigAsync(path).ConfigureAwait(false);
             }
 
             try
             {
-                await LoadConfigAsync(Path.Combine(_gitDir, "config"));
+                await LoadConfigAsync(Path.Combine(_gitDir, "config")).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -58,16 +59,16 @@ namespace AmpScm.Git.Repository
             using var b = FileBucket.OpenRead(path);
             using var cr = new GitConfigurationReaderBucket(b);
 
-            while (await cr.ReadConfigItem() is GitConfigurationItem item)
+            while (await cr.ReadConfigItem().ConfigureAwait(false) is GitConfigurationItem item)
             {
                 _config[(item.Group, item.SubGroup, item.Key)] = item.Value ?? "\xFF";
 
                 if (item.Group == "core" || item.Group == "extension")
                     ParseCore(item);
                 else if (item.Group == "include")
-                    await ParseInclude(path, item);
+                    await ParseInclude(path, item).ConfigureAwait(false);
                 else if (item.Group == "includeif")
-                    await ParseIncludeIfAsync(path, item);
+                    await ParseIncludeIfAsync(path, item).ConfigureAwait(false);
             }
             _loaded = true;
         }
@@ -83,7 +84,7 @@ namespace AmpScm.Git.Repository
 
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
-                await LoadConfigAsync(Path.GetFullPath(newPath));
+                await LoadConfigAsync(Path.GetFullPath(newPath)).ConfigureAwait(false);
             }
         }
 
@@ -111,7 +112,7 @@ namespace AmpScm.Git.Repository
 
                 if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
                 {
-                    await LoadConfigAsync(Path.GetFullPath(newPath));
+                    await LoadConfigAsync(Path.GetFullPath(newPath)).ConfigureAwait(false);
                 }
             }
         }
@@ -181,7 +182,7 @@ namespace AmpScm.Git.Repository
 
         internal async ValueTask<GitRemote?> GetRemoteAsync(string name)
         {
-            if (await GetStringAsync("remote." + name, "url") is string v)
+            if (await GetStringAsync("remote." + name, "url").ConfigureAwait(false) is string v)
             {
                 return new GitRemote(Repository, name, v);
             }
@@ -193,7 +194,7 @@ namespace AmpScm.Git.Repository
         {
             HashSet<string> names = new HashSet<string>();
 
-            await LoadAsync();
+            await LoadAsync().ConfigureAwait(false);
 
             foreach (var v in _config)
             {
@@ -213,7 +214,7 @@ namespace AmpScm.Git.Repository
 
         public async ValueTask<int?> GetIntAsync(string group, string key)
         {
-            await LoadAsync();
+            await LoadAsync().ConfigureAwait(false);
 
             int n = group.IndexOf('.');
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
@@ -235,7 +236,7 @@ namespace AmpScm.Git.Repository
 
         public async ValueTask<string?> GetStringAsync(string group, string key)
         {
-            await LoadAsync();
+            await LoadAsync().ConfigureAwait(false);
 
             int n = group.IndexOf('.');
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
@@ -259,7 +260,7 @@ namespace AmpScm.Git.Repository
 
         public async ValueTask<bool?> GetBoolAsync(string group, string key)
         {
-            await LoadAsync();
+            await LoadAsync().ConfigureAwait(false);
 
             int n = group.IndexOf('.');
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
@@ -528,8 +529,8 @@ namespace AmpScm.Git.Repository
             {
                 e.Username = username;
                 e.Password = password;
-                e.Succeeded += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
-                e.Failed += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "reject" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n");
+                e.Succeeded += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n").ConfigureAwait(false);
+                e.Failed += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "reject" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n").ConfigureAwait(false);
             }
         }
 

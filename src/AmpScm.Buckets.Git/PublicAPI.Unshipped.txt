@@ -84,7 +84,7 @@ AmpScm.Buckets.Git.Objects.GitTreeElementType.None = 0 -> AmpScm.Buckets.Git.Obj
 AmpScm.Buckets.Git.Objects.GitTreeElementType.SymbolicLink = 40960 -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket.GitTreeReadBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType idType) -> void
-AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadTreeElementRecord() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.Objects.GitTreeElementRecord!>
+AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadTreeElementRecord() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.Objects.GitTreeElementRecord?>
 AmpScm.Git.GitBucketExtensions
 AmpScm.Git.GitException
 AmpScm.Git.GitException.GitException() -> void

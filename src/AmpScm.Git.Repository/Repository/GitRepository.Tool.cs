@@ -56,7 +56,7 @@ namespace AmpScm.Git
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
 
-            await p!.WaitForExitAsync();
+            await p!.WaitForExitAsync().ConfigureAwait(false);
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
@@ -104,7 +104,7 @@ namespace AmpScm.Git
 
             p.StandardInput.Close();
 
-            await p.WaitForExitAsync();
+            await p.WaitForExitAsync().ConfigureAwait(false);
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
@@ -187,12 +187,12 @@ namespace AmpScm.Git
                 if (_eof)
                     return false;
 
-                _current = await _reader.ReadLineAsync();
+                _current = await _reader.ReadLineAsync().ConfigureAwait(false);
 
                 if (_current is null)
                 {
                     _eof = true;
-                    await _p.WaitForExitAsync();
+                    await _p.WaitForExitAsync().ConfigureAwait(false);
 
                     if (_expectedResults != null ? !_expectedResults.Contains(_p.ExitCode) : _p.ExitCode != 0)
                         throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation: {_errText}");
@@ -300,7 +300,7 @@ namespace AmpScm.Git
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
 
-            await p!.WaitForExitAsync();
+            await p!.WaitForExitAsync().ConfigureAwait(false);
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");

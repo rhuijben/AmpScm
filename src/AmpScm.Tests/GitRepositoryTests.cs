@@ -40,7 +40,7 @@ namespace AmpScm.Tests
 
                 Assert.IsNotNull(repo.Head);
                 Assert.IsNull(repo.Head.Commit);
-                Assert.IsNull(repo.Head.GitObject);
+                Assert.IsNull(repo.Head.Object);
             }
         }
 
@@ -152,7 +152,7 @@ namespace AmpScm.Tests
         {
             using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
 
-            await foreach (var c in repo.ObjectRepository.GetAll<GitCommit>())
+            await foreach (var c in repo.ObjectRepository.GetAll<GitCommit>(new HashSet<GitId>()))
             {
                 TestContext.WriteLine($"Commit {c.Id} - {GitTools.FirstLine(c.Message)}");
                 if (c.Parent != null)
@@ -408,7 +408,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public void WalkSetsDevRepository()
         {
-            using var repo = GitRepository.Open(Environment.CurrentDirectory);
+            using var repo = GitRepository.Open(typeof(GitRepositoryTests).Assembly.Location);
             HashSet<Type> walked = new HashSet<Type>();
 
             WalkSets_TestType(repo, walked);

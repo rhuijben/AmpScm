@@ -38,7 +38,7 @@ namespace AmpScm.Git.Sets.Walker
                 return gi.ParentIds;
             else if (_commit is GitRepository r)
             {
-                var info = await r.ObjectRepository.GetCommitInfo(Id);
+                var info = await r.ObjectRepository.GetCommitInfo(Id).ConfigureAwait(false);
 
                 if (info != null)
                 {
@@ -49,7 +49,7 @@ namespace AmpScm.Git.Sets.Walker
                     return _parents.Value;
                 }
 
-                var c = await r.ObjectRepository.Get<GitCommit>(Id);
+                var c = await r.ObjectRepository.GetByIdAsync<GitCommit>(Id).ConfigureAwait(false);
 
                 if (c != null)
                     _commit = c;
@@ -85,7 +85,7 @@ namespace AmpScm.Git.Sets.Walker
 
         private async ValueTask<GitCommit?> GetCommit()
         {
-            GitCommit? commit = (_commit as GitCommit) ?? await (_commit as GitRepository)!.ObjectRepository.Get<GitCommit>(Id) ?? throw new InvalidOperationException();
+            GitCommit? commit = (_commit as GitCommit) ?? await (_commit as GitRepository)!.ObjectRepository.GetByIdAsync<GitCommit>(Id).ConfigureAwait(false) ?? throw new InvalidOperationException();
 
             _commit = commit;
             return commit;
@@ -93,7 +93,7 @@ namespace AmpScm.Git.Sets.Walker
 
         internal async Task<long> GetCommitTimeValue()
         {
-            return (await GetCommit())?.Committer?.When.ToUnixTimeSeconds() ?? 0;
+            return (await GetCommit().ConfigureAwait(false))?.Committer?.When.ToUnixTimeSeconds() ?? 0;
         }
 
         internal void SetChainInfo(GitCommitGenerationValue newChainInfo)

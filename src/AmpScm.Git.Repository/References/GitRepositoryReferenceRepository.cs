@@ -62,7 +62,7 @@ namespace AmpScm.Git.References
         {
             foreach (var v in Sources)
             {
-                var r = await v.ResolveAsync(gitReference);
+                var r = await v.ResolveAsync(gitReference).ConfigureAwait(false);
 
                 if (r is not null)
                     return r;
@@ -84,7 +84,7 @@ namespace AmpScm.Git.References
 
             foreach (var v in Sources)
             {
-                var r = await v.GetUnsafeAsync(name, findSymbolic);
+                var r = await v.GetUnsafeAsync(name, findSymbolic).ConfigureAwait(false);
 
                 if (r is not null)
                     return r;

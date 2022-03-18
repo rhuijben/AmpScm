@@ -17,7 +17,7 @@ namespace AmpScm.Git.Objects
             this.chain = chain;
         }
 
-        public override ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+        public override ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
             where TGitObject : class
         {
             return default;
@@ -47,14 +47,14 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
         {
             if (!typeof(TGitObject).IsAssignableFrom(typeof(GitCommit)))
                 yield break;
 
             foreach(var v in Chains)
             {
-                await foreach(var ob in v.GetAll<TGitObject>())
+                await foreach(var ob in v.GetAll<TGitObject>(alreadyReturned))
                 {
                     yield return ob;
                 }
@@ -65,7 +65,7 @@ namespace AmpScm.Git.Objects
         {
             foreach (var v in Chains)
             {
-                var info = await v.GetCommitInfo(oid);
+                var info = await v.GetCommitInfo(oid).ConfigureAwait(false);
 
                 if (info != null)
                     return info;

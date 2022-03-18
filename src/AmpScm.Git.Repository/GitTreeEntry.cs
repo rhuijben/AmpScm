@@ -79,7 +79,7 @@ namespace AmpScm.Git
 
         public override async ValueTask ReadAsync()
         {
-            _object = await InTree.Repository.GetAsync<TObject>(Id);
+            _object = await InTree.Repository.GetAsync<TObject>(Id).ConfigureAwait(false);
             _loaded = true;
         }
     }

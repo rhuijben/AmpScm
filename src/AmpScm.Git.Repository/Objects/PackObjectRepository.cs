@@ -145,14 +145,21 @@ namespace AmpScm.Git.Objects
 
             if (first >= count)
             {
-                index = 0;
+                index = (uint)count;
                 return false;
             }
 
             var check2 = GitId.FromByteArrayOffset(_idType, oids, sz * first);
             index = (uint)first;
 
-            return oid.HashCompare(check2) == 0;
+            c = oid.HashCompare(check2);
+
+            if (c == 0)
+                return true;
+            else if (c > 0)
+                index++;
+
+            return false;
         }
 
         private byte[] GetOidArray(uint start, uint count)
@@ -243,7 +250,7 @@ namespace AmpScm.Git.Objects
             throw new GitRepositoryException("Unsupported pack version");
         }
 
-        public override async ValueTask<TGitObject?> Get<TGitObject>(GitId oid)
+        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
             where TGitObject : class
         {
             Init();
@@ -263,22 +270,81 @@ namespace AmpScm.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                await OpenPackIfNecessary();
+                await OpenPackIfNecessary().ConfigureAwait(false);
 
-                var rdr = await _packBucket!.DuplicateAsync(true);
-                await rdr.ReadSkipAsync(offset);
+                var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
+                await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, oid);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, oid).ConfigureAwait(false);
 
                 if (ob is TGitObject tg)
                     return tg;
                 else
-                    await pf.DisposeAsync();
+                    await pf.DisposeAsync().ConfigureAwait(false);
             }
             return null;
         }
+
+        internal override async ValueTask<(TGitObject? Result, bool Success)> DoResolveIdString<TGitObject>(string idString, GitId baseGitId)
+            where TGitObject : class
+        {
+            Init();
+
+            if (_fanOut is null)
+                return (null, true);
+
+            byte byte0 = baseGitId[0];
+
+            uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
+            uint count = _fanOut![byte0] - start;
+
+            byte[] oids = GetOidArray(start, count);
+
+            if (TryFindOid(oids, baseGitId, out var index) || (index >= 0 && index < count))
+            {
+                GitId foundId = GetOid(oids, (int)index);
+
+                if (!foundId.ToString().StartsWith(idString, StringComparison.OrdinalIgnoreCase))
+                    return (null, true); // Not a match, but success
+
+
+                if (index + 1 < count)
+                {
+                    GitId next = GetOid(oids, (int)index + 1);
+
+                    if (next.ToString().StartsWith(idString, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // We don't have a single match. Return failure
+
+                        return (null, false);
+                    }
+                }
+
+                var r = GetOffsetArray(index + start, 1, oids);
+                var offset = GetOffset(r, 0);
+
+                await OpenPackIfNecessary().ConfigureAwait(false);
+
+                var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
+                await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
+
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+
+                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, foundId).ConfigureAwait(false);
+
+                if (ob is TGitObject tg)
+                    return (tg, true); // Success
+                else
+                    await pf.DisposeAsync().ConfigureAwait(false);
+
+                return (null, false); // We had a match. No singular good result
+            }
+            else
+                return (null, true);
+        }
+
 
         private async Task OpenPackIfNecessary()
         {
@@ -286,7 +352,7 @@ namespace AmpScm.Git.Objects
             {
                 var fb = FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
 
-                await VerifyPack(fb);
+                await VerifyPack(fb).ConfigureAwait(false);
 
                 _packBucket = fb;
             }
@@ -296,7 +362,7 @@ namespace AmpScm.Git.Objects
         {
             using var phr = new GitPackHeaderBucket(fb.NoClose());
 
-            var bb = await phr.ReadAsync();
+            var bb = await phr.ReadAsync().ConfigureAwait(false);
 
             if (!bb.IsEof)
                 throw new GitBucketException("Error during reading of pack header");
@@ -308,26 +374,26 @@ namespace AmpScm.Git.Objects
                 throw new GitBucketException($"Header has {phr.ObjectCount} records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
-        public override IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
             where TGitObject : class
         {
             Init();
 
-            if (typeof(TGitObject) != typeof(GitObject) && _hasBitmap)
+            if (typeof(TGitObject) != typeof(GitObject) && _hasBitmap && _hasReverseIndex)
             {
-                return GetAllViaBitmap<TGitObject>();
+                return GetAllViaBitmap<TGitObject>(alreadyReturned);
             }
             else
             {
-                return GetAllAll<TGitObject>();
+                return GetAllAll<TGitObject>(alreadyReturned);
             }
         }
 
 
-        async IAsyncEnumerable<TGitObject> GetAllAll<TGitObject>()
+        async IAsyncEnumerable<TGitObject> GetAllAll<TGitObject>(HashSet<GitId> alreadyReturned)
             where TGitObject : class
         {
-            await OpenPackIfNecessary();
+            await OpenPackIfNecessary().ConfigureAwait(false);
 
             if (_fanOut is null || _fanOut[255] == 0)
                 yield break;
@@ -340,26 +406,30 @@ namespace AmpScm.Git.Objects
             for (int i = 0; i < count; i++)
             {
                 GitId objectId = GetOid(oids, i);
+
+                if (alreadyReturned.Contains(objectId))
+                    continue;
+
                 long offset = GetOffset(offsets, i);
 
-                var rdr = await _packBucket!.DuplicateAsync(true);
-                await rdr.ReadSkipAsync(offset);
+                var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
+                await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, objectId);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, objectId).ConfigureAwait(false);
 
                 if (ob is TGitObject one)
                     yield return one;
                 else
-                    await pf.DisposeAsync();
+                    await pf.DisposeAsync().ConfigureAwait(false);
             }
         }
 
-        async IAsyncEnumerable<TGitObject> GetAllViaBitmap<TGitObject>()
+        async IAsyncEnumerable<TGitObject> GetAllViaBitmap<TGitObject>(HashSet<GitId> alreadyReturned)
             where TGitObject : class
         {
-            await OpenPackIfNecessary();
+            await OpenPackIfNecessary().ConfigureAwait(false);
 
             if (_fanOut is null || _fanOut[255] == 0)
                 yield break;
@@ -368,11 +438,11 @@ namespace AmpScm.Git.Objects
             {
                 var bmp = FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".bitmap"));
 
-                await VerifyBitmap(bmp);
+                await VerifyBitmap(bmp).ConfigureAwait(false);
                 _bitmapBucket = bmp;
             }
-            await _bitmapBucket.ResetAsync();
-            await _bitmapBucket.ReadSkipAsync(32);
+            await _bitmapBucket.ResetAsync().ConfigureAwait(false);
+            await _bitmapBucket.ReadSkipAsync(32).ConfigureAwait(false);
 
             GitEwahBitmapBucket? ewahBitmap = null;
 
@@ -388,7 +458,7 @@ namespace AmpScm.Git.Objects
                 }
                 else
                 {
-                    await ew.ReadSkipUntilEofAsync();
+                    await ew.ReadSkipUntilEofAsync().ConfigureAwait(false);
                 }
             }
 
@@ -398,7 +468,7 @@ namespace AmpScm.Git.Objects
             GitObjectType gitObjectType = GetGitObjectType(typeof(TGitObject));
             int bit = 0;
             int? bitLength = null;
-            while (await ewahBitmap.NextByteAsync() is byte b)
+            while (await ewahBitmap.NextByteAsync().ConfigureAwait(false) is byte b)
             {
                 if (b != 0)
                 {
@@ -406,9 +476,9 @@ namespace AmpScm.Git.Objects
                     {
                         if ((b & (1 << n)) != 0)
                         {
-                            if (bit + n < (bitLength ??= await ewahBitmap.ReadBitLengthAsync()))
+                            if (bit + n < (bitLength ??= await ewahBitmap.ReadBitLengthAsync().ConfigureAwait(false)))
                             {
-                                yield return await GetOneViaPackOffset<TGitObject>(bit + n, gitObjectType);
+                                yield return await GetOneViaPackOffset<TGitObject>(bit + n, gitObjectType).ConfigureAwait(false);
                             }
                         }
                     }
@@ -435,28 +505,28 @@ namespace AmpScm.Git.Objects
             where TGitObject : class
         {
             _revIdxBucket ??= FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".rev"));
-            await _revIdxBucket.ResetAsync();
-            await _revIdxBucket.ReadSkipAsync(12 + sizeof(uint) * v);
-            var indexOffs = await _revIdxBucket.ReadNetworkUInt32Async();
+            await _revIdxBucket.ResetAsync().ConfigureAwait(false);
+            await _revIdxBucket.ReadSkipAsync(12 + sizeof(uint) * v).ConfigureAwait(false);
+            var indexOffs = await _revIdxBucket.ReadNetworkUInt32Async().ConfigureAwait(false);
 
             byte[] oids = GetOidArray(indexOffs, 1);
             byte[] offsets = GetOffsetArray(indexOffs, 1, oids);
 
             GitId objectId = GitId.FromByteArrayOffset(_idType, oids, 0);
 
-            var rdr = await _packBucket!.DuplicateAsync(true);
-            await rdr.ReadSkipAsync(GetOffset(offsets, 0));
+            var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
+            await rdr.ReadSkipAsync(GetOffset(offsets, 0)).ConfigureAwait(false);
 
             GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-            return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId, gitObjectType);
+            return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId, gitObjectType).ConfigureAwait(false);
         }
 
         private async ValueTask VerifyBitmap(FileBucket bmp)
         {
             using var bhr = new GitBitmapHeaderBucket(bmp.NoClose());
 
-            var bb = await bhr.ReadAsync();
+            var bb = await bhr.ReadAsync().ConfigureAwait(false);
 
             if (!bb.IsEof)
                 throw new GitBucketException("Error during reading of pack header");
@@ -487,10 +557,10 @@ namespace AmpScm.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                await OpenPackIfNecessary();
+                await OpenPackIfNecessary().ConfigureAwait(false);
 
-                var rdr = await _packBucket!.DuplicateAsync(true);
-                await rdr.ReadSkipAsync(offset);
+                var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
+                await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 

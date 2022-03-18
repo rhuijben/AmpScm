@@ -50,7 +50,7 @@ namespace AmpScm.Git
         public async ValueTask ReadAsync()
         {
             if (_rawUrl == null)
-                _rawUrl = await Repository.Configuration.GetStringAsync("remote." + Name, "url") ?? "";
+                _rawUrl = await Repository.Configuration.GetStringAsync("remote." + Name, "url").ConfigureAwait(false) ?? "";
         }
     }
 }

@@ -46,7 +46,7 @@ namespace AmpScm.Git
 
                     try
                     {
-                        var t = Repository.ObjectRepository.Get<GitTree>(oid).AsTask().Result; // BAD async
+                        var t = Repository.ObjectRepository.GetByIdAsync<GitTree>(oid).AsTask().Result; // BAD async
 
                         if (t != null)
                         {
@@ -101,7 +101,7 @@ namespace AmpScm.Git
             else
                 return null;
 
-            return SetParent(index, Repository.ObjectRepository.Get<GitCommit>(id).AsTask().Result);
+            return SetParent(index, Repository.ObjectRepository.GetByIdAsync<GitCommit>(id).AsTask().Result);
         }
         private GitId? GetParentId(int index, bool viaIndex = true)
         {
@@ -192,7 +192,7 @@ namespace AmpScm.Git
         {
             if (_tree is GitObjectBucket b)
             {
-                await b.ReadTypeAsync();
+                await b.ReadTypeAsync().ConfigureAwait(false);
 
                 if (b.Type != GitObjectType.Commit)
                     throw new InvalidOperationException();
@@ -202,7 +202,7 @@ namespace AmpScm.Git
 
                 while (true)
                 {
-                    var (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.LF, _eolState ??= new BucketEolState());
+                    var (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.LF, _eolState ??= new BucketEolState()).ConfigureAwait(false);
 
                     if (bb.IsEof || bb.Length == eol.CharCount())
                         break;
@@ -255,7 +255,7 @@ namespace AmpScm.Git
 
                 while (true)
                 {
-                    var (bb, _) = await b.ReadUntilEolFullAsync(BucketEol.Zero, _eolState ??= new BucketEolState());
+                    var (bb, _) = await b.ReadUntilEolFullAsync(BucketEol.Zero, _eolState ??= new BucketEolState()).ConfigureAwait(false);
 
                     if (bb.IsEof)
                         break;

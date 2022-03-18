@@ -29,7 +29,7 @@ namespace AmpScm.Git
 
             if (type == null)
             {
-                await rdr.ReadTypeAsync();
+                await rdr.ReadTypeAsync().ConfigureAwait(false);
                 tp = rdr.Type;
             }
             else

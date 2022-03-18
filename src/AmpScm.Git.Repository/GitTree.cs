@@ -37,20 +37,17 @@ namespace AmpScm.Git
             if (_rdr == null)
                 return;
 
-            if (!(_rdr is GitTreeReadBucket rdr))
+            if (_rdr is not GitTreeReadBucket rdr)
             {
-                if (_rdr is Bucket b)
-                    _rdr = rdr = new GitTreeReadBucket(b, Repository.InternalConfig.IdType);
-                else
-                    return;
+                _rdr = rdr = new GitTreeReadBucket(_rdr, Repository.InternalConfig.IdType);
             }
 
-            var el = await rdr.ReadTreeElementRecord();
+            var el = await rdr.ReadTreeElementRecord().ConfigureAwait(false);
 
             if (el is null)
             {
                 _rdr = null;
-                await rdr.DisposeAsync();
+                await rdr.DisposeAsync().ConfigureAwait(false);
                 return;
             }
 
@@ -86,7 +83,7 @@ namespace AmpScm.Git
                     yield break;
                 }
 
-                await ReadNext();
+                await ReadNext().ConfigureAwait(false);
             }
         }
 

@@ -33,7 +33,7 @@ namespace AmpScm.Git.Implementation
             foreach(var v in this)
             {
                 if (v is IGitObject r)
-                    await r.ReadAsync();
+                    await r.ReadAsync().ConfigureAwait(false);
 
                 yield return v;
             }

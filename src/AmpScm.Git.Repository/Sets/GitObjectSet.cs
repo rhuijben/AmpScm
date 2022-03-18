@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Git;
 using AmpScm.Git.Implementation;
+using AmpScm.Git.Sets;
 
 namespace AmpScm.Git.Sets
 {
@@ -18,7 +19,7 @@ namespace AmpScm.Git.Sets
         internal GitObjectSet(GitRepository repository, Expression<Func<GitObjectSet<T>>> rootExpression)
             : base(repository)
         {
-            Expression = (rootExpression?.Body as MemberExpression) ?? throw new ArgumentNullException();
+            Expression = (rootExpression?.Body as MemberExpression) ?? throw new ArgumentNullException(nameof(rootExpression));
         }
 
         public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
@@ -33,12 +34,17 @@ namespace AmpScm.Git.Sets
 
         public ValueTask<T?> GetAsync(GitId id)
         {
-            return Repository.SetQueryProvider.GetAsync<T>(id);
+            return Repository.SetQueryProvider.GetByIdAsync<T>(id);
+        }
+
+        public ValueTask<T?> ResolveIdAsync(string idString)
+        {
+            return Repository.ObjectRepository.ResolveIdString<T>(idString);
         }
 
         public T? this[GitId id]
         {
-            get => Repository.SetQueryProvider.GetAsync<T>(id).AsTask().Result;
+            get => Repository.SetQueryProvider.GetByIdAsync<T>(id).AsTask().Result;
         }
     }
 }

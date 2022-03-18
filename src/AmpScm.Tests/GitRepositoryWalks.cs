@@ -120,6 +120,14 @@ namespace AmpScm.Tests
 
                 Assert.IsTrue(manyParents.Parent!.ParentCount > 3);
             }
+
+            var id = repo.Head.Id!.ToString();
+
+            for (int i = id.Length - 1; i > 7; i--)
+            {
+                string searchVia = id.Substring(0, i);
+                Assert.IsNotNull(await repo.Commits.ResolveIdAsync(searchVia), $"Able to find via {searchVia}, len={i}");
+            }
         }
 
 

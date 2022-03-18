@@ -44,11 +44,11 @@ namespace AmpScm.Git
                         GitObject? t;
 
                         if (_objType == GitObjectType.Commit)
-                            t = Repository.ObjectRepository.Get<GitCommit>(oid).Result; // BAD async
+                            t = Repository.ObjectRepository.GetByIdAsync<GitCommit>(oid).AsTask().Result; // BAD async
                         else if (_objType == GitObjectType.Tree)
-                            t = Repository.ObjectRepository.Get<GitTree>(oid).Result; // BAD async
+                            t = Repository.ObjectRepository.GetByIdAsync<GitTree>(oid).AsTask().Result; // BAD async
                         else
-                            t = Repository.ObjectRepository.Get<GitObject>(oid).Result; // BAD async
+                            t = Repository.ObjectRepository.GetByIdAsync<GitObject>(oid).AsTask().Result; // BAD async
 
                         if (t != null)
                         {
@@ -124,7 +124,7 @@ namespace AmpScm.Git
 
                 while(true)
                 {
-                    var (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.LF, _eolState ??= new BucketEolState());
+                    var (bb, eol) = await b.ReadUntilEolFullAsync(BucketEol.LF, _eolState ??= new BucketEolState()).ConfigureAwait(false);
 
                     if (bb.IsEof || bb.Length == eol.CharCount())
                         break;
@@ -175,7 +175,7 @@ namespace AmpScm.Git
 
                 while(true)
                 {
-                    var (bb, _) = await b.ReadUntilEolFullAsync(BucketEol.Zero, _eolState ??= new BucketEolState());
+                    var (bb, _) = await b.ReadUntilEolFullAsync(BucketEol.Zero, _eolState ??= new BucketEolState()).ConfigureAwait(false);
 
                     if (bb.IsEof)
                         break;

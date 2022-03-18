@@ -21,18 +21,18 @@ namespace AmpScm.Git.Objects
             _fileName = chainFile ?? throw new ArgumentNullException(nameof(chainFile));
         }
 
-        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>()
+        public override async IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
         {
             if (!typeof(TGitObject).IsAssignableFrom(typeof(GitCommit)))
                 yield break;
 
-            await Init();
+            await Init().ConfigureAwait(false);
 
             for (uint i = 0; i < (_fanOut?[255] ?? 0); i++)
             {
                 var oid = GetOid(i);
 
-                yield return (TGitObject)(object)new GitCommit(Repository, await Repository.ObjectRepository.ResolveByOid(oid)!, oid);
+                yield return (TGitObject)(object)new GitCommit(Repository, await Repository.ObjectRepository.ResolveByOid(oid).ConfigureAwait(false)!, oid);
             }
         }
 
@@ -133,7 +133,7 @@ namespace AmpScm.Git.Objects
 
         internal override async ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
         {
-            await Init();
+            await Init().ConfigureAwait(false);
 
             if (TryFindId(oid, out var index))
             {
@@ -176,7 +176,7 @@ namespace AmpScm.Git.Objects
                 return new GitCommitGraphInfo(parents, chainLevel);
             }
 
-            return await base.GetCommitInfo(oid);
+            return await base.GetCommitInfo(oid).ConfigureAwait(false);
         }
 
         private bool TryFindId(GitId oid, out uint index)

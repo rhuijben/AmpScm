@@ -30,7 +30,7 @@ namespace AmpScm.Git.Sets
 
             do
             {
-                while (await cur.MoveNextAsync())
+                while (await cur.MoveNextAsync().ConfigureAwait(false))
                 {
                     var c = cur.Current;
 
@@ -41,7 +41,7 @@ namespace AmpScm.Git.Sets
 
                         inside ??= new Stack<(IAsyncEnumerator<GitTreeEntry>, string)>();
 
-                        await dir.ReadAsync();
+                        await dir.ReadAsync().ConfigureAwait(false);
 
                         var t = dir.Tree?.GetAsyncEnumerator();
 
@@ -61,7 +61,7 @@ namespace AmpScm.Git.Sets
                     cancellationToken.ThrowIfCancellationRequested();
                 }
 
-                await cur.DisposeAsync();
+                await cur.DisposeAsync().ConfigureAwait(false);
 
                 if (inside?.Count > 0)
                 {
