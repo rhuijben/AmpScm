@@ -21,7 +21,7 @@ namespace AmpScm.Buckets.Git
         {
             if (!_header.HasResult)
             {
-                await _header.ReadAsync(Inner);
+                await _header.ReadAsync(Inner).ConfigureAwait(false);
 
                 // Can fall through for EOF in OK and error case
             }

@@ -23,7 +23,7 @@ namespace AmpScm.Buckets.Git
         {
             if (_startOffset == 0)
             {
-                var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.Zero, null);
+                var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.Zero, null).ConfigureAwait(false);
 
                 if (Type == default)
                 {
@@ -80,7 +80,7 @@ namespace AmpScm.Buckets.Git
 
         public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
-            await ReadTypeAsync();
+            await ReadTypeAsync().ConfigureAwait(false);
 
             if (_length.HasValue)
             {
@@ -101,16 +101,16 @@ namespace AmpScm.Buckets.Git
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (_startOffset == 0)
-                await ReadTypeAsync();
+                await ReadTypeAsync().ConfigureAwait(false);
             
-            return await Inner.ReadAsync(requested);
+            return await Inner.ReadAsync(requested).ConfigureAwait(false);
         }
 
         public override bool CanReset => Inner.CanReset;
 
         public override async ValueTask ResetAsync()
         {
-            await base.ResetAsync();
+            await base.ResetAsync().ConfigureAwait(false);
 
             _startOffset = 0; // Handles skip and offset
             // Keep Type and Length values

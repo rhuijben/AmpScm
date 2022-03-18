@@ -41,7 +41,6 @@ AmpScm.Buckets.Git.GitBucketException.GitBucketException(string? message, System
 AmpScm.Buckets.Git.GitBucketException.GitBucketException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 AmpScm.Buckets.Git.GitConfigurationItem
 AmpScm.Buckets.Git.GitConfigurationItem.CompareTo(AmpScm.Buckets.Git.GitConfigurationItem? other) -> int
-AmpScm.Buckets.Git.GitConfigurationItem.GitConfigurationItem() -> void
 AmpScm.Buckets.Git.GitConfigurationItem.Group.get -> string!
 AmpScm.Buckets.Git.GitConfigurationItem.Group.set -> void
 AmpScm.Buckets.Git.GitConfigurationItem.Key.get -> string!
@@ -86,6 +85,7 @@ AmpScm.Buckets.Git.Objects.GitTreeElementType.SymbolicLink = 40960 -> AmpScm.Buc
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket.GitTreeReadBucket(AmpScm.Buckets.Bucket! inner, AmpScm.Git.GitIdType idType) -> void
 AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadTreeElementRecord() -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.Git.Objects.GitTreeElementRecord!>
+AmpScm.Git.GitBucketExtensions
 AmpScm.Git.GitException
 AmpScm.Git.GitException.GitException() -> void
 AmpScm.Git.GitException.GitException(string! message) -> void
@@ -152,10 +152,19 @@ override AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadAsync(int requested = 
 override AmpScm.Git.GitId.Equals(object? obj) -> bool
 override AmpScm.Git.GitId.GetHashCode() -> int
 override AmpScm.Git.GitId.ToString() -> string!
+static AmpScm.Buckets.Git.GitConfigurationItem.operator <(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool
+static AmpScm.Buckets.Git.GitConfigurationItem.operator <=(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool
+static AmpScm.Buckets.Git.GitConfigurationItem.operator >(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool
+static AmpScm.Buckets.Git.GitConfigurationItem.operator >=(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool
+static AmpScm.Git.GitBucketExtensions.HashLength(this AmpScm.Git.GitIdType type) -> int
 static AmpScm.Git.GitId.FromByteArrayOffset(AmpScm.Git.GitIdType type, byte[]! hash, int offset) -> AmpScm.Git.GitId!
 static AmpScm.Git.GitId.HashLength(AmpScm.Git.GitIdType type) -> int
 static AmpScm.Git.GitId.operator !=(AmpScm.Git.GitId? one, AmpScm.Git.GitId? other) -> bool
+static AmpScm.Git.GitId.operator <(AmpScm.Git.GitId! left, AmpScm.Git.GitId! right) -> bool
+static AmpScm.Git.GitId.operator <=(AmpScm.Git.GitId! left, AmpScm.Git.GitId! right) -> bool
 static AmpScm.Git.GitId.operator ==(AmpScm.Git.GitId? one, AmpScm.Git.GitId? other) -> bool
+static AmpScm.Git.GitId.operator >(AmpScm.Git.GitId! left, AmpScm.Git.GitId! right) -> bool
+static AmpScm.Git.GitId.operator >=(AmpScm.Git.GitId! left, AmpScm.Git.GitId! right) -> bool
 static AmpScm.Git.GitId.Parse(string! oidString) -> AmpScm.Git.GitId!
 static AmpScm.Git.GitId.StringToByteArray(string! hex) -> byte[]!
 static AmpScm.Git.GitId.TryParse(string! oidString, out AmpScm.Git.GitId! oid) -> bool

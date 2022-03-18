@@ -44,7 +44,7 @@ namespace AmpScm.Buckets.Git
 
         public async ValueTask<GitReferenceLogRecord?> ReadGitReferenceLogRecordAsync()
         {
-            var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.LF, null);
+            var (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.LF, null).ConfigureAwait(false);
 
             if (bb.IsEof)
                 return null;

@@ -25,6 +25,9 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Copyright>(c) Copyright AmpScm Project</Copyright>
     <PackageProjectUrl>https://github.com/AmpScm/AmpScm</PackageProjectUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-all</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>

@@ -32,7 +32,7 @@ namespace AmpScm.Buckets.Git
 
             do
             {
-                var rd = await b.ReadAsync(bytes.Length - _pos);
+                var rd = await b.ReadAsync(bytes.Length - _pos).ConfigureAwait(false);
 
                 if (rd.Length > 0)
                 {

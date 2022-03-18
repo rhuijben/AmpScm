@@ -16,7 +16,7 @@ namespace System.Runtime.CompilerServices
 
 namespace AmpScm.Buckets.Git
 {
-    internal class Compatibility
-    {
-    }
+    //internal class Compatibility
+    //{
+    //}
 }

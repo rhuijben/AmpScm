@@ -36,7 +36,7 @@ namespace AmpScm.Git.Client.Plumbing
                 throw new ArgumentOutOfRangeException();
 
             List<string> results = new List<string>();
-            await foreach (var line in c.Repository.WalkPlumbingCommand(name, new[] { "-h" }, expectedResults: new[] { 129 }))
+            await foreach (var line in await c.Repository.WalkPlumbingCommandAsync(name, new[] { "-h" }, expectedResults: new[] { 129 }))
             {
                 results.Add(line);
             }

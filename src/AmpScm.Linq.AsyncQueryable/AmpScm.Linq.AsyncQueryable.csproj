@@ -7,7 +7,12 @@
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\AmpScm.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
+    <NoWarn>1701;1702;1591</NoWarn>
     <WarningLevel>5</WarningLevel>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,6 +23,9 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Copyright>(c) Copyright AmpScm Project</Copyright>
     <PackageProjectUrl>https://github.com/AmpScm/AmpScm</PackageProjectUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-all</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">

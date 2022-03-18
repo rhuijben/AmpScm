@@ -11,7 +11,7 @@ using AmpScm.Buckets.Specialized;
 namespace AmpScm.Buckets.Git
 {
     [DebuggerDisplay("{ToString(),nq}")]
-    public sealed class GitConfigurationItem : IComparable<GitConfigurationItem>
+    public sealed record GitConfigurationItem : IComparable<GitConfigurationItem>
     {
         public string Group { get; set; } = "";
         public string? SubGroup { get; set; }
@@ -38,6 +38,26 @@ namespace AmpScm.Buckets.Git
             else
                 return $"{Group}.{Key}: {Value ?? "<<empty>>"}";
         }
+
+        public static bool operator <(GitConfigurationItem left, GitConfigurationItem right)
+        {
+            return (left is null) ? !(right is null) : left.CompareTo(right) < 0;
+        }
+
+        public static bool operator <=(GitConfigurationItem left, GitConfigurationItem right)
+        {
+            return (left is null) || left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >(GitConfigurationItem left, GitConfigurationItem right)
+        {
+            return !(left is null) && left.CompareTo(right) > 0;
+        }
+
+        public static bool operator >=(GitConfigurationItem left, GitConfigurationItem right)
+        {
+            return (left is null) ? (right is null) : left.CompareTo(right) >= 0;
+        }
     }
     public class GitConfigurationReaderBucket : GitBucket
     {
@@ -63,11 +83,11 @@ namespace AmpScm.Buckets.Git
                 if (line.Length == 0)
                     continue;
 
-                while (line.EndsWith("\\"))
+                while (line.EndsWith("\\", StringComparison.Ordinal))
                 {
                     line = line.Substring(0, line.Length - 1);
 
-                    (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.AnyEol, _state);
+                    (bb, eol) = await Inner.ReadUntilEolFullAsync(BucketEol.AnyEol, _state).ConfigureAwait(false);
 
                     if (bb.IsEmpty)
                         break;

@@ -55,7 +55,7 @@ namespace AmpScm.Buckets.Git
                     return bb;
                 }
 
-                if (!await RefillAsync(true))
+                if (!await RefillAsync(true).ConfigureAwait(false))
                     return BucketBytes.Eof;
             }
         }
@@ -74,7 +74,7 @@ namespace AmpScm.Buckets.Git
         {
             if (_lengthBits is null)
             {
-                await RefillAsync(true);
+                await RefillAsync(true).ConfigureAwait(false);
             }
 
             return (int)_lengthBits!.Value;
@@ -87,7 +87,7 @@ namespace AmpScm.Buckets.Git
 
             if (_lengthBits is null)
             {
-                var bb = await Inner.ReadFullAsync(4 + 4);
+                var bb = await Inner.ReadFullAsync(4 + 4).ConfigureAwait(false);
                 _lengthBits = NetBitConverter.ToUInt32(bb, 0);
                 _compressedSize = NetBitConverter.ToInt32(bb, 4);
 
@@ -101,7 +101,7 @@ namespace AmpScm.Buckets.Git
             switch (_state)
             {
                 case ewah_state.start:
-                    ulong curOp = await Inner.ReadNetworkUInt64Async();
+                    ulong curOp = await Inner.ReadNetworkUInt64Async().ConfigureAwait(false);
 
                     _repBit = (curOp & 1UL) != 0;
                     _repCount = (uint)(curOp >> 1);
@@ -145,7 +145,7 @@ namespace AmpScm.Buckets.Git
                             return true;
                         }
 
-                        var bb = await Inner.ReadFullAsync(sizeof(ulong));
+                        var bb = await Inner.ReadFullAsync(sizeof(ulong)).ConfigureAwait(false);
 
                         if (bb.Length != sizeof(ulong))
                             throw new BucketException("Unexpected EOF");
@@ -170,7 +170,7 @@ namespace AmpScm.Buckets.Git
                     _state = ewah_state.start;
                     goto case ewah_state.start;
                 case ewah_state.footer:
-                    await Inner.ReadNetworkUInt32Async();
+                    await Inner.ReadNetworkUInt32Async().ConfigureAwait(false);
                     _state = ewah_state.done;
                     goto case ewah_state.done;
                 case ewah_state.done:
@@ -183,7 +183,7 @@ namespace AmpScm.Buckets.Git
 
         public override async ValueTask ResetAsync()
         {
-            await Inner.ResetAsync();
+            await Inner.ResetAsync().ConfigureAwait(false);
             _state = ewah_state.init;
             _wpos = 0;
             _position = 0;
@@ -192,7 +192,7 @@ namespace AmpScm.Buckets.Git
         public override async ValueTask<long?> ReadRemainingBytesAsync()
         {
             if (_lengthBits is null)
-                await RefillAsync(true);
+                await RefillAsync(true).ConfigureAwait(false);
 
             return ((_lengthBits + 8 * sizeof(ulong) - 1) / (8 * sizeof(ulong))) * 8 - _position;
         }

@@ -58,34 +58,34 @@ namespace AmpScm.Buckets.Git
             if (reader == null || state != frame_state.body)
                 return BucketBytes.Empty;
 
-            return await reader.PollAsync();
+            return await reader.PollAsync().ConfigureAwait(false);
         }
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (reader == null || state != frame_state.body)
             {
-                if (!await ReadInfoAsync())
+                if (!await ReadInfoAsync().ConfigureAwait(false))
                     return BucketBytes.Eof;
             }
 
-            return await reader!.ReadAsync(requested);
+            return await reader!.ReadAsync(requested).ConfigureAwait(false);
         }
 
         public override async ValueTask<int> ReadSkipAsync(int requested)
         {
             if (reader == null || state != frame_state.body)
             {
-                if (!await ReadInfoAsync())
+                if (!await ReadInfoAsync().ConfigureAwait(false))
                     return 0;
             }
 
-            return await reader!.ReadSkipAsync(requested);
+            return await reader!.ReadSkipAsync(requested).ConfigureAwait(false);
         }
 
         public override async ValueTask ReadTypeAsync()
         {
-            await PrepareState(frame_state.type_done);
+            await PrepareState(frame_state.type_done).ConfigureAwait(false);
 
             Debug.Assert(Type >= GitObjectType.Commit && Type <= GitObjectType.Tag);
         }
@@ -125,7 +125,7 @@ namespace AmpScm.Buckets.Git
                 else
                     rq_len = 1;
 
-                var read = await Inner.ReadAsync(rq_len);
+                var read = await Inner.ReadAsync(rq_len).ConfigureAwait(false);
 
                 for (int i = 0; i < read.Length; i++)
                 {
@@ -178,7 +178,7 @@ namespace AmpScm.Buckets.Git
 
                     while (position < _deltaId.Length)
                     {
-                        var read = await Inner.ReadAsync(_deltaId.Length - (int)position);
+                        var read = await Inner.ReadAsync(_deltaId.Length - (int)position).ConfigureAwait(false);
 
                         if (read.IsEof)
                             return false;
@@ -213,7 +213,7 @@ namespace AmpScm.Buckets.Git
                     else
                         rq_len = 1;
 
-                    var read = await Inner.ReadAsync(rq_len);
+                    var read = await Inner.ReadAsync(rq_len).ConfigureAwait(false);
 
                     for (int i = 0; i < read.Length; i++)
                     {
@@ -259,12 +259,12 @@ namespace AmpScm.Buckets.Git
                     // TODO: This is not restartable via async handling, while it should be.
 
                     // The source needs support for this. Our filestream and memorystreams have this support
-                    Bucket deltaSource = await Inner.DuplicateAsync(true);
+                    Bucket deltaSource = await Inner.DuplicateAsync(true).ConfigureAwait(false);
                     long to_skip = delta_position;
 
                     while (to_skip > 0)
                     {
-                        var skipped = await deltaSource.ReadSkipAsync(to_skip);
+                        var skipped = await deltaSource.ReadSkipAsync(to_skip).ConfigureAwait(false);
 
                         if (skipped == 0)
                             return false; // EOF
@@ -281,14 +281,14 @@ namespace AmpScm.Buckets.Git
                     if (_oidResolver == null)
                         throw new GitBucketException($"Found delta offset against {deltaId}, but don't have a resolver to obtain that object");
 
-                    base_reader = await _oidResolver(deltaId);
+                    base_reader = await _oidResolver(deltaId).ConfigureAwait(false);
 
                     if (base_reader == null)
                         throw new GitBucketException($"Can't obtain delta reference for {deltaId}");
                     _deltaId = null; // Not used any more
                 }
 
-                await base_reader.ReadTypeAsync();
+                await base_reader.ReadTypeAsync().ConfigureAwait(false);
                 Type = base_reader.Type;
                 state = frame_state.body;
 
@@ -310,14 +310,14 @@ namespace AmpScm.Buckets.Git
         {
             if (state < frame_state.body)
             {
-                var b = await ReadInfoAsync();
+                var b = await ReadInfoAsync().ConfigureAwait(false);
 
                 if (!b)
                     return null;
             }
 
             if (DeltaCount > 0)
-                return await reader!.ReadRemainingBytesAsync();
+                return await reader!.ReadRemainingBytesAsync().ConfigureAwait(false);
             else
                 return body_size - reader!.Position;
         }
@@ -327,7 +327,7 @@ namespace AmpScm.Buckets.Git
             if (state < frame_state.body)
                 return; // Nothing to reset
 
-            await reader!.ResetAsync();
+            await reader!.ResetAsync().ConfigureAwait(false);
         }
 
         public override bool CanReset => Inner.CanReset;

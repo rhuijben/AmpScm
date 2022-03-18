@@ -16,7 +16,7 @@ namespace AmpScm.Buckets.Git
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
-            while (await ReadSkipAsync(int.MaxValue) > 0)
+            while (await ReadSkipAsync(int.MaxValue).ConfigureAwait(false) > 0)
             {
 
             }
@@ -31,10 +31,10 @@ namespace AmpScm.Buckets.Git
         {
             byte[]? start;
 
-            using var poll = await Inner.PollReadAsync(4);
+            using var poll = await Inner.PollReadAsync(4).ConfigureAwait(false);
             if (poll.Length < 4)
             {
-                var pb = await poll.ReadAsync(4);
+                var pb = await poll.ReadAsync(4).ConfigureAwait(false);
 
                 if (pb.IsEof)
                     return BucketBytes.Eof;
@@ -43,7 +43,7 @@ namespace AmpScm.Buckets.Git
 
                 while (start.Length < 4)
                 {
-                    pb = await Inner.ReadAsync(4 - start.Length);
+                    pb = await Inner.ReadAsync(4 - start.Length).ConfigureAwait(false);
 
                     if (pb.IsEof)
                         throw new GitBucketException($"Invalid packet header in {Name} bucket");
@@ -53,7 +53,7 @@ namespace AmpScm.Buckets.Git
             }
             else
             {
-                start = (await poll.ReadAsync(4)).ToArray();
+                start = (await poll.ReadAsync(4).ConfigureAwait(false)).ToArray();
             }
 
             _packetLength = Convert.ToInt32(Encoding.ASCII.GetString(start), 16);
@@ -62,7 +62,7 @@ namespace AmpScm.Buckets.Git
             if (_packetLength <= 4)
                 return BucketBytes.Empty;
 
-            BucketBytes bb = await Inner.ReadAsync(_packetLength - 4);
+            BucketBytes bb = await Inner.ReadAsync(_packetLength - 4).ConfigureAwait(false);
 
             if (bb.IsEof || bb.Length == _packetLength)
                 return bb;
@@ -71,7 +71,7 @@ namespace AmpScm.Buckets.Git
 
             while (start.Length < _packetLength - 4)
             {
-                bb = await Inner.ReadAsync(start.Length - _packetLength - 4);
+                bb = await Inner.ReadAsync(start.Length - _packetLength - 4).ConfigureAwait(false);
 
                 if (bb.IsEof)
                     throw new GitBucketException($"Unexpected eof in {Name} bucket");

@@ -146,7 +146,9 @@ namespace System.Linq
         /// <returns></returns>
         public static IAsyncQueryable AsAsyncQueryable(this IQueryable queryable)
         {
-            if (queryable is IAsyncQueryable r)
+            if (queryable is null)
+                throw new ArgumentNullException(nameof(queryable));
+            else if (queryable is IAsyncQueryable r)
                 return r;
             else
             {
