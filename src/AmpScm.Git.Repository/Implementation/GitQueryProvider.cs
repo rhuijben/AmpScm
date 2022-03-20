@@ -73,13 +73,6 @@ namespace AmpScm.Git.Implementation
             return GetNamedAsyncEnumerable<TResult>(CancellationToken.None).AsNonAsyncEnumerable();
         }
 
-        public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
-        {
-            expression = new GitQueryVisitor().Visit(expression);
-
-            return Expression.Lambda<Func<TResult>>(expression).Compile().Invoke();
-        }
-
         internal IList GetNamedList<T>()
         {
             return new List<T>(GetNamedEnumerable<T>());

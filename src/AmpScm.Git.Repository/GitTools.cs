@@ -28,7 +28,7 @@ namespace AmpScm.Git
             {
                 var p = Directory.GetDirectories(parent!, Path.GetFileName(dir)).FirstOrDefault();
 
-                if (p != null && (!path.StartsWith(p) || path[p.Length] == Path.DirectorySeparatorChar))
+                if (p != null && (!path.StartsWith(p, StringComparison.Ordinal) || path[p.Length] == Path.DirectorySeparatorChar))
                 {
                     path = p + path.Substring(dir.Length);
                 }

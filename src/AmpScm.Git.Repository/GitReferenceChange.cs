@@ -8,7 +8,7 @@ using AmpScm.Git.Sets;
 
 namespace AmpScm.Git
 {
-    public class GitReferenceChange : IGitObject
+    public sealed class GitReferenceChange : IGitObject
     {
         object _signature;
         internal GitReferenceChange(GitReferenceLogRecord record)

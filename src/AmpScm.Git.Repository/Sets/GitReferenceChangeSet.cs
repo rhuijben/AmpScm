@@ -24,7 +24,7 @@ namespace AmpScm.Git.Sets
 
         public IAsyncEnumerator<GitReferenceChange> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return Repository.ReferenceRepository.GetChanges(_reference).GetAsyncEnumerator(cancellationToken);
+            return Repository.ReferenceRepository.GetChanges(_reference)?.GetAsyncEnumerator(cancellationToken) ?? AsyncEnumerable.Empty<GitReferenceChange>().GetAsyncEnumerator(cancellationToken);
         }
 
         public override IEnumerator<GitReferenceChange> GetEnumerator()

@@ -33,7 +33,7 @@ namespace AmpScm.Git.Objects
             {
                 var oid = GetOid(i);
 
-                yield return (TGitObject)(object)new GitCommit(Repository, await Repository.ObjectRepository.ResolveByOid(oid).ConfigureAwait(false)!, oid);
+                yield return (TGitObject)(object)new GitCommit(Repository, await Repository.ObjectRepository.ResolveByOid(oid).ConfigureAwait(false), oid);
             }
         }
 

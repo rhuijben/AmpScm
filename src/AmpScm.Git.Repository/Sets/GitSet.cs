@@ -47,7 +47,9 @@ namespace AmpScm.Git.Sets
             return GetEnumerator();
         }
 
+#pragma warning disable CA1033 // Interface methods should be callable by child types
         IList IListSource.GetList()
+#pragma warning restore CA1033 // Interface methods should be callable by child types
         {
             return this.ToList();
         }

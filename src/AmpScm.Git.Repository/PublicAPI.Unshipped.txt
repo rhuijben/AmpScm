@@ -64,6 +64,7 @@ AmpScm.Git.GitRepository.TagObjects.get -> AmpScm.Git.Sets.GitObjectSet<AmpScm.G
 AmpScm.Git.GitRepository.Tags.get -> AmpScm.Git.Sets.GitNamedSet<AmpScm.Git.GitTag!>!
 AmpScm.Git.GitRepository.Trees.get -> AmpScm.Git.Sets.GitObjectSet<AmpScm.Git.GitTree!>!
 AmpScm.Git.GitRepositoryException
+AmpScm.Git.GitRepositoryException.GitRepositoryException() -> void
 AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message) -> void
 AmpScm.Git.GitRepositoryException.GitRepositoryException(string! message, System.Exception! innerexception) -> void
 AmpScm.Git.GitRepositoryException.GitRepositoryException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
@@ -137,6 +138,7 @@ AmpScm.Git.Sets.GitNamedSet<T>.this[string! name].get -> T?
 AmpScm.Git.Sets.GitObjectSet<T>
 AmpScm.Git.Sets.GitObjectSet<T>.GetAsync(AmpScm.Git.GitId! id) -> System.Threading.Tasks.ValueTask<T?>
 AmpScm.Git.Sets.GitObjectSet<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<T!>!
+AmpScm.Git.Sets.GitObjectSet<T>.ResolveIdAsync(string! idString) -> System.Threading.Tasks.ValueTask<T?>
 AmpScm.Git.Sets.GitObjectSet<T>.this[AmpScm.Git.GitId! id].get -> T?
 AmpScm.Git.Sets.GitObjectWrapper<TGitObject>
 AmpScm.Git.Sets.GitReferenceChangeSet
@@ -180,7 +182,7 @@ override AmpScm.Git.GitTree.Type.get -> AmpScm.Git.GitObjectType
 override AmpScm.Git.GitTreeEntry.Equals(object? obj) -> bool
 override AmpScm.Git.GitTreeEntry.GetHashCode() -> int
 override AmpScm.Git.GitTreeEntry<TEntry, TObject>.ReadAsync() -> System.Threading.Tasks.ValueTask
-override AmpScm.Git.Objects.GitCommitGenerationValue.Equals(object! obj) -> bool
+override AmpScm.Git.Objects.GitCommitGenerationValue.Equals(object? obj) -> bool
 override AmpScm.Git.Objects.GitCommitGenerationValue.GetHashCode() -> int
 override AmpScm.Git.References.GitSymbolicReference.Commit.get -> AmpScm.Git.GitCommit?
 override AmpScm.Git.References.GitSymbolicReference.GitObject.get -> AmpScm.Git.GitObject?
@@ -217,6 +219,7 @@ static AmpScm.Git.Sets.GitTreeItem.operator !=(AmpScm.Git.Sets.GitTreeItem left,
 static AmpScm.Git.Sets.GitTreeItem.operator ==(AmpScm.Git.Sets.GitTreeItem left, AmpScm.Git.Sets.GitTreeItem right) -> bool
 virtual AmpScm.Git.GitObject.ReadAsync() -> System.Threading.Tasks.ValueTask
 virtual AmpScm.Git.GitReference.Commit.get -> AmpScm.Git.GitCommit?
+virtual AmpScm.Git.GitReference.GitObject.get -> AmpScm.Git.GitObject?
 virtual AmpScm.Git.GitReference.Id.get -> AmpScm.Git.GitId?
 virtual AmpScm.Git.GitReference.ReadAsync() -> System.Threading.Tasks.ValueTask
 virtual AmpScm.Git.GitTreeEntry.EntryName.get -> string!

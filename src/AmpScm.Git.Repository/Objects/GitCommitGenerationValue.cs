@@ -65,7 +65,7 @@ namespace AmpScm.Git.Objects
 
         public bool HasValue => value != 0;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return (obj is GitCommitGenerationValue other) && Equals(other);
         }

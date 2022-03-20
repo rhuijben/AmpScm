@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Client;
 using AmpScm.Buckets.Git;
 using AmpScm.Git.Repository.Implementation;
-using AmpScm.Git.Sets;
 
 namespace AmpScm.Git.Repository
 {
@@ -119,7 +118,7 @@ namespace AmpScm.Git.Repository
 
         static string ApplyHomeDir(string path)
         {
-            if (path != null && path.StartsWith("~", StringComparison.Ordinal) 
+            if (path != null && path.StartsWith("~", StringComparison.Ordinal)
                 && UserHomeDirectory is var homeDir && !string.IsNullOrWhiteSpace(homeDir))
             {
                 if (path.StartsWith("~/", StringComparison.Ordinal))
@@ -157,6 +156,9 @@ namespace AmpScm.Git.Repository
 
         public IEnumerable<string> GetSubGroups(string group)
         {
+            if (string.IsNullOrEmpty(group))
+                throw new ArgumentNullException(nameof(group));
+
             if (!_loaded)
                 LoadAsync().AsTask().GetAwaiter().GetResult();
 
@@ -215,6 +217,9 @@ namespace AmpScm.Git.Repository
 
         public async ValueTask<int?> GetIntAsync(string group, string key)
         {
+            if (string.IsNullOrEmpty(group))
+                throw new ArgumentNullException(nameof(group));
+
             await LoadAsync().ConfigureAwait(false);
 
             int n = group.IndexOf('.');
@@ -237,6 +242,9 @@ namespace AmpScm.Git.Repository
 
         public async ValueTask<string?> GetStringAsync(string group, string key)
         {
+            if (string.IsNullOrEmpty(group))
+                throw new ArgumentNullException(nameof(group));
+
             await LoadAsync().ConfigureAwait(false);
 
             int n = group.IndexOf('.');
@@ -434,15 +442,21 @@ namespace AmpScm.Git.Repository
                         else if (File.Exists(git = Path.Combine(p, "git.exe")))
                             return Path.GetFullPath(git);
                     }
-                    catch { }
+                    catch (ArgumentException)
+                    { }
+                    catch (IOException)
+                    { }
+                    catch (SecurityException)
+                    { }
                 }
-                return null;
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-                return null;
-            }
+            catch (ArgumentException)
+            { }
+            catch (IOException)
+            { }
+            catch (SecurityException)
+            { }
+            return null;
         }
 
         public GitSignature Identity
@@ -461,6 +475,9 @@ namespace AmpScm.Git.Repository
         public void BasicAuthenticationHandler(object? sender, BasicBucketAuthenticationEventArgs e)
 #pragma warning restore CA2109 // Review visible event handlers
         {
+            if (e is null)
+                throw new ArgumentNullException(nameof(e));
+
             if (e.Items[_extraHeaderSetTag] is null && (e.Uri?.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ?? false))
             {
                 e.Items[_extraHeaderSetTag] = _extraHeaderSetTag;

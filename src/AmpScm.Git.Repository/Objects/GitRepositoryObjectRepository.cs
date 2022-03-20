@@ -57,7 +57,9 @@ namespace AmpScm.Git.Objects
             {
                 foreach (var (key, value) in Repository.Configuration.GetGroup("extensions", null))
                 {
+#pragma warning disable CA1308 // Normalize strings to uppercase
                     switch (key.ToLowerInvariant())
+#pragma warning restore CA1308 // Normalize strings to uppercase
                     {
                         case "noop":
                             break;
@@ -122,14 +124,11 @@ namespace AmpScm.Git.Objects
                         continue;
 
                     string? dir = null;
-                    try
-                    {
-                        var p = Path.Combine(ObjectsDir, l);
 
-                        if (Directory.Exists(p))
-                            dir = p;
-                    }
-                    catch { }
+                    var p = Path.Combine(ObjectsDir, l);
+
+                    if (Directory.Exists(p))
+                        dir = p;
 
                     if (dir != null)
                         yield return new GitRepositoryObjectRepository(Repository, dir);

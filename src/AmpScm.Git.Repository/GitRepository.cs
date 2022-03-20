@@ -59,7 +59,7 @@ namespace AmpScm.Git
             FullPath = GitTools.GetNormalizedFullPath(path);
 
             // TODO: Needs config check
-            if (bareCheck && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git"))
+            if (bareCheck && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git", StringComparison.OrdinalIgnoreCase))
             {
                 GitDir = FullPath;
 
@@ -172,6 +172,11 @@ namespace AmpScm.Git
         }
 
         object? IServiceProvider.GetService(Type serviceType)
+        {
+            return GetService(serviceType);
+        }
+
+        protected virtual object? GetService(Type serviceType)
         {
             return ((IServiceProvider)_container).GetService(serviceType);
         }

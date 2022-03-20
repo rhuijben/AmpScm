@@ -18,6 +18,6 @@ namespace AmpScm.Git.Sets
         {
         }
 
-        public GitReference Head => Repository.ReferenceRepository.GetAsync(Git.References.GitReferenceRepository.Head).Result!;
+        public GitReference Head => Repository.ReferenceRepository.GetAsync(Git.References.GitReferenceRepository.Head).AsTask().Result!;
     }
 }

@@ -135,7 +135,7 @@ namespace AmpScm.Git.References
             return null;
         }
 
-        private async IAsyncEnumerable<GitReferenceChange>? GetChangesFromRefLogFile(string fileName)
+        static async IAsyncEnumerable<GitReferenceChange>? GetChangesFromRefLogFile(string fileName)
         {
             using var fb = FileBucket.OpenRead(fileName);
 
