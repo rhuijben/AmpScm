@@ -104,10 +104,27 @@ namespace AmpScm.Git.Objects
                 yield return new CommitGraphChainRepository(Repository, chain);
             }
 
+            string multipackFile = Path.Combine(ObjectsDir, "pack", "multi-pack-index");
+            MultiPackObjectRepository? multiPack = null;
+            if (File.Exists(multipackFile) && Repository.Configuration.Lazy.MultiPack)
+            {
+                MultiPackObjectRepository mp = new MultiPackObjectRepository(Repository, multipackFile);
+
+                if (mp.CanLoad())
+                {
+                    yield return mp;
+
+                    multiPack = mp;
+                }
+                else
+                    mp.Dispose();
+            }
+
             foreach (var pack in Directory.GetFiles(Path.Combine(ObjectsDir, "pack"), "pack-*.pack"))
             {
                 // TODO: Check if length matches hashtype?
-                yield return new PackObjectRepository(Repository, pack, _idType);
+                if (!multiPack?.ContainsPack(pack) ?? true)
+                    yield return new PackObjectRepository(Repository, pack, _idType);
             }
 
             yield return new FileObjectRepository(Repository, ObjectsDir);

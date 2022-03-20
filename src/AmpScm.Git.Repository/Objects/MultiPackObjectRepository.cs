@@ -7,9 +7,9 @@ using AmpScm.Buckets.Git;
 
 namespace AmpScm.Git.Objects
 {
-    internal class MultiPackObjectRespository : GitObjectRepository
+    internal class MultiPackObjectRepository : GitObjectRepository
     {
-        public MultiPackObjectRespository(GitRepository repository) : base(repository, "MultiPack:" + repository.GitDir)
+        public MultiPackObjectRepository(GitRepository repository, string multipackFile) : base(repository, "MultiPack:" + repository.GitDir)
         {
         }
 
@@ -22,6 +22,16 @@ namespace AmpScm.Git.Objects
         public override IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
         {
             return AsyncEnumerable.Empty<TGitObject>();
+        }
+
+        internal bool CanLoad()
+        {
+            return false;
+        }
+
+        internal bool ContainsPack(string path)
+        {
+            return false;
         }
     }
 }

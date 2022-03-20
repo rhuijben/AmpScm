@@ -10,6 +10,7 @@ if NOT EXIST git-no-blob-alt-cs       @git clone -s git-no-blob                 
 if NOT EXIST libgit2-std              @git clone https://github.com/libgit2/libgit2.git                     libgit2-std
 if NOT EXIST libgit2-bmp              @git clone libgit2-std                                                libgit2-bmp
 if NOT EXIST lin-no-tree-cs           @git clone https://github.com/torvalds/linux.git --filter=tree:0      lin-no-tree-cs
+if NOT EXIST tado-multipack           @git clone https://github.com/germainlefebvre4/libtado.git            tado-multipack
 REM if NOT EXIST git-reftable             @git clone https://github.com/git/git.git --filter=tree:0             git-reftable
 
 for /d %%1 in (*-cs) do (
@@ -23,4 +24,8 @@ for /d %%1 in (*-cs) do (
 pushd libgit2-bmp
 git config --local pack.writeReverseIndex true
 git repack -a -b -d
+popd
+
+pushd tado-multipack
+git multi-pack-index write
 popd

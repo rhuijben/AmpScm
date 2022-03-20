@@ -323,6 +323,7 @@ namespace AmpScm.Git.Repository
             readonly Lazy<bool> _repositoryIsLazy;
             readonly Lazy<bool> _repositoryIsShallow;
             readonly Lazy<bool> _repositoryCommitGraph;
+            readonly Lazy<bool> _repositorySupportsMultiPack;
             readonly Lazy<int> _autoGCBlobs;
 
             public GitLazyConfig(GitConfiguration config)
@@ -332,6 +333,7 @@ namespace AmpScm.Git.Repository
                 _repositoryIsLazy = new Lazy<bool>(GetRepositoryIsLazy);
                 _repositoryIsShallow = new Lazy<bool>(GetRepositoryIsShallow);
                 _repositoryCommitGraph = new Lazy<bool>(GetRepositoryCommitGraph);
+                _repositorySupportsMultiPack = new Lazy<bool>(GetRepositorySupportsMultiPack);
                 _autoGCBlobs = new Lazy<int>(GetAutGCBlobs);
             }
 
@@ -359,6 +361,11 @@ namespace AmpScm.Git.Repository
                 return Configuration.GetBool("core", "commitGraph") ?? true; // By default enabled in git current
             }
 
+            bool GetRepositorySupportsMultiPack()
+            {
+                return Configuration.GetBool("core", "multiPackIndex") ?? true; // By default enabled in git current
+            }
+
             int GetAutGCBlobs()
             {
                 return Configuration.GetInt("gc", "auto") ?? 6700;
@@ -368,6 +375,7 @@ namespace AmpScm.Git.Repository
             public bool RepositoryIsShallow => _repositoryIsShallow.Value;
 
             public bool CommitGraph => _repositoryCommitGraph.Value;
+            public bool MultiPack => _repositorySupportsMultiPack.Value;
 
             public int AutoGCBlobs => _autoGCBlobs.Value;
         }
