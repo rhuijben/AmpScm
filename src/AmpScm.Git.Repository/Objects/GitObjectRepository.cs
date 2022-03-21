@@ -32,18 +32,18 @@ namespace AmpScm.Git.Objects
         }
 
 
-        public virtual ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
+        public virtual ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId id)
             where TGitObject : GitObject
         {
             return default;
         }
 
-        internal virtual ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        internal virtual ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
             return default;
         }
 
-        internal virtual ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
+        internal virtual ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId id)
         {
             return default;
         }

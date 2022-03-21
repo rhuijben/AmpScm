@@ -209,17 +209,17 @@ namespace AmpScm.Git.Objects
             return (first, true);
         }
 
-        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
+        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId id)
             where TGitObject : class
         {
-            if (oid == null)
-                throw new ArgumentNullException(nameof(oid));
+            if (id is null)
+                throw new ArgumentNullException(nameof(id));
 
             foreach (var p in Sources)
             {
                 if (p.ProvidesGetObject)
                 {
-                    var r = await p.GetByIdAsync<TGitObject>(oid).ConfigureAwait(false);
+                    var r = await p.GetByIdAsync<TGitObject>(id).ConfigureAwait(false);
 
                     if (r != null)
                         return r;
@@ -229,14 +229,14 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
-            if (oid == null)
-                throw new ArgumentNullException(nameof(oid));
+            if (id is null)
+                throw new ArgumentNullException(nameof(id));
 
             foreach (var p in Sources)
             {
-                var r = await p.ResolveByOid(oid).ConfigureAwait(false);
+                var r = await p.ResolveByOid(id).ConfigureAwait(false);
 
                 if (r != null)
                     return r;
@@ -245,16 +245,16 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal override async ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
+        internal override async ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId id)
         {
-            if (oid == null)
-                throw new ArgumentNullException(nameof(oid));
+            if (id is null)
+                throw new ArgumentNullException(nameof(id));
 
             foreach (var p in Sources)
             {
                 if (p.ProvidesCommitInfo)
                 {
-                    var r = await p.GetCommitInfo(oid).ConfigureAwait(false);
+                    var r = await p.GetCommitInfo(id).ConfigureAwait(false);
 
                     if (r != null)
                         return r;

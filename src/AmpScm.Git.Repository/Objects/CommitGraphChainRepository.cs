@@ -17,7 +17,7 @@ namespace AmpScm.Git.Objects
             this.chain = chain;
         }
 
-        public override ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
+        public override ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId id)
             where TGitObject : class
         {
             return default;
@@ -61,11 +61,11 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        internal override async ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId oid)
+        internal override async ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId id)
         {
             foreach (var v in Chains)
             {
-                var info = await v.GetCommitInfo(oid).ConfigureAwait(false);
+                var info = await v.GetCommitInfo(id).ConfigureAwait(false);
 
                 if (info != null)
                     return info;

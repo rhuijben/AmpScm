@@ -97,7 +97,7 @@ namespace AmpScm.Git.Sets
         public string Path { get; }
         public GitTreeEntry Entry { get; }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return (obj is GitTreeItem other) && Equals(other);
         }

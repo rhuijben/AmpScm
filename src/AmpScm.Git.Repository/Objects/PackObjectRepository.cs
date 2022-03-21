@@ -101,7 +101,7 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        private bool TryFindOid(byte[] oids, GitId oid, out uint index)
+        private bool TryFindId(byte[] oids, GitId oid, out uint index)
         {
             int sz;
 
@@ -250,7 +250,7 @@ namespace AmpScm.Git.Objects
             throw new GitRepositoryException("Unsupported pack version");
         }
 
-        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
+        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId id)
             where TGitObject : class
         {
             Init();
@@ -258,14 +258,14 @@ namespace AmpScm.Git.Objects
             if (_fanOut is null)
                 return null;
 
-            byte byte0 = oid[0];
+            byte byte0 = id[0];
 
             uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
             uint count = _fanOut![byte0] - start;
 
             byte[] oids = GetOidArray(start, count);
 
-            if (TryFindOid(oids, oid, out var index))
+            if (TryFindId(oids, id, out var index))
             {
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
@@ -277,7 +277,7 @@ namespace AmpScm.Git.Objects
 
                 GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
-                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, oid).ConfigureAwait(false);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, id).ConfigureAwait(false);
 
                 if (ob is TGitObject tg)
                     return tg;
@@ -302,7 +302,7 @@ namespace AmpScm.Git.Objects
 
             byte[] oids = GetOidArray(start, count);
 
-            if (TryFindOid(oids, baseGitId, out var index) || (index >= 0 && index < count))
+            if (TryFindId(oids, baseGitId, out var index) || (index >= 0 && index < count))
             {
                 GitId foundId = GetOid(oids, (int)index);
 
@@ -538,21 +538,21 @@ namespace AmpScm.Git.Objects
                 throw new GitBucketException($"Bitmap Header has {bhr.ObjectCount} commit records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
-        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
             Init();
 
             if (_fanOut is null)
                 return null!;
 
-            byte byte0 = oid[0];
+            byte byte0 = id[0];
 
             uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
             uint count = _fanOut![byte0] - start;
 
             byte[] oids = GetOidArray(start, count);
 
-            if (TryFindOid(oids, oid, out var index))
+            if (TryFindId(oids, id, out var index))
             {
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);

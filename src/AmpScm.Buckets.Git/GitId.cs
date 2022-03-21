@@ -107,27 +107,27 @@ namespace AmpScm.Git
             return 0;
         }
 
-        public static bool TryParse(string oidString, out GitId oid)
+        public static bool TryParse(string idString, out GitId id)
         {
-            if (oidString is null)
-                throw new ArgumentNullException(nameof(oidString));
+            if (idString is null)
+                throw new ArgumentNullException(nameof(idString));
 
-            if ((oidString.Length & 0x3) != 0 && (char.IsWhiteSpace(oidString, 0) || char.IsWhiteSpace(oidString, oidString.Length - 1)))
-                oidString = oidString.Trim();
+            if ((idString.Length & 0x3) != 0 && (char.IsWhiteSpace(idString, 0) || char.IsWhiteSpace(idString, idString.Length - 1)))
+                idString = idString.Trim();
 
-            if (oidString.Length == 40)
+            if (idString.Length == 40)
             {
-                oid = new GitId(GitIdType.Sha1, StringToByteArray(oidString));
+                id = new GitId(GitIdType.Sha1, StringToByteArray(idString));
                 return true;
             }
-            else if (oidString.Length == 64)
+            else if (idString.Length == 64)
             {
-                oid = new GitId(GitIdType.Sha256, StringToByteArray(oidString));
+                id = new GitId(GitIdType.Sha256, StringToByteArray(idString));
                 return true;
             }
             else
             {
-                oid = null!;
+                id = null!;
                 return false;
             }
         }

@@ -20,7 +20,7 @@ namespace AmpScm.Git.References
         private protected sealed class GitRefPeel
         {
             public string Name { get; set; } = null!;
-            public GitId Oid { get; set; } = null!;
+            public GitId Id { get; set; } = null!;
             public GitId? Peeled { get; set; }
         }
 
@@ -73,7 +73,7 @@ namespace AmpScm.Git.References
                     string name = line.Substring(idLength + 1).Trim();
 
                     if (GitReference.ValidName(name, false))
-                        _peelRefs![name] = last = new GitRefPeel { Name = name, Oid = oid };
+                        _peelRefs![name] = last = new GitRefPeel { Name = name, Id = oid };
                 }
             }
             else if (line[0] == '^')
@@ -92,7 +92,7 @@ namespace AmpScm.Git.References
 
             foreach (var v in _peelRefs!.Values)
             {
-                yield return new GitReference(this, v.Name, v.Oid).SetPeeled(v.Peeled);
+                yield return new GitReference(this, v.Name, v.Id).SetPeeled(v.Peeled);
             }
         }
 
@@ -101,7 +101,7 @@ namespace AmpScm.Git.References
             await Read().ConfigureAwait(false);
 
             if (_peelRefs!.TryGetValue(name, out var v))
-                return new GitReference(this, v.Name, v.Oid).SetPeeled(v.Peeled);
+                return new GitReference(this, v.Name, v.Id).SetPeeled(v.Peeled);
 
             return null;
         }

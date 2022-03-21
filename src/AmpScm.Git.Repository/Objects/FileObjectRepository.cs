@@ -20,10 +20,10 @@ namespace AmpScm.Git.Objects
             _objectsDir = objectsDir;
         }
 
-        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId oid)
+        public override async ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId id)
             where TGitObject : class
         {
-            var name = oid.ToString();
+            var name = id.ToString();
 
             string path = Path.Combine(_objectsDir, name.Substring(0, 2), name.Substring(2));
 
@@ -35,7 +35,7 @@ namespace AmpScm.Git.Objects
             {
                 var rdr = new GitObjectFileBucket(fileReader);
 
-                GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, oid).ConfigureAwait(false);
+                GitObject ob = await GitObject.FromBucketAsync(Repository, rdr, id).ConfigureAwait(false);
 
                 if (ob is TGitObject tg)
                     return tg;
@@ -51,9 +51,9 @@ namespace AmpScm.Git.Objects
             }
         }
 
-        internal override ValueTask<GitObjectBucket?> ResolveByOid(GitId oid)
+        internal override ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
-            var name = oid.ToString();
+            var name = id.ToString();
 
             string path = Path.Combine(_objectsDir, name.Substring(0, 2), name.Substring(2));
 

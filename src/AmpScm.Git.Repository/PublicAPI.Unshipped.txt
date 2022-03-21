@@ -192,7 +192,7 @@ override AmpScm.Git.Sets.GitNamedSet<T>.GetEnumerator() -> System.Collections.Ge
 override AmpScm.Git.Sets.GitObjectSet<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T!>!
 override AmpScm.Git.Sets.GitReferenceChangeSet.GetEnumerator() -> System.Collections.Generic.IEnumerator<AmpScm.Git.GitReferenceChange!>!
 override AmpScm.Git.Sets.GitRevisionSet.GetEnumerator() -> System.Collections.Generic.IEnumerator<AmpScm.Git.GitRevision!>!
-override AmpScm.Git.Sets.GitTreeItem.Equals(object! obj) -> bool
+override AmpScm.Git.Sets.GitTreeItem.Equals(object? obj) -> bool
 override AmpScm.Git.Sets.GitTreeItem.GetHashCode() -> int
 override sealed AmpScm.Git.GitBlob.Type.get -> AmpScm.Git.GitObjectType
 override sealed AmpScm.Git.GitCommit.Type.get -> AmpScm.Git.GitObjectType
@@ -225,7 +225,7 @@ virtual AmpScm.Git.GitReference.ReadAsync() -> System.Threading.Tasks.ValueTask
 virtual AmpScm.Git.GitTreeEntry.EntryName.get -> string!
 virtual AmpScm.Git.GitTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 virtual AmpScm.Git.Objects.GitObjectRepository.GetAll<TGitObject>(System.Collections.Generic.HashSet<AmpScm.Git.GitId!>! alreadyReturned) -> System.Collections.Generic.IAsyncEnumerable<TGitObject!>!
-virtual AmpScm.Git.Objects.GitObjectRepository.GetByIdAsync<TGitObject>(AmpScm.Git.GitId! oid) -> System.Threading.Tasks.ValueTask<TGitObject?>
+virtual AmpScm.Git.Objects.GitObjectRepository.GetByIdAsync<TGitObject>(AmpScm.Git.GitId! id) -> System.Threading.Tasks.ValueTask<TGitObject?>
 virtual AmpScm.Git.References.GitReferenceRepository.GetChanges(AmpScm.Git.GitReference! reference) -> System.Collections.Generic.IAsyncEnumerable<AmpScm.Git.GitReferenceChange!>?
 virtual AmpScm.Git.References.GitReferenceRepository.ResolveAsync(AmpScm.Git.GitReference! gitReference) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 virtual AmpScm.Git.References.GitReferenceRepository.ResolveByOidAsync(AmpScm.Git.GitId! arg) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
