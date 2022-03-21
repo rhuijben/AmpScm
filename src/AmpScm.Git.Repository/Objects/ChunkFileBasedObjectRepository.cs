@@ -21,7 +21,7 @@ namespace AmpScm.Git.Objects
             _fileName = mainFile ?? throw new ArgumentNullException(nameof(mainFile));
         }
 
-        private GitId GetOid(uint i)
+        protected GitId GetGitIdByIndex(uint i)
         {
             int hashLength = GitId.HashLength(IdType);
             byte[] oidData = new byte[hashLength];
@@ -161,7 +161,7 @@ namespace AmpScm.Git.Objects
             {
                 uint mid = (first + c) / 2;
 
-                var check = GetOid(mid);
+                var check = GetGitIdByIndex(mid);
 
                 int n = id.HashCompare(check);
 
@@ -182,7 +182,7 @@ namespace AmpScm.Git.Objects
                 return false;
             }
 
-            var check2 = GetOid(first);
+            var check2 = GetGitIdByIndex(first);
             index = first;
 
             int n2 = id.HashCompare(check2);

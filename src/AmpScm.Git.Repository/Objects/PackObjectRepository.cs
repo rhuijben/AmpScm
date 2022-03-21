@@ -270,20 +270,27 @@ namespace AmpScm.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                await OpenPackIfNecessary().ConfigureAwait(false);
-
-                var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
-                await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
-
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
-
-                GitObject ob = await GitObject.FromBucketAsync(Repository, pf, id).ConfigureAwait(false);
-
-                if (ob is TGitObject tg)
-                    return tg;
-                else
-                    await pf.DisposeAsync().ConfigureAwait(false);
+                return await GetByOffsetAsync<TGitObject>(offset, id);
             }
+            return null;
+        }
+
+        internal async ValueTask<TGitObject?> GetByOffsetAsync<TGitObject>(long offset, GitId id)
+            where TGitObject : GitObject
+        {
+            await OpenPackIfNecessary().ConfigureAwait(false);
+
+            var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
+            await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
+
+            GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+
+            GitObject ob = await GitObject.FromBucketAsync(Repository, pf, id).ConfigureAwait(false);
+
+            if (ob is TGitObject tg)
+                return tg;
+            else
+                await pf.DisposeAsync().ConfigureAwait(false);
             return null;
         }
 
@@ -401,7 +408,7 @@ namespace AmpScm.Git.Objects
             uint count = _fanOut[255];
 
             byte[] oids = GetOidArray(0, count);
-            byte[] offsets = GetOffsetArray(0, count, oids);            
+            byte[] offsets = GetOffsetArray(0, count, oids);
 
             for (int i = 0; i < count; i++)
             {
@@ -501,7 +508,7 @@ namespace AmpScm.Git.Objects
                 throw new InvalidOperationException();
         }
 
-        private async ValueTask<TGitObject> GetOneViaPackOffset<TGitObject>(int v, GitObjectType gitObjectType) 
+        private async ValueTask<TGitObject> GetOneViaPackOffset<TGitObject>(int v, GitObjectType gitObjectType)
             where TGitObject : class
         {
             _revIdxBucket ??= FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".rev"));

@@ -48,8 +48,8 @@ namespace AmpScm.Git.Objects
             return default;
         }
 
-        internal async ValueTask<T?> ResolveIdString<T>(string idString)
-            where T : GitObject
+        internal async ValueTask<TGitObject?> ResolveIdString<TGitObject>(string idString)
+            where TGitObject : GitObject
         {
             if (string.IsNullOrEmpty(idString))
                 throw new ArgumentNullException(nameof(idString));
@@ -59,7 +59,7 @@ namespace AmpScm.Git.Objects
             string idBase = idString.PadRight(40, '0');
 
             if (GitId.TryParse(idBase, out var baseGitId))
-                return (await DoResolveIdString<T>(idString, baseGitId).ConfigureAwait(false)).Result;
+                return (await DoResolveIdString<TGitObject>(idString, baseGitId).ConfigureAwait(false)).Result;
             else
                 return null;
         }

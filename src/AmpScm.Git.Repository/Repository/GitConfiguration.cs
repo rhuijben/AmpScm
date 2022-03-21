@@ -274,7 +274,7 @@ namespace AmpScm.Git.Repository
 
             await LoadAsync().ConfigureAwait(false);
 
-            int n = group.IndexOf('.', StringComparison.OrdinalIgnoreCase);
+            int n = group.IndexOf('.', StringComparison.Ordinal);
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
             group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
 

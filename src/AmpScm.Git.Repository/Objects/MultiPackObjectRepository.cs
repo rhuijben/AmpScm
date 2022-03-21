@@ -43,17 +43,36 @@ namespace AmpScm.Git.Objects
         public async override ValueTask<TGitObject?> GetByIdAsync<TGitObject>(GitId id)
             where TGitObject : class
         {
+            if (TryFindId(id, out var index))
+            {
+                return await GetByIndexAsync<TGitObject>(index, id).ConfigureAwait(false);
+            }
+            return null;
+        }
+
+        private async ValueTask<TGitObject?> GetByIndexAsync<TGitObject>(uint index, GitId id)
+            where TGitObject : GitObject
+        {
             if (_packs == null)
                 return null; // Not really loaded yet
 
-            // TODO: Find in multipack and directly open via index
-            foreach (var p in _packs)
+            var result = new byte[2 * sizeof(uint)];
+            if (ReadFromChunk("OOFF", index * result.Length, result) == result.Length)
             {
-                var r = await p.GetByIdAsync<TGitObject>(id).ConfigureAwait(false);
+                int pack = NetBitConverter.ToInt32(result, 0);
+                long offset = NetBitConverter.ToUInt32(result, 4);
 
-                if (r is not null)
-                    return r;
+                if (offset > int.MaxValue && GetChunkLength("LOFF") != null) // If not we have 32 bits
+                {
+                    throw new NotImplementedException("TODO: Implement LOFF support on MIDX");
+                }
+
+                if (pack < _packs.Length)
+                {
+                    return await _packs[pack].GetByOffsetAsync<TGitObject>(offset, id).ConfigureAwait(false);
+                }
             }
+
             return null;
         }
 
@@ -73,19 +92,38 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal async override ValueTask<(T? Result, bool Success)> DoResolveIdString<T>(string idString, GitId baseGitId)
-            where T: class
+        internal async override ValueTask<(TGitObject? Result, bool Success)> DoResolveIdString<TGitObject>(string idString, GitId baseGitId)
+            where TGitObject: class
         {
             if (_packs == null)
                 return (null, true); // Not really loaded yet
 
-            // TODO: Find in multipack and directly open via index
-            foreach (var p in _packs)
-            {
-                var r = await p.DoResolveIdString<T>(idString, baseGitId).ConfigureAwait(false);
+            if (FanOut == null)
+                await Init().ConfigureAwait(false);
 
-                if (r.Success == false || r.Result is not null)
-                    return r;
+            uint count = FanOut![255];
+
+            if (TryFindId(baseGitId, out var index) || (index >= 0 && index < count))
+            {
+                GitId foundId = GetGitIdByIndex(index);
+
+                if (!foundId.ToString().StartsWith(idString, StringComparison.OrdinalIgnoreCase))
+                    return (null, true); // Not a match, but success
+
+
+                if (index + 1 < count)
+                {
+                    GitId next = GetGitIdByIndex(index + 1);
+
+                    if (next.ToString().StartsWith(idString, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // We don't have a single match. Return failure
+
+                        return (null, false);
+                    }
+                }
+
+                return (await GetByIndexAsync<TGitObject>(index, foundId).ConfigureAwait(false), true);
             }
 
             return (null, true);
