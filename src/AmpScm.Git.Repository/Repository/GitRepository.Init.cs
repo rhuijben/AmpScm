@@ -49,12 +49,12 @@ namespace AmpScm.Git
                 + ignoreCase;
 
             if (isBare)
-                configText = configText.Replace(bareFalse, bareFalse.Replace("false", "true"));
+                configText = configText.Replace(bareFalse, bareFalse.Replace("false", "true", StringComparison.Ordinal), StringComparison.Ordinal);
 
             if (Environment.NewLine != "\r\n")
             {
-                configText = configText.Replace(symLinks, "");
-                configText = configText.Replace(ignoreCase, "");
+                configText = configText.Replace(symLinks, "", StringComparison.Ordinal);
+                configText = configText.Replace(ignoreCase, "", StringComparison.Ordinal);
             }
 
             File.WriteAllText(Path.Combine(gitDir, "config"), configText);

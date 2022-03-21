@@ -36,7 +36,7 @@ namespace AmpScm.Git
 
         public override int GetHashCode()
         {
-            return Id.GetHashCode() ^ Name.GetHashCode();
+            return Id.GetHashCode() ^ Name.GetHashCode(StringComparison.Ordinal);
         }
 
         public abstract ValueTask ReadAsync();

@@ -56,7 +56,7 @@ namespace AmpScm.Buckets.Client
 
         public new IEnumerator<string> GetEnumerator()
         {
-            foreach(string s in BaseWhc.Keys)
+            foreach(string? s in BaseWhc.Keys)
             {
                 yield return s!;
             }
@@ -222,7 +222,7 @@ namespace AmpScm.Buckets.Client
 
             public void CopyTo(string[] array, int arrayIndex)
             {
-                foreach(string v in BaseWhc)
+                foreach(string? v in BaseWhc)
                 {
                     array[arrayIndex++] = BaseWhc[v!]!;
                 }
@@ -230,7 +230,7 @@ namespace AmpScm.Buckets.Client
 
             public IEnumerator<string> GetEnumerator()
             {
-                foreach (string v in BaseWhc)
+                foreach (string? v in BaseWhc)
                 {
                     yield return BaseWhc[v]!;
                 }

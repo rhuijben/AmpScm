@@ -70,6 +70,9 @@ namespace AmpScm.Git.Objects
 
         async ValueTask ReadChunks(int chunkCount)
         {
+            if (ChunkStream is null)
+                throw new InvalidOperationException();
+
             var chunkTable = new byte[(chunkCount + 1) * (4 + sizeof(long))];
 
             if (await ChunkStream.ReadAsync(chunkTable, 0, chunkTable.Length, CancellationToken.None).ConfigureAwait(false) != chunkTable.Length)

@@ -174,7 +174,7 @@ namespace AmpScm.Git
                     case '{' when last == '@':
                         return false;
                     case '@' when (last == '/' || last == '\0'):
-                        if (("/" + name + "/").Contains("/@/"))
+                        if (("/" + name + "/").Contains("/@/", StringComparison.Ordinal))
                             return false;
                         continue;
                     case '/':

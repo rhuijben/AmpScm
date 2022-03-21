@@ -222,7 +222,7 @@ namespace AmpScm.Git.Repository
 
             await LoadAsync().ConfigureAwait(false);
 
-            int n = group.IndexOf('.');
+            int n = group.IndexOf('.', StringComparison.Ordinal);
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
             group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
 
@@ -247,7 +247,7 @@ namespace AmpScm.Git.Repository
 
             await LoadAsync().ConfigureAwait(false);
 
-            int n = group.IndexOf('.');
+            int n = group.IndexOf('.', StringComparison.Ordinal);
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
             group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
 
@@ -274,7 +274,7 @@ namespace AmpScm.Git.Repository
 
             await LoadAsync().ConfigureAwait(false);
 
-            int n = group.IndexOf('.');
+            int n = group.IndexOf('.', StringComparison.OrdinalIgnoreCase);
             string? subGroup = (n > 0) ? group.Substring(n + 1) : null;
             group = ((n > 0) ? group.Substring(0, n) : group).ToLowerInvariant();
 
@@ -424,11 +424,13 @@ namespace AmpScm.Git.Repository
 
                 return null;
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-                return null;
-            }
+            catch (InvalidOperationException)
+            { }
+            catch (IOException)
+            { }
+            catch (System.ComponentModel.Win32Exception)
+            { }
+            return null;
         }
 
         private static string? GitExePathLook()

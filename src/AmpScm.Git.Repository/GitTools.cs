@@ -54,8 +54,8 @@ namespace AmpScm.Git
             if (message == null)
                 return null;
             
-            if (message.Contains('\r'))
-                message = message.Replace("\r", "");
+            if (message.Contains('\r', StringComparison.Ordinal))
+                message = message.Replace("\r", "", StringComparison.Ordinal);
 
             var lines = message.Split(new char[] { '\n' }, 4);
 

@@ -60,7 +60,7 @@ namespace AmpScm.Git
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode() ^ When.GetHashCode();
+            return Name.GetHashCode(StringComparison.Ordinal) ^ When.GetHashCode();
         }
 
         public override string ToString()
