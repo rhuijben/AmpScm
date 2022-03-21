@@ -17,7 +17,7 @@ namespace AmpScm.Git.Client.Plumbing
 
         public override void Verify()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 

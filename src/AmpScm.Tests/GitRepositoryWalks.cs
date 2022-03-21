@@ -19,6 +19,18 @@ namespace AmpScm.Tests
 
         static List<string> TestRepositories { get; } = GetTestRepositories().ToList();
 
+        [TestInitialize]
+        public async Task Setup()
+        {
+            if (!TestRepositoryArgsBitmapAndRev.Any())
+            {
+                GitRepository gc = GitRepository.Open(typeof(GitRepositoryWalks).Assembly.Location);
+                await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true });
+                await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true, WriteMultiPack = true });
+            }
+
+        }
+
         static IEnumerable<string> GetTestRepositories()
         {
             string p = Path.GetDirectoryName(typeof(GitRepositoryWalks).Assembly.Location)!;
