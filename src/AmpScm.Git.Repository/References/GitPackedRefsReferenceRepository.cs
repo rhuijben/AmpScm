@@ -16,7 +16,7 @@ namespace AmpScm.Git.References
         {
         }
 
-        [DebuggerDisplay("{Oid} {Name} {Peeled}")]
+        [DebuggerDisplay($"{nameof(GitRefPeel.Id)} {nameof(GitRefPeel.Name)} {nameof(GitRefPeel.Peeled)}")]
         private protected sealed class GitRefPeel
         {
             public string Name { get; set; } = null!;
