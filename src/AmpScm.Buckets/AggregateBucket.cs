@@ -69,6 +69,7 @@ namespace AmpScm.Buckets
                 var newBuckets = new Bucket[_buckets.Length + 1];
                 Array.Copy(_buckets, _n, newBuckets, 1, _buckets.Length);
                 newBuckets[0] = bucket;
+                _buckets = newBuckets;
             }
             return this;
         }

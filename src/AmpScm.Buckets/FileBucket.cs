@@ -8,8 +8,8 @@ namespace AmpScm.Buckets
 {
     public sealed class FileBucket : Bucket, IBucketPoll
     {
-        FileHolder _holder;
-        byte[] _buffer;
+        readonly FileHolder _holder;
+        readonly byte[] _buffer;
         int _size;
         int _pos;
         long _filePos;
