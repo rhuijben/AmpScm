@@ -22,7 +22,7 @@ namespace AmpScm.Git
 
         public virtual string EntryName => Name;
 
-        public virtual GitTreeElementType TypeMask => GitTreeElementType.None;
+        public virtual GitTreeElementType ElementType => GitTreeElementType.None;
 
         public override bool Equals(object? obj)
         {
@@ -90,10 +90,10 @@ namespace AmpScm.Git
     {
         internal GitFileTreeEntry(GitTree tree, string name, GitTreeElementType mask, GitId item) : base(tree, name, item)
         {
-            TypeMask = mask;
+            ElementType = mask;
         }
 
-        public override GitTreeElementType TypeMask { get; }
+        public override GitTreeElementType ElementType { get; }
 
         public GitBlob Blob => Object;
 
@@ -112,6 +112,6 @@ namespace AmpScm.Git
 
         public new GitTree GitObject => Object;
 
-        public override GitTreeElementType TypeMask => GitTreeElementType.Directory;
+        public override GitTreeElementType ElementType => GitTreeElementType.Directory;
     }
 }

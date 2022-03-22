@@ -14,8 +14,6 @@ namespace AmpScm.Git
         {
             public GitIdType IdType { get; } = GitIdType.Sha1;
 
-            public bool NoAsync => false;
-
             internal GitInternalConfigAccess(GitIdType type)
             {
                 IdType = type;

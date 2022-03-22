@@ -91,5 +91,15 @@ namespace AmpScm.Git
 
             return this;
         }
+
+        internal GitSignatureRecord AsRecord()
+        {
+            return new GitSignatureRecord
+            {
+                Name = Name,
+                Email = Email,
+                When = When
+            };
+        }
     }
 }

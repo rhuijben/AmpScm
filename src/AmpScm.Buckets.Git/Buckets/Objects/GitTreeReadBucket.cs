@@ -25,9 +25,9 @@ namespace AmpScm.Buckets.Git.Objects
         /// </summary>
         File = 0x81A4,
         /// <summary>
-        /// 0100644 - Executable (Id->Blob)
+        /// 0100755 - Executable (Id->Blob)
         /// </summary>
-        FileExcutable = 0x81ED,
+        FileExecutable = 0x81ED,
 
         /// <summary>
         /// 0120000 - Symlink (Id->Blob)
@@ -42,9 +42,19 @@ namespace AmpScm.Buckets.Git.Objects
 
     public record GitTreeElementRecord
     {
-        public GitTreeElementType Type { get; internal init; }
-        public string Name { get; internal init; } = default!;
-        public GitId Id { get; internal init; } = default!;
+        public GitTreeElementType Type { get; init; }
+        public string Name { get; init; } = default!;
+        public GitId Id { get; init; } = default!;
+
+        public Bucket AsBucket()
+        {
+            var pf = $"{Convert.ToString((int)Type, 8)} {Name}\0";
+
+            return new AggregateBucket(
+                Encoding.UTF8.GetBytes(pf).AsBucket(),  // "100644 MyFile\0"
+                Id.Hash.AsBucket());                    // Hashcode
+            
+        }
     }
 
     public class GitTreeReadBucket : GitBucket

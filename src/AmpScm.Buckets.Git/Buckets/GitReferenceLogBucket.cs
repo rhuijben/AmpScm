@@ -22,6 +22,26 @@ namespace AmpScm.Buckets.Git
         public string Name { get; init; } = default!;
         public string Email { get; init; } = default!;
         public DateTimeOffset When { get; init; }
+
+        public override string ToString()
+        {
+            string offsetMinutes;
+
+            if (When.Offset == TimeSpan.Zero)
+                offsetMinutes = "+0000";
+            else
+            {
+                int mins = (int)When.Offset.TotalMinutes;
+
+                int hours = mins / 60;
+
+                offsetMinutes = (mins + (hours * 100) - (hours * 60)).ToString("+0000");
+
+
+            }
+
+            return $"{Name} <{Email}> {When.ToUnixTimeSeconds()} {offsetMinutes}";
+        }
     }
 
     public class GitReferenceLogBucket : GitBucket

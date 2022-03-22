@@ -637,7 +637,7 @@ namespace AmpScm.Tests
 
                 byte[]? checksum = null;
 
-                var hdr = GitHeader(pf.Type, len.Value);
+                var hdr = pf.Type.CreateHeader(len.Value);
                 var hdrLen = await hdr.ReadRemainingBytesAsync();
 
                 var csum = hdr.Append(pf).SHA1(s => checksum = s);
@@ -749,26 +749,7 @@ namespace AmpScm.Tests
 
         static Bucket GitHeader(GitObjectType type, long length)
         {
-            string txt;
-            switch (type)
-            {
-                case GitObjectType.Blob:
-                    txt = $"blob {length}\0";
-                    break;
-                case GitObjectType.Tree:
-                    txt = $"tree {length}\0";
-                    break;
-                case GitObjectType.Commit:
-                    txt = $"commit {length}\0";
-                    break;
-                case GitObjectType.Tag:
-                    txt = $"tag {length}\0";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type));
-            }
-
-            return Encoding.ASCII.GetBytes(txt).AsBucket();
+            return type.CreateHeader(length);
         }
 
         private string FormatHash(byte[] hashResult)

@@ -132,12 +132,12 @@ namespace AmpScm.Git
             }
         }
 
-        public static GitId Parse(string oidString)
+        public static GitId Parse(string idString)
         {
-            if (TryParse(oidString, out var v))
+            if (TryParse(idString, out var v))
                 return v;
             else
-                throw new ArgumentOutOfRangeException(nameof(oidString));
+                throw new ArgumentOutOfRangeException(nameof(idString));
         }
 
         public static byte[] StringToByteArray(string hex)

@@ -270,7 +270,7 @@ namespace AmpScm.Git.Objects
                 var r = GetOffsetArray(index + start, 1, oids);
                 var offset = GetOffset(r, 0);
 
-                return await GetByOffsetAsync<TGitObject>(offset, id);
+                return await GetByOffsetAsync<TGitObject>(offset, id).ConfigureAwait(false);
             }
             return null;
         }
@@ -357,7 +357,7 @@ namespace AmpScm.Git.Objects
         {
             if (_packBucket == null)
             {
-                var fb = FileBucket.OpenRead(_packFile, !Repository.InternalConfig.NoAsync);
+                var fb = FileBucket.OpenRead(_packFile);
 
                 await VerifyPack(fb).ConfigureAwait(false);
 

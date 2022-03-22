@@ -43,7 +43,7 @@ namespace AmpScm.Git.References
             if (!File.Exists(fileName))
                 return null;
 
-            return new GitReference(this, name, new GitAsyncLazy<GitId?>(async () => await LoadOidFromFile(fileName).ConfigureAwait(false)));
+            return new GitReference(this, name, new GitAsyncLazy<GitId?>(async () => await LoadIdFromFile(fileName).ConfigureAwait(false)));
         }
 
         protected internal override async ValueTask<GitReference?> ResolveAsync(GitReference gitReference)
@@ -85,7 +85,7 @@ namespace AmpScm.Git.References
             return gitReference; // Not symbolic, and exists. Or error and exists
         }
 
-        async ValueTask<GitId?> LoadOidFromFile(string fileName)
+        async ValueTask<GitId?> LoadIdFromFile(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException(nameof(fileName));
