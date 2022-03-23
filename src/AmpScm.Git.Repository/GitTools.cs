@@ -11,18 +11,21 @@ namespace AmpScm.Git
     {
         public static string GetNormalizedFullPath(string path)
         {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
             path = Path.GetFullPath(path);
+
+            string? dir = Path.GetDirectoryName(path)!;
 
             if (File.Exists(path))
             {
-                path = Directory.GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path)).Single();
+                path = Directory.GetFiles(dir, Path.GetFileName(path)).Single();
             }
             else if (Directory.Exists(path))
             {
-                path = Directory.GetDirectories(Path.GetDirectoryName(path)!, Path.GetFileName(path)).Single();
+                path = Directory.GetDirectories(dir, Path.GetFileName(path)).Single();
             }
-
-            string? dir = Path.GetDirectoryName(path)!;
 
             for(string parent = Path.GetDirectoryName(dir)!; parent != null && parent != dir; parent = Path.GetDirectoryName(parent)!)
             {
@@ -30,7 +33,11 @@ namespace AmpScm.Git
 
                 if (p != null && (!path.StartsWith(p, StringComparison.Ordinal) || path[p.Length] == Path.DirectorySeparatorChar))
                 {
+#if !NETFRAMEWORK
+                    path = string.Concat(p, path.AsSpan(dir.Length));
+#else
                     path = p + path.Substring(dir.Length);
+#endif
                 }
             }
             while (dir != (dir = Path.GetDirectoryName(dir)));

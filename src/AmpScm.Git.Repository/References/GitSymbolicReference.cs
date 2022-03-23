@@ -70,6 +70,11 @@ namespace AmpScm.Git.References
             }
         }
 
+        public string? ReferenceName
+        {
+            get => (_reference as string) ?? Reference?.Name ?? (_reference as string); // Last for later resolved
+        }
+
         public override GitObject? GitObject => Reference?.GitObject;
 
         public override GitCommit? Commit => Reference?.Commit;

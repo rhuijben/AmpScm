@@ -10,6 +10,8 @@ using AmpScm.Buckets;
 using AmpScm.Git;
 using AmpScm.Git.Client.Plumbing;
 using AmpScm.Git.Objects;
+using AmpScm.Git.References;
+using AmpScm.Git.Sets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AmpScm.Tests
@@ -445,14 +447,14 @@ namespace AmpScm.Tests
 
             Assert.AreEqual("f6315a2112111a87d565eef0175d25ed01c7da6e", tree.Id.ToString());
 
-            var fsckOutput = await repo.GetPlumbing().Fsck(new GitFsckArgs() { Full = true });
-            Assert.AreEqual($"dangling tree f6315a2112111a87d565eef0175d25ed01c7da6e{Environment.NewLine}{Environment.NewLine}", fsckOutput);
+            var fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
+            Assert.AreEqual($"dangling tree f6315a2112111a87d565eef0175d25ed01c7da6e", fsckOutput);
         }
 
         [TestMethod]
         public async Task CreateSvnTree()
         {
-            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "SvnTreeTest"));
+            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, TestContext.TestName));
 
             var items = new RepoItem[]
             {
@@ -485,7 +487,6 @@ namespace AmpScm.Tests
 
                 var r = await b.WriteAndFetchAsync(repo);
                 ht[i.Name] = r;
-                TestContext.WriteLine($"Written blob {i.Name} - {r.Id}");
             }
 
             foreach (var m in items.Where(x => x.Content == null).OrderByDescending(x => x.Name).Concat(new[] { new RepoItem { Name = "" } }))
@@ -512,8 +513,6 @@ namespace AmpScm.Tests
                 ht[m.Name] = r;
             }
 
-            var txt = await repo.GetPlumbing().Fsck(new GitFsckArgs() { Full = true });
-
             GitCommitWriter cw = GitCommitWriter.Create(new GitCommit[0]);
             cw.Tree = ((GitTree)ht[""]).AsWriter();
 
@@ -522,8 +521,86 @@ namespace AmpScm.Tests
             var cs = await cw.WriteAndFetchAsync(repo);
 
 
-            var fsckOutput = await repo.GetPlumbing().Fsck(new GitFsckArgs() { Full = true });
-            Assert.AreEqual($"dangling commit {cs.Id}{Environment.NewLine}{Environment.NewLine}", fsckOutput);
+            var fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
+            Assert.AreEqual($"dangling commit {cs.Id}", fsckOutput);
+
+            Assert.AreEqual(items.Length + 1, repo.Objects.Count()); // F and C are the same empty tree
+            Assert.IsFalse(items.Select(x => x.Name).Except(((IEnumerable<GitTreeItem>)repo.Commits[cs.Id]!.Tree.AllItems).Select(x => x.Path)).Any(), "All paths reached");
+        }
+
+        [TestMethod]
+        public async Task CreateSvnTree2()
+        {
+            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, TestContext.TestName));
+
+            GitCommitWriter cw = GitCommitWriter.Create(new GitCommitWriter[0]);
+
+            var items = new RepoItem[]
+            {
+                new RepoItem { Name = "iota", Content="This is dthe file 'iota'.\n" },
+                new RepoItem { Name = "A" },
+                new RepoItem { Name = "A/mu", Content="This is the file 'mu'.\n" },
+                new RepoItem { Name = "A/B" },
+                new RepoItem { Name = "A/B/lambda", Content="This is the file 'lambda'.\n"},
+                new RepoItem { Name = "A/B/E", },
+                new RepoItem { Name = "A/B/E/alpha", Content="This is the file 'alpha'.\n"},
+                new RepoItem { Name = "A/B/E/beta", Content="This is the file 'beta'.\n" },
+                new RepoItem { Name = "A/B/F" },
+                new RepoItem { Name = "A/C" },
+                new RepoItem { Name = "A/D" },
+                new RepoItem { Name = "A/D/gamma", Content="This is the file 'gamma'.\n" },
+                new RepoItem { Name = "A/D/G" },
+                new RepoItem { Name = "A/D/G/pi", Content="This is the file 'pi'.\n" },
+                new RepoItem { Name = "A/D/G/rho", Content="This is the file 'rho'.\n" },
+                new RepoItem { Name = "A/D/G/tau", Content="This is the file 'tau'.\n" },
+                new RepoItem { Name = "A/D/H" },
+                new RepoItem { Name = "A/D/H/chi", Content = "This is the file 'chi'.\n" },
+                new RepoItem { Name = "A/D/H/psi", Content = "This is the file 'psi'.\n" },
+                new RepoItem { Name = "A/D/H/omega", Content = "This is the file 'omega'.\n" }
+            };
+
+            foreach (var item in items)
+            {
+                if (item.Content is not null)
+                {
+                    cw.Tree.Add(item.Name, GitBlobWriter.CreateFrom(System.Text.Encoding.UTF8.GetBytes(item.Content!).AsBucket()));
+                }
+                else
+                {
+                    cw.Tree.Add(item.Name, GitTreeWriter.CreateEmpty());
+                }
+            }
+
+            cw.Author = cw.Committer = new GitSignature("BH", "bh@BH", new DateTimeOffset(new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Local)));
+
+            var cs = await cw.WriteAndFetchAsync(repo);
+
+            var fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
+            Assert.AreEqual($"dangling commit {cs.Id}", fsckOutput);
+
+            Assert.AreEqual(items.Length + 1, repo.Objects.Count()); // F and C are the same empty tree
+            Assert.IsFalse(items.Select(x => x.Name).Except(((IEnumerable<GitTreeItem>)repo.Commits[cs.Id]!.Tree.AllItems).Select(x => x.Path)).Any(), "All paths reached");
+
+            cw = GitCommitWriter.Create(cs);
+
+            cw.Author = cw.Committer = new GitSignature("BH", "bh@BH", new DateTimeOffset(new DateTime(2000, 1, 1, 1, 0, 0, DateTimeKind.Local)));
+
+            cs = await cw.WriteAndFetchAsync(repo);
+
+            fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
+            Assert.AreEqual($"dangling commit {cs.Id}", fsckOutput);
+
+            Assert.AreEqual(items.Length + 2, repo.Objects.Count()); // F and C are the same empty tree
+            Assert.IsFalse(items.Select(x => x.Name).Except(((IEnumerable<GitTreeItem>)repo.Commits[cs.Id]!.Tree.AllItems).Select(x => x.Path)).Any(), "All paths reached");
+
+            string? refName = ((GitSymbolicReference)repo.Head).ReferenceName;
+            Assert.AreEqual("refs/heads/master", refName);
+            await repo.GetPlumbing().UpdateReference(
+                new GitUpdateReference { Name = refName!, Target = cs.Id }, 
+                new GitUpdateReferenceArgs { Message = "Testing" });
+
+            fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
+            Assert.AreEqual($"", fsckOutput);
         }
 
 

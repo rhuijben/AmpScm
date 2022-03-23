@@ -140,7 +140,7 @@ namespace AmpScm.Git
 
         public IReadOnlyList<GitId> ParentIds => new IdList(this);
 
-        public IReadOnlyList<GitCommit?> Parents => new ParentList(this);
+        public IReadOnlyList<GitCommit> Parents => new ParentList(this);
 
         public string? Message
         {
@@ -322,7 +322,7 @@ namespace AmpScm.Git
             }
         }
 
-        private sealed class ParentList : IReadOnlyList<GitCommit?>
+        private sealed class ParentList : IReadOnlyList<GitCommit>
         {
             GitCommit Commit { get; }
 
@@ -332,7 +332,7 @@ namespace AmpScm.Git
                 Commit.Read();
             }
 
-            public GitCommit? this[int index] => Commit.GetParent(index);
+            public GitCommit? this[int index] => Commit.GetParent(index) ?? throw new InvalidOperationException();
 
             public int Count => Commit.ParentCount;
 

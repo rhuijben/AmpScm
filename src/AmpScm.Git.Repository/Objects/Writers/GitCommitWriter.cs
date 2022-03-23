@@ -46,12 +46,7 @@ namespace AmpScm.Git.Objects
 
         public static GitCommitWriter Create(params GitCommit[] parents)
         {
-            return Create(parents.Select(p => CreateFrom(p)).ToArray());
-        }
-
-        private static GitCommitWriter CreateFrom(GitCommit p)
-        {
-            throw new NotImplementedException();
+            return Create(parents.Select(p => p.AsWriter()).ToArray());
         }
 
         public override async ValueTask<GitId> WriteAsync(GitRepository toRepository)
@@ -78,6 +73,11 @@ namespace AmpScm.Git.Objects
             var b = Encoding.UTF8.GetBytes(sb.ToString()).AsBucket();
 
             return Id = await WriteBucketAsObject(b, toRepository).ConfigureAwait(false);
+        }
+
+        internal void PutId(GitId id)
+        {
+            Id ??= id;
         }
 
         public async ValueTask<GitCommit> WriteAndFetchAsync(GitRepository repository)

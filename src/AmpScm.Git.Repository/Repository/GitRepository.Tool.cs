@@ -19,6 +19,18 @@ namespace AmpScm.Git
             return RunPlumbingCommand(command, args, stdinText: null, expectedResults: null);
         }
 
+#if NETFRAMEWORK
+        static void FixBOMEncoding()
+        {
+            if (Console.InputEncoding == Encoding.UTF8 && Console.InputEncoding.GetPreamble().Length > 0)
+            {
+                // Workaround CHCP 65001 / UTF8 bug, where the process will always write a BOM to each started process
+                // with Stdin redirected
+                Console.InputEncoding = new UTF8Encoding(false, true);
+            }
+        }
+#endif
+
         protected internal async ValueTask<int> RunPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo(GitConfiguration.GitProgramPath)
@@ -33,6 +45,11 @@ namespace AmpScm.Git
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
             startInfo.Arguments = string.Join(" ", allArgs);
+
+            if (!string.IsNullOrEmpty(stdinText))
+            {
+                FixBOMEncoding();
+            }
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -73,11 +90,16 @@ namespace AmpScm.Git
                 WorkingDirectory = this.FullPath,
                 RedirectStandardInput = true,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true,
+                RedirectStandardOutput = true
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
             startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+
+            if (!string.IsNullOrEmpty(stdinText))
+            {
+                FixBOMEncoding();
+            }
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -129,6 +151,11 @@ namespace AmpScm.Git
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
             startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+
+            if (!string.IsNullOrEmpty(stdinText))
+            {
+                FixBOMEncoding();
+            }
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -276,6 +303,11 @@ namespace AmpScm.Git
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
             startInfo.Arguments = string.Join(" ", allArgs);
+
+            if (!string.IsNullOrEmpty(stdinText))
+            {
+                FixBOMEncoding();
+            }
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);

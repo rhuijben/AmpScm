@@ -530,7 +530,7 @@ namespace AmpScm.Git.Repository
 
             // BUG: Somehow the first line gets corrupted, so we write an ignored first line to make sure the required fields get through correctly
 
-            var r = Repository.RunPlumbingCommandOut("credential", new[] { "fill" }, stdinText: $"ignore=true\nurl={e.Uri}").AsTask();
+            var r = Repository.RunPlumbingCommandOut("credential", new[] { "fill" }, stdinText: $"url={e.Uri}").AsTask();
 
             var (exitCode, output) = r.GetAwaiter().GetResult();
             bool gotUser = false;
@@ -562,8 +562,8 @@ namespace AmpScm.Git.Repository
             {
                 e.Username = username;
                 e.Password = password;
-                e.Succeeded += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n").ConfigureAwait(false);
-                e.Failed += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "reject" }, stdinText: $"ignore=true\nurl={e.Uri}\nusername={username}\npassword={password}\n").ConfigureAwait(false);
+                e.Succeeded += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "approve" }, stdinText: $"url={e.Uri}\nusername={username}\npassword={password}\n").ConfigureAwait(false);
+                e.Failed += async (_, _) => await Repository.RunPlumbingCommand("credential", new[] { "reject" }, stdinText: $"url={e.Uri}\nusername={username}\npassword={password}\n").ConfigureAwait(false);
             }
         }
 

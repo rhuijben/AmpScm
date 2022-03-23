@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git.Client.Plumbing
 {
-    public class GitFsckArgs : GitPlumbingArgs
+    public class GitConsistencyCheckArgs : GitPlumbingArgs
     {
         public bool Full { get; set; }
         public override void Verify()
@@ -18,7 +18,7 @@ namespace AmpScm.Git.Client.Plumbing
     partial class GitPlumbing
     {
         [GitCommand("fsck")]
-        public static async ValueTask<string> Fsck(this GitPlumbingClient c, GitFsckArgs a)
+        public static async ValueTask<string> ConsistencyCheck(this GitPlumbingClient c, GitConsistencyCheckArgs a)
         {
             a.Verify();
             var args = new List<string>();
@@ -27,7 +27,7 @@ namespace AmpScm.Git.Client.Plumbing
                 args.Add("--full");
 
             var (_, txt) = await c.Repository.RunPlumbingCommandOut("fsck", args.ToArray());
-            return txt;
+            return txt.Replace("\r","", StringComparison.Ordinal).TrimEnd();
         }
     }
 }

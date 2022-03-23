@@ -40,5 +40,16 @@ namespace AmpScm.Git.Objects
 
             return bw;
         }
+
+        public static GitCommitWriter AsWriter(this GitCommit commit)
+        {
+            var bw = GitCommitWriter.CreateFromTree(commit.Tree.AsWriter());
+            bw.Parents = commit.Parents.Select(x => (x ?? throw new InvalidOperationException()).AsWriter()).ToArray();
+
+
+            bw.PutId(commit.Id); // TODO: Cleanup
+
+            return bw;
+        }
     }
 }
