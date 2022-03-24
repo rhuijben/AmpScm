@@ -199,8 +199,6 @@ namespace AmpScm.Git
 
             public async ValueTask<bool> MoveNextAsync()
             {
-                if (_errText is not null)
-                    throw new GitExecCommandException(_errText.ToString());
                 if (_eof)
                     return false;
 
@@ -219,7 +217,7 @@ namespace AmpScm.Git
                     await _p.WaitForExitAsync().ConfigureAwait(false);
 
                     if (_expectedResults != null ? !_expectedResults.Contains(_p.ExitCode) : _p.ExitCode != 0)
-                        throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation: {_errText}");
+                        throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation: {_errText?.ToString()}");
 
                     _p.Dispose();
 
