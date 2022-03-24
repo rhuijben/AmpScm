@@ -69,8 +69,8 @@ namespace AmpScm.Git.Implementation
                 return;
 
             var tcs = new TaskCompletionSource<object?>();
-            process.EnableRaisingEvents = true;
             process.Exited += (sender, args) => tcs.TrySetResult(null);
+            process.EnableRaisingEvents = true;
             if (cancellationToken != default(CancellationToken))
                 cancellationToken.Register(() => tcs.SetCanceled());
 
