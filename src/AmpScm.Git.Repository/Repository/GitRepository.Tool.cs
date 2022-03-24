@@ -170,6 +170,7 @@ namespace AmpScm.Git
             string? _current;
             StringBuilder? _errText;
             readonly int[]? _expectedResults;
+            readonly object _l = new ();
 
             public StdOutputWalker(Process p, string? stdinText, int[]? expectedResults)
             {
@@ -216,8 +217,11 @@ namespace AmpScm.Git
                     _eof = true;
                     await _p.WaitForExitAsync().ConfigureAwait(false);
 
-                    if (_expectedResults != null ? !_expectedResults.Contains(_p.ExitCode) : _p.ExitCode != 0)
-                        throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation: {_errText?.ToString()}");
+                    lock (_l)
+                    {
+                        if (_expectedResults != null ? !_expectedResults.Contains(_p.ExitCode) : _p.ExitCode != 0)
+                            throw new GitExecCommandException($"Unexpected error {_p.ExitCode} from git plumbing operation: {_errText?.ToString()}");
+                    }
 
                     _p.Dispose();
 
@@ -231,7 +235,10 @@ namespace AmpScm.Git
             {
                 if (e.Data is not null)
                 {
-                    (_errText ??= new StringBuilder()).AppendLine(e.Data);
+                    lock (_l)
+                    {
+                        (_errText ??= new StringBuilder()).AppendLine(e.Data);
+                    }
                 }
             }
         }
