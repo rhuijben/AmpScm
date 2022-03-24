@@ -63,17 +63,24 @@ namespace AmpScm.Git.Implementation
         /// <param name="cancellationToken">A cancellation token. If invoked, the task will return 
         /// immediately as canceled.</param>
         /// <returns>A Task representing waiting for the process to end.</returns>
-        public static Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (process.HasExited) return Task.CompletedTask;
+            if (process.HasExited)
+            {
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
+                return;
+            }
 
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object?>();
             process.EnableRaisingEvents = true;
-            process.Exited += (sender, args) => tcs.TrySetResult(null!);
+            process.Exited += (sender, args) => tcs.TrySetResult(null);
             if (cancellationToken != default(CancellationToken))
                 cancellationToken.Register(() => tcs.SetCanceled());
 
-            return process.HasExited ? Task.CompletedTask : tcs.Task;
+            await Task.Delay(10, cancellationToken).ConfigureAwait(false);
+
+            if (!process.HasExited)
+                await tcs.Task.ConfigureAwait(false);
         }
 #endif
 

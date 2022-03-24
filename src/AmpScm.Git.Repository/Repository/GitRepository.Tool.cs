@@ -119,8 +119,6 @@ namespace AmpScm.Git
 
             await p.WaitForExitAsync().ConfigureAwait(false);
 
-            await Task.Delay(10).ConfigureAwait(false);
-
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
 
