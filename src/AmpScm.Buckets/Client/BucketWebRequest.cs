@@ -10,7 +10,7 @@ using AmpScm.Buckets.Client.Protocols;
 
 namespace AmpScm.Buckets.Client
 {
-    public abstract class BucketWebRequest : IAsyncDisposable, IDisposable
+    public abstract class BucketWebRequest
     {
         protected BucketWebClient Client {get; }
         private bool _disposed;
@@ -48,47 +48,6 @@ namespace AmpScm.Buckets.Client
         }
 
         public abstract ValueTask<ResponseBucket> GetResponseAsync();
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                _disposed = true;
-            }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~BucketWebRequest()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await DisposeAsyncCore().ConfigureAwait(false);
-            Dispose(false);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual ValueTask DisposeAsyncCore()
-        {
-            return default;
-        }
 
         public event EventHandler<BasicBucketAuthenticationEventArgs>? BasicAuthentication;
 

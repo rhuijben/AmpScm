@@ -56,7 +56,11 @@ namespace AmpScm.Git.Objects
 
             if (chunkCount == 0)
             {
+#if !NETFRAMEWORK
+                await ChunkStream.DisposeAsync().ConfigureAwait(false);
+#else
                 ChunkStream.Dispose();
+#endif
                 ChunkStream = null;
                 return;
             }
@@ -75,8 +79,13 @@ namespace AmpScm.Git.Objects
 
             var chunkTable = new byte[(chunkCount + 1) * (4 + sizeof(long))];
 
+#if !NETFRAMEWORK
+            if (await ChunkStream.ReadAsync(chunkTable, CancellationToken.None).ConfigureAwait(false) != chunkTable.Length)
+                return;
+#else
             if (await ChunkStream.ReadAsync(chunkTable, 0, chunkTable.Length, CancellationToken.None).ConfigureAwait(false) != chunkTable.Length)
                 return;
+#endif
 
             _chunks = Enumerable.Range(0, chunkCount + 1).Select(i => new Chunk
             {

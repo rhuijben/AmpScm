@@ -71,6 +71,8 @@ end_of_line = crlf
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 dotnet_style_prefer_compound_assignment = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
+dotnet_style_namespace_match_folder = true:suggestion
+dotnet_code_quality.CA2000.excluded_symbol_names = AmpScm.Buckets.Bucket
 ###############################
 # C# Coding Conventions       #
 ###############################
@@ -136,6 +138,7 @@ csharp_style_namespace_declarations = block_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_expression_bodied_lambdas = true:silent
 csharp_style_expression_bodied_local_functions = false:silent
+csharp_style_prefer_null_check_over_type_check = true:suggestion
 ###############################
 # VB Coding Conventions       #
 ###############################

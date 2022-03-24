@@ -7,19 +7,20 @@ using AmpScm.Buckets;
 
 namespace AmpScm.Git.Objects
 {
-    public class GitCommitWriter : GitObjectWriter, IGitPromisor<GitCommit>
+    public sealed class GitCommitWriter : GitObjectWriter<GitCommit>
     {
         public override GitObjectType Type => GitObjectType.Commit;
 
         public GitTreeWriter Tree { get; set; }
         public IReadOnlyList<IGitLazy<GitCommit>> Parents { get; set; }
 
-        public GitSignature Committer { get; set; }
-        public GitSignature Author { get; set; }
+        public GitSignature? Committer { get; set; }
+        public GitSignature? Author { get; set; }
 
         private GitCommitWriter()
         {
-
+            Parents = default!;
+            Tree = default!;
         }
 
         public static GitCommitWriter Create(params GitCommitWriter[] parents)
@@ -29,7 +30,7 @@ namespace AmpScm.Git.Objects
 
             return new GitCommitWriter()
             {
-                Parents = parents?.ToArray(),
+                Parents = parents?.ToArray() ?? Array.Empty<IGitLazy<GitCommit>>(),
                 Tree = parents?.FirstOrDefault()?.Tree ?? GitTreeWriter.CreateEmpty()
             };
         }
@@ -49,7 +50,7 @@ namespace AmpScm.Git.Objects
 
             return new GitCommitWriter()
             {
-                Parents = parents?.ToArray(),
+                Parents = parents?.ToArray() ?? Array.Empty<IGitLazy<GitCommit>>(),
                 Tree = parents?.FirstOrDefault()?.Tree.AsWriter() ?? GitTreeWriter.CreateEmpty()
             };
         }
@@ -63,39 +64,28 @@ namespace AmpScm.Git.Objects
             {
                 StringBuilder sb = new StringBuilder();
 
-                var id = await Tree.WriteToAsync(repository);
+                var id = await Tree.WriteToAsync(repository).ConfigureAwait(false);
 
-                sb.Append($"tree {id}\n");
+                sb.Append((string)$"tree {id}\n");
 
                 foreach (var p in Parents)
                 {
-                    id = await p.WriteToAsync(repository);
-                    sb.Append($"parent {id}\n");
+                    id = await p.WriteToAsync(repository).ConfigureAwait(false);
+                    sb.Append((string)$"parent {id}\n");
                 }
 
                 var committer = Committer ?? repository.Configuration.Identity;
                 var author = Author ?? repository.Configuration.Identity;
 
-                sb.Append($"author {author.AsRecord()}\n");
-                sb.Append($"committer {committer.AsRecord()}\n");
-                sb.Append("\n");
+                sb.Append((string)$"author {author.AsRecord()}\n");
+                sb.Append((string)$"committer {committer.AsRecord()}\n");
+                sb.Append('\n');
 
                 var b = Encoding.UTF8.GetBytes(sb.ToString()).AsBucket();
 
                 Id = await WriteBucketAsObject(b, repository).ConfigureAwait(false);
             }
             return Id;
-        }
-
-        internal void PutId(GitId id)
-        {
-            Id ??= id;
-        }
-
-        public async ValueTask<GitCommit> WriteAndFetchAsync(GitRepository repository)
-        {
-            var id = await WriteToAsync(repository).ConfigureAwait(false);
-            return await repository.GetAsync<GitCommit>(id).ConfigureAwait(false) ?? throw new InvalidOperationException();
         }
     }
 }

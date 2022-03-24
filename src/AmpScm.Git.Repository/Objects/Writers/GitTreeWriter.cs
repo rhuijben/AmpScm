@@ -9,13 +9,16 @@ using AmpScm.Buckets.Git.Objects;
 
 namespace AmpScm.Git.Objects
 {
-    public class GitTreeWriter : GitObjectWriter, IGitPromisor<GitTree>, IEnumerable<KeyValuePair<string, GitObjectWriter>>
+    public sealed class GitTreeWriter : GitObjectWriter<GitTree>, IEnumerable<KeyValuePair<string, IGitLazy<GitObject>>>
     {
         readonly SortedList<string, Item> _items = new SortedList<string, Item>(StringComparer.Ordinal);
 
-        public GitTree? GitObject => throw new NotImplementedException();
-
         public override GitObjectType Type => GitObjectType.Tree;
+
+        private GitTreeWriter()
+        {
+
+        }
 
         static bool IsValidName(string name)
         {
@@ -52,7 +55,7 @@ namespace AmpScm.Git.Objects
                 foreach (var si in p.Take(p.Length - 1))
                 {
                     if (tw._items.TryGetValue(si, out var v)
-                        && v.Promisor is GitTreeWriter subTw)
+                        && v.Writer is GitTreeWriter subTw)
                     {
                         tw = subTw;
                     }
@@ -70,11 +73,6 @@ namespace AmpScm.Git.Objects
 
             Id = null;
         }
-
-        internal void PutId(GitId id)
-        {
-            Id ??= id;
-        }    
 
         public void Replace<TGitObject>(string name, IGitLazy<TGitObject> item)
             where TGitObject : GitObject
@@ -99,7 +97,7 @@ namespace AmpScm.Git.Objects
                 foreach (var si in p.Take(p.Length - 1))
                 {
                     if (tw._items.TryGetValue(si, out var v)
-                        && v.Promisor is GitTreeWriter subTw)
+                        && v.Writer is GitTreeWriter subTw)
                     {
                         tw = subTw;
                     }
@@ -116,7 +114,7 @@ namespace AmpScm.Git.Objects
                 throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid name");
 
             Id = null;
-        }      
+        }
 
         public override async ValueTask<GitId> WriteToAsync(GitRepository repository)
         {
@@ -136,7 +134,7 @@ namespace AmpScm.Git.Objects
                     {
                         Name = x.Name,
                         Type = x.Type,
-                        Id = x.Id ?? throw new InvalidOperationException("Id not set on entry")
+                        Id = x.Lazy.Id ?? throw new InvalidOperationException("Id not set on entry")
                     }.AsBucket()).ToArray());
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
@@ -146,55 +144,50 @@ namespace AmpScm.Git.Objects
             return Id;
         }
 
-        public async ValueTask<GitTree> WriteAndFetchAsync(GitRepository repository)
-        {
-            var id = await WriteToAsync(repository).ConfigureAwait(false);
-            return await repository.GetAsync<GitTree>(id).ConfigureAwait(false) ?? throw new InvalidOperationException();
-        }
-
         abstract class Item
         {
-            public string Name { get; set; }
+            protected Item(string name)
+            {
+                Name = name;
+            }
+            public string Name { get; private set; }
             public GitTreeElementType Type { get; internal set; }
-
-            public GitId? Id { get; set; }
 
             public abstract ValueTask EnsureAsync(GitRepository repository);
 
-            public abstract object Promisor { get; }
+            public abstract GitObjectWriter? Writer { get; }
+
+            public abstract IGitLazy<GitObject> Lazy { get; }
         }
 
-        class Item<TGitObject> : Item
+        sealed class Item<TGitObject> : Item
             where TGitObject : GitObject
         {
             IGitLazy<TGitObject> _lazy;
-            private TGitObject? item;
-            private IGitPromisor<TGitObject>? _promisor;
+            private GitObjectWriter? _writer;
 
             public Item(string name, IGitLazy<TGitObject> lazy)
+                : base(name)
             {
                 _lazy = lazy;
                 if (lazy is TGitObject item)
                 {
-                    Name = name;
-                    this.item = item;
-                    Id = item.Id ?? throw new InvalidOperationException("Id is null");
                     Type = item.Type switch
                     {
                         GitObjectType.Blob => GitTreeElementType.File,
                         GitObjectType.Tree => GitTreeElementType.Directory,
+                        GitObjectType.Commit => GitTreeElementType.GitCommitLink,
                         _ => GitTreeElementType.None
                     };
                 }
-                else if (lazy is IGitPromisor<TGitObject> writer)
+                else if (lazy is GitObjectWriter writer)
                 {
-                    Name = name;
-                    this._promisor = writer;
-                    //Id = item1.Id ?? throw new InvalidOperationException($"No id on {Name}");
+                    _writer = writer;
                     Type = writer.Type switch
                     {
                         GitObjectType.Blob => GitTreeElementType.File,
                         GitObjectType.Tree => GitTreeElementType.Directory,
+                        GitObjectType.Commit => GitTreeElementType.GitCommitLink,
                         _ => GitTreeElementType.None
                     };
                 }
@@ -202,11 +195,13 @@ namespace AmpScm.Git.Objects
                     throw new InvalidOperationException();
             }
 
-            public override object Promisor => _promisor;
+            public override GitObjectWriter? Writer => _writer;
+
+            public override IGitLazy<GitObject> Lazy => _lazy;
 
             public override async ValueTask EnsureAsync(GitRepository repository)
             {
-                Id ??= await _lazy.WriteToAsync(repository).ConfigureAwait(false);
+                await _lazy.WriteToAsync(repository).ConfigureAwait(false);
             }
         }
 
@@ -215,11 +210,11 @@ namespace AmpScm.Git.Objects
             return new GitTreeWriter();
         }
 
-        public IEnumerator<KeyValuePair<string, GitObjectWriter>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, IGitLazy<GitObject>>> GetEnumerator()
         {
             foreach (var i in _items)
             {
-                yield return new KeyValuePair<string, GitObjectWriter>(i.Key, (GitObjectWriter)i.Value.Promisor);
+                yield return new KeyValuePair<string, IGitLazy<GitObject>>(i.Key, i.Value.Lazy);
             }
         }
 

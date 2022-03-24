@@ -79,7 +79,8 @@ namespace AmpScm.Git.References
                     if (ob is not null)
                         return ob;
                 }
-                catch { }
+                catch(ArgumentOutOfRangeException)
+                { }
             }
             
             return gitReference; // Not symbolic, and exists. Or error and exists
@@ -119,7 +120,8 @@ namespace AmpScm.Git.References
 
                     return ob?.Id;
                 }
-                catch { }
+                catch(ArgumentOutOfRangeException)
+                { }
             }
 
             return null;

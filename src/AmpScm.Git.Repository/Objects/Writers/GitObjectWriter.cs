@@ -16,7 +16,7 @@ namespace AmpScm.Git.Objects
 
         public abstract GitObjectType Type { get; }
 
-        public abstract ValueTask<GitId> WriteToAsync(GitRepository toRepository);
+        public abstract ValueTask<GitId> WriteToAsync(GitRepository repository);
 
         private protected async ValueTask<GitId> WriteBucketAsObject(Bucket bucket, GitRepository repository)
         {
@@ -77,6 +77,26 @@ namespace AmpScm.Git.Objects
             else
                 File.Move(tmpFilePath, newName);
             return id;
+        }
+    }
+
+    public abstract class GitObjectWriter<TGitObject> : GitObjectWriter, IGitLazy<TGitObject>
+        where TGitObject : GitObject
+    {
+        private protected GitObjectWriter()
+        {
+
+        }
+
+        public async ValueTask<TGitObject> WriteAndFetchAsync(GitRepository repository)
+        {
+            var id = await WriteToAsync(repository).ConfigureAwait(false);
+            return await repository.GetAsync<TGitObject>(id).ConfigureAwait(false) ?? throw new InvalidOperationException();
+        }
+
+        internal void PutId(GitId id)
+        {
+            Id ??= id;
         }
     }
 }

@@ -6,23 +6,28 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git.Objects
 {
-    public class GitTagObjectWriter : GitObjectWriter, IGitPromisor<GitTagObject>
+    public class GitTagObjectWriter : GitObjectWriter<GitTagObject>
     {
+        private GitTagObjectWriter()
+        {
+
+        }
         public sealed override GitObjectType Type => GitObjectType.Tag;
 
-        public ValueTask<GitTagObject> WriteAndFetchAsync(GitRepository repository)
+
+        public override ValueTask<GitId> WriteToAsync(GitRepository repository)
         {
             throw new NotImplementedException();
         }
 
-        public override ValueTask<GitId> WriteToAsync(GitRepository toRepository)
+        internal static GitTagObjectWriter Create(IGitLazy<GitObject> obj)
         {
             throw new NotImplementedException();
         }
 
-        internal void PutId(GitId id)
+        internal static GitTagObjectWriter Create(GitObject obj)
         {
-            throw new NotImplementedException();
+            return Create((IGitLazy<GitObject>)obj);
         }
     }
 }

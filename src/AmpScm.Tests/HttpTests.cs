@@ -34,10 +34,10 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitHubHome()
         {
-            using var br = Client.CreateRequest($"https://github.com/get-404-{Guid.NewGuid()}");
+            var br = Client.CreateRequest($"https://github.com/get-404-{Guid.NewGuid()}");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
-            var result = await br.GetResponseAsync();
+            using var result = await br.GetResponseAsync();
 
             BucketBytes bb;
             string total = "";
@@ -63,10 +63,10 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitHubHomeInsecure()
         {
-            using var br = Client.CreateRequest($"http://github.com/get-404-{Guid.NewGuid()}");
+            var br = Client.CreateRequest($"http://github.com/get-404-{Guid.NewGuid()}");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
-            var result = await br.GetResponseAsync();
+            using var result = await br.GetResponseAsync();
 
             BucketBytes bb;
             string total = "";
@@ -93,11 +93,11 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitInfoV1()
         {
-            using var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
+            var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             //br.Headers["Git-Protocol"] = "version=2";
-            var result = await br.GetResponseAsync();
+            using var result = await br.GetResponseAsync();
 
             BucketBytes bb;
             string total = "";
@@ -128,11 +128,11 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitInfoV2()
         {
-            using var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
+            var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             br.Headers["Git-Protocol"] = "version=2";
-            var result = await br.GetResponseAsync();
+            using var result = await br.GetResponseAsync();
 
             BucketBytes bb;
             string total = "";
@@ -165,7 +165,7 @@ namespace AmpScm.Tests
         {
             using var rp = GitRepository.Open(Environment.CurrentDirectory);
 
-            using var br = Client.CreateRequest($"https://github.com/rhuijben/asd-admin-css.git/info/refs?service=git-upload-pack");
+            var br = Client.CreateRequest($"https://github.com/rhuijben/asd-admin-css.git/info/refs?service=git-upload-pack");
             //br.PreAuthenticate = true;
 
             br.BasicAuthentication += (sender, e) => { e.Username = $"q-{Guid.NewGuid()}"; e.Password = "123"; e.Handled = true; };
@@ -174,7 +174,7 @@ namespace AmpScm.Tests
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             br.Headers["Git-Protocol"] = "version=2";
-            var result = await br.GetResponseAsync();
+            using var result = await br.GetResponseAsync();
 
             BucketBytes bb;
             string total = "";

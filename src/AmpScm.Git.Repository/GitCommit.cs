@@ -341,7 +341,7 @@ namespace AmpScm.Git
                 Commit.Read();
             }
 
-            public GitCommit? this[int index] => Commit.GetParent(index) ?? throw new InvalidOperationException();
+            public GitCommit this[int index] => Commit.GetParent(index) ?? throw new InvalidOperationException();
 
             public int Count => Commit.ParentCount;
 

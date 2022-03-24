@@ -38,9 +38,9 @@ namespace AmpScm.Tests
 
             tw.Add("iota", blob);
 
-            var tree = await tw.WriteAndFetchAsync(repo);
+            var treeId = await tw.WriteToAsync(repo);
 
-            Assert.AreEqual("f6315a2112111a87d565eef0175d25ed01c7da6e", tree.Id.ToString());
+            Assert.AreEqual("f6315a2112111a87d565eef0175d25ed01c7da6e", treeId.ToString());
 
             var fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
             Assert.AreEqual($"dangling tree f6315a2112111a87d565eef0175d25ed01c7da6e", fsckOutput);

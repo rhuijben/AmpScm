@@ -17,7 +17,7 @@ AmpScm.Git.GitCommit.Parent.get -> AmpScm.Git.GitCommit?
 AmpScm.Git.GitCommit.ParentCount.get -> int
 AmpScm.Git.GitCommit.ParentId.get -> AmpScm.Git.GitId?
 AmpScm.Git.GitCommit.ParentIds.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.GitId!>!
-AmpScm.Git.GitCommit.Parents.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.GitCommit?>!
+AmpScm.Git.GitCommit.Parents.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.GitCommit!>!
 AmpScm.Git.GitCommit.Revisions.get -> AmpScm.Git.Sets.GitRevisionSet!
 AmpScm.Git.GitCommit.Summary.get -> string?
 AmpScm.Git.GitCommit.Tree.get -> AmpScm.Git.GitTree!
@@ -104,15 +104,28 @@ AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string? message, System.Exception? innerException) -> void
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 AmpScm.Git.Implementation.IGitAsyncQueryable<T>
+AmpScm.Git.Objects.GitBlobWriter
+AmpScm.Git.Objects.GitCommitWriter
+AmpScm.Git.Objects.GitCommitWriter.Author.get -> AmpScm.Git.GitSignature?
+AmpScm.Git.Objects.GitCommitWriter.Author.set -> void
+AmpScm.Git.Objects.GitCommitWriter.Committer.get -> AmpScm.Git.GitSignature?
+AmpScm.Git.Objects.GitCommitWriter.Committer.set -> void
+AmpScm.Git.Objects.GitCommitWriter.Parents.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.Objects.IGitLazy<AmpScm.Git.GitCommit!>!>!
 AmpScm.Git.Objects.GitObjectRepository
 AmpScm.Git.Objects.GitObjectRepository.Dispose() -> void
 AmpScm.Git.Objects.GitObjectWriter
 AmpScm.Git.Objects.GitObjectWriter.EnsureId(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
 AmpScm.Git.Objects.GitObjectWriter.GitObjectWriter() -> void
 AmpScm.Git.Objects.GitObjectWriter.Id.get -> AmpScm.Git.GitId?
+AmpScm.Git.Objects.GitObjectWriter<TGitObject>.WriteAndFetchAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<TGitObject!>
 AmpScm.Git.Objects.GitObjectWriterExtensions
 AmpScm.Git.Objects.GitTagObjectWriter
+AmpScm.Git.Objects.GitTreeWriter.Add<TGitObject>(string! name, AmpScm.Git.Objects.IGitLazy<TGitObject!>! item) -> void
+AmpScm.Git.Objects.GitTreeWriter.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<string!, AmpScm.Git.Objects.IGitLazy<AmpScm.Git.GitObject!>!>>!
+AmpScm.Git.Objects.GitTreeWriter.Replace<TGitObject>(string! name, AmpScm.Git.Objects.IGitLazy<TGitObject!>! item) -> void
 AmpScm.Git.Objects.IGitLazy<TGitObject>
+AmpScm.Git.Objects.IGitLazy<TGitObject>.Id.get -> AmpScm.Git.GitId?
+AmpScm.Git.Objects.IGitLazy<TGitObject>.WriteToAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
 AmpScm.Git.References.GitReferenceRepository
 AmpScm.Git.References.GitReferenceRepository.GetAsync(string! name) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 AmpScm.Git.References.GitReferenceRepository.GitDir.get -> string!
@@ -166,9 +179,9 @@ AmpScm.Git.Sets.IGitObject
 AmpScm.Git.Sets.IGitObject.ReadAsync() -> System.Threading.Tasks.ValueTask
 const AmpScm.Git.References.GitReferenceRepository.Head = "HEAD" -> string!
 override AmpScm.Git.GitCommit.ReadAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Git.GitDirectoryTreeEntry.ElementType.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 override AmpScm.Git.GitDirectoryTreeEntry.EntryName.get -> string!
-override AmpScm.Git.GitDirectoryTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
-override AmpScm.Git.GitFileTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
+override AmpScm.Git.GitFileTreeEntry.ElementType.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 override AmpScm.Git.GitObject.Equals(object? obj) -> bool
 override AmpScm.Git.GitObject.GetHashCode() -> int
 override AmpScm.Git.GitRepository.ToString() -> string!
@@ -182,6 +195,10 @@ override AmpScm.Git.GitTree.Type.get -> AmpScm.Git.GitObjectType
 override AmpScm.Git.GitTreeEntry.Equals(object? obj) -> bool
 override AmpScm.Git.GitTreeEntry.GetHashCode() -> int
 override AmpScm.Git.GitTreeEntry<TEntry, TObject>.ReadAsync() -> System.Threading.Tasks.ValueTask
+override AmpScm.Git.Objects.GitBlobWriter.WriteToAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
+override AmpScm.Git.Objects.GitCommitWriter.Type.get -> AmpScm.Git.GitObjectType
+override AmpScm.Git.Objects.GitCommitWriter.WriteToAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
+override AmpScm.Git.Objects.GitTreeWriter.Type.get -> AmpScm.Git.GitObjectType
 override AmpScm.Git.Objects.GitTreeWriter.WriteToAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
 override AmpScm.Git.References.GitSymbolicReference.Commit.get -> AmpScm.Git.GitCommit?
 override AmpScm.Git.References.GitSymbolicReference.GitObject.get -> AmpScm.Git.GitObject?
@@ -209,6 +226,9 @@ static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
 static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
 static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
 static AmpScm.Git.GitTreeEntry.operator ==(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
+static AmpScm.Git.Objects.GitBlobWriter.CreateFrom(AmpScm.Buckets.Bucket! bucket) -> AmpScm.Git.Objects.GitBlobWriter!
+static AmpScm.Git.Objects.GitCommitWriter.Create(params AmpScm.Git.GitCommit![]! parents) -> AmpScm.Git.Objects.GitCommitWriter!
+static AmpScm.Git.Objects.GitCommitWriter.Create(params AmpScm.Git.Objects.GitCommitWriter![]! parents) -> AmpScm.Git.Objects.GitCommitWriter!
 static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitBlob! blob) -> AmpScm.Git.Objects.GitBlobWriter!
 static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitCommit! commit) -> AmpScm.Git.Objects.GitCommitWriter!
 static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitTagObject! tag) -> AmpScm.Git.Objects.GitTagObjectWriter!
@@ -224,8 +244,8 @@ virtual AmpScm.Git.GitReference.Commit.get -> AmpScm.Git.GitCommit?
 virtual AmpScm.Git.GitReference.GitObject.get -> AmpScm.Git.GitObject?
 virtual AmpScm.Git.GitReference.Id.get -> AmpScm.Git.GitId?
 virtual AmpScm.Git.GitReference.ReadAsync() -> System.Threading.Tasks.ValueTask
+virtual AmpScm.Git.GitTreeEntry.ElementType.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 virtual AmpScm.Git.GitTreeEntry.EntryName.get -> string!
-virtual AmpScm.Git.GitTreeEntry.TypeMask.get -> AmpScm.Buckets.Git.Objects.GitTreeElementType
 virtual AmpScm.Git.Objects.GitObjectRepository.GetAll<TGitObject>(System.Collections.Generic.HashSet<AmpScm.Git.GitId!>! alreadyReturned) -> System.Collections.Generic.IAsyncEnumerable<TGitObject!>!
 virtual AmpScm.Git.Objects.GitObjectRepository.GetByIdAsync<TGitObject>(AmpScm.Git.GitId! id) -> System.Threading.Tasks.ValueTask<TGitObject?>
 virtual AmpScm.Git.References.GitReferenceRepository.GetChanges(AmpScm.Git.GitReference! reference) -> System.Collections.Generic.IAsyncEnumerable<AmpScm.Git.GitReferenceChange!>?

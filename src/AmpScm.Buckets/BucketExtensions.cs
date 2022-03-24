@@ -252,6 +252,11 @@ namespace AmpScm.Buckets
             return new Wrappers.BucketStream.WithWriter(self, writer);
         }
 
+        public static Bucket AsBucket(this Stream self)
+        {
+            return new Wrappers.StreamBucket(self);
+        }
+
         public static TextReader AsReader(this Bucket self)
         {
             return new StreamReader(self.AsStream());
