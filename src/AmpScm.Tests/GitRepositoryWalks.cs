@@ -19,18 +19,6 @@ namespace AmpScm.Tests
 
         static List<string> TestRepositories { get; } = GetTestRepositories().ToList();
 
-        [TestInitialize]
-        public async Task Setup()
-        {
-            if (!TestRepositoryArgsBitmapAndRev.Any())
-            {
-                GitRepository gc = GitRepository.Open(typeof(GitRepositoryWalks).Assembly.Location);
-                await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true });
-                await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true, WriteMultiPack = true });
-            }
-
-        }
-
         static IEnumerable<string> GetTestRepositories()
         {
             string p = Path.GetDirectoryName(typeof(GitRepositoryWalks).Assembly.Location)!;
@@ -143,11 +131,22 @@ namespace AmpScm.Tests
         }
 
 
-        public static IEnumerable<object[]> TestRepositoryArgsBitmapAndRev => TestRepositoryArgs.Where(x => x[0] is string s && Directory.GetFiles(Path.Combine(s, ".git", "objects", "pack"), "*.bitmap").Any());
+        public static IEnumerable<object[]> TestRepositoryArgsBitmapAndRev => TestRepositoryArgs.Where(x => x[0] is string s && Directory.GetFiles(Path.Combine(s, ".git", "objects", "pack"), "*.bitmap").Any()).Concat(new[] { new[]{ "<>" } });
         [TestMethod]
         [DynamicData(nameof(TestRepositoryArgsBitmapAndRev))]
         public async Task WalkObjectsViaBitmap(string path)
         {
+            if (path == "<>")
+            {
+                GitRepository gc = GitRepository.Open(typeof(GitRepositoryWalks).Assembly.Location);
+                path = Path.Combine(TestContext.TestRunResultsDirectory, TestContext.TestName);
+
+                await gc.GetPlumbing().RunRawCommand("clone", new[] { gc.FullPath, path });
+
+                gc = GitRepository.Open(path);
+                await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true });
+                await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true, WriteMultiPack = true });
+            }
             using var repo = await GitRepository.OpenAsync(path);
 
             Assert.IsTrue(repo.Commits.Count() > 0);
