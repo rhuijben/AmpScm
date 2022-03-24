@@ -20,12 +20,13 @@ namespace AmpScm.Git
         }
 
 #if NETFRAMEWORK
-        static void FixBOMEncoding()
+        static void FixConsoleUTF8BOMEncoding()
         {
-            if (Console.InputEncoding == Encoding.UTF8 && Console.InputEncoding.GetPreamble().Length > 0)
+            var ci = Console.InputEncoding;
+            if (ci == Encoding.UTF8 && ci.GetPreamble().Length > 0)
             {
                 // Workaround CHCP 65001 / UTF8 bug, where the process will always write a BOM to each started process
-                // with Stdin redirected
+                // with Stdin redirected, which breaks processes which explicitly expect some strings as binary data
                 Console.InputEncoding = new UTF8Encoding(false, true);
             }
         }
@@ -44,12 +45,8 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs);
-
-            if (!string.IsNullOrEmpty(stdinText))
-            {
-                FixBOMEncoding();
-            }
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+            FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -95,11 +92,7 @@ namespace AmpScm.Git
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
             startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
-
-            if (!string.IsNullOrEmpty(stdinText))
-            {
-                FixBOMEncoding();
-            }
+            FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -151,11 +144,7 @@ namespace AmpScm.Git
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
             startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
-
-            if (!string.IsNullOrEmpty(stdinText))
-            {
-                FixBOMEncoding();
-            }
+            FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);
@@ -166,34 +155,33 @@ namespace AmpScm.Git
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
-            if (!string.IsNullOrEmpty(stdinText))
-#pragma warning disable CA1849 // Call async methods when in an async method
-                p.StandardInput.Write(stdinText);
-#pragma warning restore CA1849 // Call async methods when in an async method
+            if (string.IsNullOrEmpty(stdinText))
+                p.StandardInput.Close();
 
-            p.StandardInput.Close();
-
-            return new StdOutputWalker(p, expectedResults);
+            return new StdOutputWalker(p, stdinText, expectedResults);
         }
 
         sealed class StdOutputWalker : IAsyncEnumerable<string>, IAsyncEnumerator<string>
         {
             readonly Process _p;
             readonly StreamReader _reader;
+            string? _stdinText;
             bool _eof;
             string? _current;
             StringBuilder? _errText;
             readonly int[]? _expectedResults;
 
-            public StdOutputWalker(Process p, int[]? expectedResults)
+            public StdOutputWalker(Process p, string? stdinText, int[]? expectedResults)
             {
                 if (p is null)
                     throw new ArgumentNullException(nameof(p));
 
                 _p = p;
+                _stdinText = stdinText;
                 _expectedResults = expectedResults;
                 _reader = p.StandardOutput;
                 _p.ErrorDataReceived += P_ErrorDataReceived;
+                p.BeginErrorReadLine();
             }
 
             public string Current => _current!;
@@ -215,6 +203,13 @@ namespace AmpScm.Git
                     throw new GitExecCommandException(_errText.ToString());
                 if (_eof)
                     return false;
+
+                if (!string.IsNullOrEmpty(_stdinText))
+                {
+                    await _p.StandardInput.WriteAsync(_stdinText).ConfigureAwait(false);
+                    _p.StandardInput.Close();
+                    _stdinText = null;
+                }
 
                 _current = await _reader.ReadLineAsync().ConfigureAwait(false);
 
@@ -302,12 +297,8 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs);
-
-            if (!string.IsNullOrEmpty(stdinText))
-            {
-                FixBOMEncoding();
-            }
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+            FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
                 startInfo.ArgumentList.Add(v);

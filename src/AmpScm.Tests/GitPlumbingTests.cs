@@ -70,6 +70,8 @@ namespace AmpScm.Tests
                                     parts[i] = "revision";
                                 else if (parts[i] == "var")
                                     parts[i] = "variable";
+                                else if (parts[i] == "fsck")
+                                    parts[i] = "ConsistencyCheck";
                             }
 
                             string name = string.Join("", parts.Select(x => x.Substring(0, 1).ToUpperInvariant() + x.Substring(1)));
