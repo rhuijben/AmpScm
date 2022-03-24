@@ -13,7 +13,6 @@ namespace AmpScm.Buckets.Client
     public abstract class BucketWebRequest
     {
         protected BucketWebClient Client {get; }
-        private bool _disposed;
 
         public Uri RequestUri { get; private set;}
 
