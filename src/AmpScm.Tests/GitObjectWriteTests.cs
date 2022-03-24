@@ -43,7 +43,7 @@ namespace AmpScm.Tests
             Assert.AreEqual("f6315a2112111a87d565eef0175d25ed01c7da6e", treeId.ToString());
 
             var fsckOutput = await repo.GetPlumbing().ConsistencyCheck(new GitConsistencyCheckArgs() { Full = true });
-            Assert.AreEqual($"dangling tree f6315a2112111a87d565eef0175d25ed01c7da6e", fsckOutput);
+            Assert.AreEqual($"dangling tree {treeId}", fsckOutput);
         }
 
         class RepoItem
