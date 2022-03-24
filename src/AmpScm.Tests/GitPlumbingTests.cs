@@ -123,6 +123,7 @@ namespace AmpScm.Tests
             using (var repo = GitRepository.Open(Environment.CurrentDirectory))
             {
                 var args = await repo.GetPlumbing().HelpUsage(gca.Name);
+                bool got = false;
 
                 IEnumerable<string> argInfo = args.SkipWhile(x=>!string.IsNullOrWhiteSpace(x)).Where(x=>x.StartsWith("    -")).Select(x=>x.TrimStart());
 
@@ -134,7 +135,19 @@ namespace AmpScm.Tests
                         TestContext.WriteLine(line);
                     else
                         TestContext.WriteLine(ma.ToString());
+                    got = true;
                 }
+
+                if (got)
+                    return;
+
+                if (args.Length > 0 && args[0].StartsWith("Usage:", StringComparison.OrdinalIgnoreCase))
+                {
+                    TestContext.WriteLine(args[0]);
+                    return;
+                }
+
+                Assert.Inconclusive();
             }
         }
     }

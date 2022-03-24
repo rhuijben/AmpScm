@@ -65,9 +65,6 @@ namespace AmpScm.Git.Implementation
         /// <returns>A Task representing waiting for the process to end.</returns>
         public static async Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (process.HasExited)
-                return;
-
             var tcs = new TaskCompletionSource<object?>();
             process.Exited += (sender, args) => tcs.TrySetResult(null);
             process.EnableRaisingEvents = true;

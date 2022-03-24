@@ -36,12 +36,20 @@ namespace AmpScm.Git.Client.Plumbing
                 throw new ArgumentOutOfRangeException();
 
             List<string> results = new List<string>();
+            bool gotOne = false;
             await foreach (var line in c.Repository.WalkPlumbingCommand(name, new[] { "-h" }, expectedResults: new[] { 129 }))
             {
                 results.Add(line);
+                if (!gotOne && !string.IsNullOrWhiteSpace(line))
+                    gotOne = true;
             }
 
-            return results.ToArray();
+            if (gotOne)
+                return results.ToArray();
+
+            var (_, _, stderr) = await c.Repository.RunPlumbingCommandErr(name, new[] { "-h" }, expectedResults: new[] { 129 });
+
+            return new[] { stderr.TrimEnd() };
         }
     }
 }
