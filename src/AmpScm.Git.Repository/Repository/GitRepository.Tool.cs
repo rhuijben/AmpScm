@@ -57,23 +57,17 @@ namespace AmpScm.Git
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
-            StringBuilder? outputText = null;
-            StringBuilder? errorText = null;
-
-            p.OutputDataReceived += (sender, e) => { lock (startInfo) (outputText ??= new StringBuilder()).AppendLine(e.Data); };
-            p.ErrorDataReceived += (sender, e) => { lock (startInfo) (errorText ??= new StringBuilder()).AppendLine(e.Data); };
+            var rcv = new OutputReceiver(p, true);
 
             if (!string.IsNullOrEmpty(stdinText))
                 await p.StandardInput.WriteAsync(stdinText).ConfigureAwait(false);
 
             p.StandardInput.Close();
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
 
-            await p!.WaitForExitAsync().ConfigureAwait(false);
+            await Task.WhenAll(p.WaitForExitAsync(), rcv.DoneTask).ConfigureAwait(false);
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
-                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
+                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {rcv.StdErr}");
 
             return p.ExitCode;
         }
@@ -103,31 +97,19 @@ namespace AmpScm.Git
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
-            StringBuilder? outputText = null;
-            StringBuilder? errorText = null;
-
-            p.OutputDataReceived += (sender, e) => { lock (startInfo) (outputText ??= new StringBuilder()).AppendLine(e.Data); };
-            p.ErrorDataReceived += (sender, e) => { lock (startInfo) (errorText ??= new StringBuilder()).AppendLine(e.Data); };
-
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
+            var rcv = new OutputReceiver(p, true);
 
             if (!string.IsNullOrEmpty(stdinText))
                 await p.StandardInput.WriteAsync(stdinText).ConfigureAwait(false);
 
             p.StandardInput.Close();
 
-            await p.WaitForExitAsync().ConfigureAwait(false);
+            await Task.WhenAll(p.WaitForExitAsync(), rcv.DoneTask).ConfigureAwait(false);
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
-                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {errorText}");
+                throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation: {rcv.StdErr}");
 
-            lock (startInfo)
-            {
-#pragma warning disable CA1508 // Avoid dead conditional code
-                return (p.ExitCode, outputText?.ToString() ?? "");
-#pragma warning restore CA1508 // Avoid dead conditional code
-            }
+            return (p.ExitCode, rcv.StdOut);
         }
 
         protected internal async ValueTask<(int ExitCode, string OutputText, string ErrorText)> RunPlumbingCommandErr(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
@@ -155,30 +137,19 @@ namespace AmpScm.Git
             if (p == null)
                 throw new GitExecCommandException($"Unable to start 'git {command}' operation");
 
-            StringBuilder? outputText = null;
-            StringBuilder? errorText = null;
-
-            p.OutputDataReceived += (sender, e) => { lock (startInfo) (outputText ??= new StringBuilder()).AppendLine(e.Data); };
-            p.ErrorDataReceived += (sender, e) => { lock (startInfo) (errorText ??= new StringBuilder()).AppendLine(e.Data); };
+            var rcv = new OutputReceiver(p, true);
 
             if (!string.IsNullOrEmpty(stdinText))
                 await p.StandardInput.WriteAsync(stdinText).ConfigureAwait(false);
 
             p.StandardInput.Close();
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
 
-            await p!.WaitForExitAsync().ConfigureAwait(false);
+            await Task.WhenAll(p.WaitForExitAsync(), rcv.DoneTask).ConfigureAwait(false);
 
             if (expectedResults != null ? !expectedResults.Contains(p.ExitCode) : p.ExitCode != 0)
                 throw new GitExecCommandException($"Unexpected error {p.ExitCode} from 'git {command}' operation");
 
-            lock (startInfo)
-            {
-#pragma warning disable CA1508 // Avoid dead conditional code
-                return (p.ExitCode, outputText?.ToString() ?? "", errorText?.ToString() ?? "");
-#pragma warning restore CA1508 // Avoid dead conditional code
-            }
+            return (p.ExitCode, rcv.StdOut, rcv.StdErr ?? "");
         }
 
         protected internal IAsyncEnumerable<string> WalkPlumbingCommand(string command, string[] args, string? stdinText = null, int[]? expectedResults = null)
@@ -221,7 +192,7 @@ namespace AmpScm.Git
             string? _current;
             StringBuilder? _errText;
             readonly int[]? _expectedResults;
-            readonly object _l = new ();
+            readonly object _l = new();
 
             public StdOutputWalker(Process p, string? stdinText, int[]? expectedResults)
             {
@@ -292,6 +263,60 @@ namespace AmpScm.Git
                     }
                 }
             }
+        }
+
+
+        sealed class OutputReceiver
+        {
+            readonly TaskCompletionSource<object?> _tcs;
+            int _n;
+            StringBuilder _stdOut;
+            StringBuilder? _stdErr;
+            public Task DoneTask { get; }
+
+            public OutputReceiver(Process p, bool receiveStderr)
+            {
+                _tcs = new TaskCompletionSource<object?>();
+                _n = receiveStderr ? 2 : 1;
+                _stdOut = new StringBuilder();
+                p.OutputDataReceived += P_OutputDataReceived;
+                p.BeginOutputReadLine();
+
+                if (receiveStderr)
+                {
+                    _stdErr = new StringBuilder();
+                    p.ErrorDataReceived += P_ErrorDataReceived;
+                    p.BeginErrorReadLine();
+                }
+                DoneTask = _tcs.Task;
+            }
+
+            private void P_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                if (e.Data is not null)
+                {
+                    _stdErr!.Append(e.Data);
+                }
+                else if (Interlocked.Decrement(ref _n) == 0)
+                {
+                    _tcs.SetResult(null);
+                }
+            }
+
+            private void P_OutputDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                if (e.Data is not null)
+                {
+                    _stdOut!.Append(e.Data);
+                }
+                else if (Interlocked.Decrement(ref _n) == 0)
+                {
+                    _tcs.SetResult(null);
+                }
+            }
+
+            public string StdOut => _stdOut.ToString();
+            public string? StdErr => _stdErr?.ToString();
         }
 
 #if NETFRAMEWORK

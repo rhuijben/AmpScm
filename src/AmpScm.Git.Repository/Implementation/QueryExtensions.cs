@@ -66,18 +66,13 @@ namespace AmpScm.Git.Implementation
         public static async Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (process.HasExited)
-            {
-                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
                 return;
-            }
 
             var tcs = new TaskCompletionSource<object?>();
             process.EnableRaisingEvents = true;
             process.Exited += (sender, args) => tcs.TrySetResult(null);
             if (cancellationToken != default(CancellationToken))
                 cancellationToken.Register(() => tcs.SetCanceled());
-
-            await Task.Delay(10, cancellationToken).ConfigureAwait(false);
 
             if (!process.HasExited)
                 await tcs.Task.ConfigureAwait(false);

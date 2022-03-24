@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,9 +36,7 @@ namespace AmpScm.Buckets.Git
 
                 int hours = mins / 60;
 
-                offsetMinutes = (mins + (hours * 100) - (hours * 60)).ToString("+0000");
-
-
+                offsetMinutes = (mins + (hours * 100) - (hours * 60)).ToString("+0000", CultureInfo.InvariantCulture);
             }
 
             return $"{Name} <{Email}> {When.ToUnixTimeSeconds()} {offsetMinutes}";
