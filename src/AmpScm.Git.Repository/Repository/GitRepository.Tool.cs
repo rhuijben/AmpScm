@@ -45,7 +45,7 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeGitCommandlineArgument(x)));
             FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
@@ -91,7 +91,7 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeGitCommandlineArgument(x)));
             FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
@@ -143,7 +143,7 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeGitCommandlineArgument(x)));
             FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
@@ -239,7 +239,7 @@ namespace AmpScm.Git
         }
 
 #if NETFRAMEWORK
-        static string EscapeCommandlineArgument(string argument)
+        static string EscapeGitCommandlineArgument(string argument)
         {
             if (string.IsNullOrEmpty(argument))
                 return "";
@@ -271,7 +271,7 @@ namespace AmpScm.Git
                 switch (argument[i])
                 {
                     case '\"':
-                        sb.Append('\"');
+                        sb.Append('\\');
                         break;
                 }
 
@@ -297,7 +297,7 @@ namespace AmpScm.Git
             };
             IEnumerable<string> allArgs = new string[] { command }.Concat(args ?? Array.Empty<string>());
 #if NETFRAMEWORK
-            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeCommandlineArgument(x)));
+            startInfo.Arguments = string.Join(" ", allArgs.Select(x => EscapeGitCommandlineArgument(x)));
             FixConsoleUTF8BOMEncoding();
 #else
             foreach (var v in allArgs)
