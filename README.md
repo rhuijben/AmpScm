@@ -35,7 +35,7 @@ Of course you can also use the non async api if needed. This repository layer is
 be used separately. The IAsyncQueryable<T> support is abstracted via the hopefully temporary *AmpScm.Linq.AsyncQueryable*, until Async LINQ is fully
 supported in .NET itself.
   
-Currently this library is read-only, but writing database entities (blob, commit, tree, tag, reference) will be added.
+Currently this library is mostly read-only, but writing simple database entities (blob, commit, tree, tag) to the object store is supported.
   
 ## AmpScm.Git.Client
 [![latest version](https://img.shields.io/nuget/v/AmpScm.Git.Client)](https://www.nuget.org/packages/AmpScm.Git.Client)
