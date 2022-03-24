@@ -120,6 +120,7 @@ AmpScm.Git.References.GitReferenceRepository.GitReferenceRepository(AmpScm.Git.G
 AmpScm.Git.References.GitReferenceRepository.Repository.get -> AmpScm.Git.GitRepository!
 AmpScm.Git.References.GitSymbolicReference
 AmpScm.Git.References.GitSymbolicReference.Reference.get -> AmpScm.Git.GitReference?
+AmpScm.Git.References.GitSymbolicReference.ReferenceName.get -> string?
 AmpScm.Git.Repository.GitConfiguration
 AmpScm.Git.Repository.GitConfiguration.BasicAuthenticationHandler(object? sender, AmpScm.Buckets.Client.BasicBucketAuthenticationEventArgs! e) -> void
 AmpScm.Git.Repository.GitConfiguration.GetBool(string! group, string! key) -> bool?
