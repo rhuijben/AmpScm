@@ -2,7 +2,7 @@
 abstract AmpScm.Git.GitTreeEntry.GitObject.get -> AmpScm.Git.GitObject!
 abstract AmpScm.Git.GitTreeEntry.ReadAsync() -> System.Threading.Tasks.ValueTask
 abstract AmpScm.Git.Objects.GitObjectWriter.Type.get -> AmpScm.Git.GitObjectType
-abstract AmpScm.Git.Objects.GitObjectWriter.WriteAsync(AmpScm.Git.GitRepository! toRepository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
+abstract AmpScm.Git.Objects.GitObjectWriter.WriteToAsync(AmpScm.Git.GitRepository! toRepository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
 abstract AmpScm.Git.References.GitReferenceRepository.GetAll() -> System.Collections.Generic.IAsyncEnumerable<AmpScm.Git.GitReference!>!
 abstract AmpScm.Git.References.GitReferenceRepository.GetUnsafeAsync(string! name, bool findSymbolic) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 abstract AmpScm.Git.Sets.GitSet<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T!>!
@@ -104,22 +104,15 @@ AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(string? message, System.Exception? innerException) -> void
 AmpScm.Git.Implementation.GitExecCommandException.GitExecCommandException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 AmpScm.Git.Implementation.IGitAsyncQueryable<T>
-AmpScm.Git.Objects.GitCommitGenerationValue
-AmpScm.Git.Objects.GitCommitGenerationValue.CorrectedTime.get -> System.DateTimeOffset
-AmpScm.Git.Objects.GitCommitGenerationValue.CorrectedTimeValue.get -> long
-AmpScm.Git.Objects.GitCommitGenerationValue.Equals(AmpScm.Git.Objects.GitCommitGenerationValue other) -> bool
-AmpScm.Git.Objects.GitCommitGenerationValue.Generation.get -> int
-AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue() -> void
-AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue(int generation, long timeValue) -> void
-AmpScm.Git.Objects.GitCommitGenerationValue.GitCommitGenerationValue(int generation, System.DateTimeOffset timeStamp) -> void
-AmpScm.Git.Objects.GitCommitGenerationValue.HasValue.get -> bool
-AmpScm.Git.Objects.GitCommitGenerationValue.Value.get -> ulong
 AmpScm.Git.Objects.GitObjectRepository
 AmpScm.Git.Objects.GitObjectRepository.Dispose() -> void
 AmpScm.Git.Objects.GitObjectWriter
 AmpScm.Git.Objects.GitObjectWriter.EnsureId(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
 AmpScm.Git.Objects.GitObjectWriter.GitObjectWriter() -> void
 AmpScm.Git.Objects.GitObjectWriter.Id.get -> AmpScm.Git.GitId?
+AmpScm.Git.Objects.GitObjectWriterExtensions
+AmpScm.Git.Objects.GitTagObjectWriter
+AmpScm.Git.Objects.IGitLazy<TGitObject>
 AmpScm.Git.References.GitReferenceRepository
 AmpScm.Git.References.GitReferenceRepository.GetAsync(string! name) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 AmpScm.Git.References.GitReferenceRepository.GitDir.get -> string!
@@ -188,9 +181,7 @@ override AmpScm.Git.GitTree.Type.get -> AmpScm.Git.GitObjectType
 override AmpScm.Git.GitTreeEntry.Equals(object? obj) -> bool
 override AmpScm.Git.GitTreeEntry.GetHashCode() -> int
 override AmpScm.Git.GitTreeEntry<TEntry, TObject>.ReadAsync() -> System.Threading.Tasks.ValueTask
-override AmpScm.Git.Objects.GitBlobWriter.WriteAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
-override AmpScm.Git.Objects.GitCommitGenerationValue.Equals(object? obj) -> bool
-override AmpScm.Git.Objects.GitCommitGenerationValue.GetHashCode() -> int
+override AmpScm.Git.Objects.GitTreeWriter.WriteToAsync(AmpScm.Git.GitRepository! repository) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitId!>
 override AmpScm.Git.References.GitSymbolicReference.Commit.get -> AmpScm.Git.GitCommit?
 override AmpScm.Git.References.GitSymbolicReference.GitObject.get -> AmpScm.Git.GitObject?
 override AmpScm.Git.References.GitSymbolicReference.Id.get -> AmpScm.Git.GitId?
@@ -204,6 +195,7 @@ override AmpScm.Git.Sets.GitTreeItem.GetHashCode() -> int
 override sealed AmpScm.Git.GitBlob.Type.get -> AmpScm.Git.GitObjectType
 override sealed AmpScm.Git.GitCommit.Type.get -> AmpScm.Git.GitObjectType
 override sealed AmpScm.Git.GitTreeEntry<TEntry, TObject>.GitObject.get -> AmpScm.Git.GitObject!
+override sealed AmpScm.Git.Objects.GitBlobWriter.Type.get -> AmpScm.Git.GitObjectType
 static AmpScm.Git.GitObject.operator !=(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitObject.operator ==(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitReference.ValidName(string! name, bool allowSpecialSymbols) -> bool
@@ -216,9 +208,11 @@ static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
 static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
 static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
 static AmpScm.Git.GitTreeEntry.operator ==(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
-static AmpScm.Git.Objects.GitCommitGenerationValue.FromValue(ulong value) -> AmpScm.Git.Objects.GitCommitGenerationValue
-static AmpScm.Git.Objects.GitCommitGenerationValue.operator !=(AmpScm.Git.Objects.GitCommitGenerationValue left, AmpScm.Git.Objects.GitCommitGenerationValue right) -> bool
-static AmpScm.Git.Objects.GitCommitGenerationValue.operator ==(AmpScm.Git.Objects.GitCommitGenerationValue left, AmpScm.Git.Objects.GitCommitGenerationValue right) -> bool
+static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitBlob! blob) -> AmpScm.Git.Objects.GitBlobWriter!
+static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitCommit! commit) -> AmpScm.Git.Objects.GitCommitWriter!
+static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitTagObject! tag) -> AmpScm.Git.Objects.GitTagObjectWriter!
+static AmpScm.Git.Objects.GitObjectWriterExtensions.AsWriter(this AmpScm.Git.GitTree! tree) -> AmpScm.Git.Objects.GitTreeWriter!
+static AmpScm.Git.Objects.GitTreeWriter.CreateEmpty() -> AmpScm.Git.Objects.GitTreeWriter!
 static AmpScm.Git.Repository.GitConfiguration.GetGitConfigurationFilePaths(bool includeSystem = true) -> System.Collections.Generic.IEnumerable<string!>!
 static AmpScm.Git.Repository.GitConfiguration.GitProgramPath.get -> string!
 static AmpScm.Git.Repository.GitConfiguration.UserHomeDirectory.get -> string!

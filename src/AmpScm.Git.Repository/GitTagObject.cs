@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Specialized;
+using AmpScm.Git.Objects;
 
 namespace AmpScm.Git
 {
-    public sealed class GitTagObject : GitObject
+    public sealed class GitTagObject : GitObject, IGitLazy<GitTagObject>
     {
         private object _obj;
         string? _message, _summary;
@@ -176,6 +177,14 @@ namespace AmpScm.Git
                     _message += bb.ToUTF8String();
                 }
             }
+        }
+
+        ValueTask<GitId> IGitLazy<GitTagObject>.WriteToAsync(GitRepository repository)
+        {
+            if (repository != Repository && !repository.Blobs.ContainsId(Id))
+                return this.AsWriter().WriteToAsync(repository);
+            else
+                return new ValueTask<GitId>(Id);
         }
     }
 }

@@ -51,6 +51,15 @@ namespace AmpScm.Git.Objects
             }
         }
 
+        internal override bool ContainsId(GitId id)
+        {
+            var name = id.ToString();
+
+            string path = Path.Combine(_objectsDir, name.Substring(0, 2), name.Substring(2));
+
+            return File.Exists(path);
+        }
+
         internal override ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
             var name = id.ToString();

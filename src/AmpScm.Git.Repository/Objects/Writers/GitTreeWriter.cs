@@ -29,7 +29,7 @@ namespace AmpScm.Git.Objects
             return true;
         }
 
-        public void Add<TGitObject>(string name, TGitObject item)
+        public void Add<TGitObject>(string name, IGitLazy<TGitObject> item)
             where TGitObject : GitObject
         {
             if (string.IsNullOrEmpty(name))
@@ -74,51 +74,9 @@ namespace AmpScm.Git.Objects
         internal void PutId(GitId id)
         {
             Id ??= id;
-        }
+        }    
 
-        public void Add<TGitObject>(string name, IGitPromisor<TGitObject> item)
-            where TGitObject : GitObject
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-            else if (item is null)
-                throw new ArgumentNullException(nameof(item));
-
-            if (IsValidName(name))
-            {
-                if (_items.ContainsKey(name))
-                    throw new ArgumentOutOfRangeException(nameof(name));
-
-                _items.Add(name, new Item<TGitObject>(name, item));
-            }
-            else if (name.Contains('/', StringComparison.Ordinal))
-            {
-                var p = name.Split('/');
-                GitTreeWriter tw = this;
-
-                foreach (var si in p.Take(p.Length - 1))
-                {
-                    if (tw._items.TryGetValue(si, out var v)
-                        && v.Promisor is GitTreeWriter subTw)
-                    {
-                        tw = subTw;
-                    }
-                    else
-                    {
-                        tw.Add(si, subTw = GitTreeWriter.CreateEmpty());
-                        tw = subTw;
-                    }
-                }
-
-                tw.Add(p.Last(), item);
-            }
-            else
-                throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid name");
-
-            Id = null;
-        }
-
-        public void Replace<TGitObject>(string name, TGitObject item)
+        public void Replace<TGitObject>(string name, IGitLazy<TGitObject> item)
             where TGitObject : GitObject
         {
             if (string.IsNullOrEmpty(name))
@@ -158,53 +116,14 @@ namespace AmpScm.Git.Objects
                 throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid name");
 
             Id = null;
-        }
+        }      
 
-        public void Replace<TGitObject>(string name, IGitPromisor<TGitObject> item)
-            where TGitObject : GitObject
+        public override async ValueTask<GitId> WriteToAsync(GitRepository repository)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-            else if (item is null)
-                throw new ArgumentNullException(nameof(item));
+            if (repository is null)
+                throw new ArgumentNullException(nameof(repository));
 
-            if (IsValidName(name))
-            {
-                if (_items.ContainsKey(name))
-                    throw new ArgumentOutOfRangeException(nameof(name));
-
-                _items[name] = new Item<TGitObject>(name, item);
-            }
-            else if (name.Contains('/', StringComparison.Ordinal))
-            {
-                var p = name.Split('/');
-                GitTreeWriter tw = this;
-
-                foreach (var si in p.Take(p.Length - 1))
-                {
-                    if (tw._items.TryGetValue(si, out var v)
-                        && v.Promisor is GitTreeWriter subTw)
-                    {
-                        tw = subTw;
-                    }
-                    else
-                    {
-                        tw.Add(si, subTw = GitTreeWriter.CreateEmpty());
-                        tw = subTw;
-                    }
-                }
-
-                tw.Replace(p.Last(), item);
-            }
-            else
-                throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid name");
-
-            Id = null;
-        }
-
-        public override async ValueTask<GitId> WriteAsync(GitRepository repository)
-        {
-            if (Id is null || await repository.Trees.GetAsync(Id).ConfigureAwait(false) is null)
+            if (Id is null || !repository.Trees.ContainsId(Id))
             {
                 foreach (var i in _items.Values)
                 {
@@ -229,7 +148,7 @@ namespace AmpScm.Git.Objects
 
         public async ValueTask<GitTree> WriteAndFetchAsync(GitRepository repository)
         {
-            var id = await WriteAsync(repository).ConfigureAwait(false);
+            var id = await WriteToAsync(repository).ConfigureAwait(false);
             return await repository.GetAsync<GitTree>(id).ConfigureAwait(false) ?? throw new InvalidOperationException();
         }
 
@@ -248,57 +167,46 @@ namespace AmpScm.Git.Objects
         class Item<TGitObject> : Item
             where TGitObject : GitObject
         {
-            private TGitObject item;
-            private IGitPromisor<TGitObject> _promisor;
+            IGitLazy<TGitObject> _lazy;
+            private TGitObject? item;
+            private IGitPromisor<TGitObject>? _promisor;
 
-            public Item(string name, TGitObject item)
+            public Item(string name, IGitLazy<TGitObject> lazy)
             {
-                Name = name;
-                this.item = item;
-                Id = item.Id ?? throw new InvalidOperationException("Id is null");
-                Type = item.Type switch
+                _lazy = lazy;
+                if (lazy is TGitObject item)
                 {
-                    GitObjectType.Blob => GitTreeElementType.File,
-                    GitObjectType.Tree => GitTreeElementType.Directory,
-                    _ => GitTreeElementType.None
-                };
-            }
-
-            public Item(string name, IGitPromisor<TGitObject> item1)
-            {
-                Name = name;
-                this._promisor = item1;
-                //Id = item1.Id ?? throw new InvalidOperationException($"No id on {Name}");
-                Type = item1.Type switch
+                    Name = name;
+                    this.item = item;
+                    Id = item.Id ?? throw new InvalidOperationException("Id is null");
+                    Type = item.Type switch
+                    {
+                        GitObjectType.Blob => GitTreeElementType.File,
+                        GitObjectType.Tree => GitTreeElementType.Directory,
+                        _ => GitTreeElementType.None
+                    };
+                }
+                else if (lazy is IGitPromisor<TGitObject> writer)
                 {
-                    GitObjectType.Blob => GitTreeElementType.File,
-                    GitObjectType.Tree => GitTreeElementType.Directory,
-                    _ => GitTreeElementType.None
-                };
+                    Name = name;
+                    this._promisor = writer;
+                    //Id = item1.Id ?? throw new InvalidOperationException($"No id on {Name}");
+                    Type = writer.Type switch
+                    {
+                        GitObjectType.Blob => GitTreeElementType.File,
+                        GitObjectType.Tree => GitTreeElementType.Directory,
+                        _ => GitTreeElementType.None
+                    };
+                }
+                else
+                    throw new InvalidOperationException();
             }
 
             public override object Promisor => _promisor;
 
             public override async ValueTask EnsureAsync(GitRepository repository)
             {
-                if (_promisor is not null)
-                {
-                    Id ??= _promisor.Id;
-
-                    if (_promisor.Id is null || (await repository.Objects.GetAsync(_promisor.Id).ConfigureAwait(false)) is null)
-                    {
-                        Id = await _promisor.EnsureId(repository).ConfigureAwait(false);
-                    }
-                }
-                else
-                {
-                    Id ??= item.Id;
-
-                    if (Id is null || (await repository.Objects.GetAsync(Id).ConfigureAwait(false)) is null)
-                    {
-                        throw new NotImplementedException();
-                    }
-                }
+                Id ??= await _lazy.WriteToAsync(repository).ConfigureAwait(false);
             }
         }
 

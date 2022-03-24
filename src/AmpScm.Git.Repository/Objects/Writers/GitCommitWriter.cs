@@ -11,10 +11,8 @@ namespace AmpScm.Git.Objects
     {
         public override GitObjectType Type => GitObjectType.Commit;
 
-        public GitCommit? GitObject => throw new NotImplementedException();
-
         public GitTreeWriter Tree { get; set; }
-        public IReadOnlyList<GitCommitWriter> Parents { get; set; }
+        public IReadOnlyList<IGitLazy<GitCommit>> Parents { get; set; }
 
         public GitSignature Committer { get; set; }
         public GitSignature Author { get; set; }
@@ -31,7 +29,7 @@ namespace AmpScm.Git.Objects
 
             return new GitCommitWriter()
             {
-                Parents = parents?.ToArray() ?? Array.Empty<GitCommitWriter>(),
+                Parents = parents?.ToArray(),
                 Tree = parents?.FirstOrDefault()?.Tree ?? GitTreeWriter.CreateEmpty()
             };
         }
@@ -46,33 +44,47 @@ namespace AmpScm.Git.Objects
 
         public static GitCommitWriter Create(params GitCommit[] parents)
         {
-            return Create(parents.Select(p => p.AsWriter()).ToArray());
+            if (parents?.Any(x => x == null) ?? false)
+                throw new ArgumentOutOfRangeException(nameof(parents));
+
+            return new GitCommitWriter()
+            {
+                Parents = parents?.ToArray(),
+                Tree = parents?.FirstOrDefault()?.Tree.AsWriter() ?? GitTreeWriter.CreateEmpty()
+            };
         }
 
-        public override async ValueTask<GitId> WriteAsync(GitRepository toRepository)
+        public override async ValueTask<GitId> WriteToAsync(GitRepository repository)
         {
-            StringBuilder sb = new StringBuilder();
+            if (repository is null)
+                throw new ArgumentNullException(nameof(repository));
 
-            var id = await Tree.EnsureId(toRepository);
-
-            sb.Append($"tree {id}\n");
-
-            foreach(var p in Parents)
+            if (Id is null || !repository.Commits.ContainsId(Id))
             {
-                id = await p.EnsureId(toRepository);
-                sb.Append($"parent {id}\n");
+                StringBuilder sb = new StringBuilder();
+
+                var id = await Tree.WriteToAsync(repository);
+
+                sb.Append($"tree {id}\n");
+
+                foreach (var p in Parents)
+                {
+                    id = await p.WriteToAsync(repository);
+                    sb.Append($"parent {id}\n");
+                }
+
+                var committer = Committer ?? repository.Configuration.Identity;
+                var author = Author ?? repository.Configuration.Identity;
+
+                sb.Append($"author {author.AsRecord()}\n");
+                sb.Append($"committer {committer.AsRecord()}\n");
+                sb.Append("\n");
+
+                var b = Encoding.UTF8.GetBytes(sb.ToString()).AsBucket();
+
+                Id = await WriteBucketAsObject(b, repository).ConfigureAwait(false);
             }
-
-            var committer = Committer ?? toRepository.Configuration.Identity;
-            var author = Author ?? toRepository.Configuration.Identity;
-
-            sb.Append($"author {committer.AsRecord()}\n");
-            sb.Append($"committer {committer.AsRecord()}\n");
-            sb.Append("\n");
-
-            var b = Encoding.UTF8.GetBytes(sb.ToString()).AsBucket();
-
-            return Id = await WriteBucketAsObject(b, toRepository).ConfigureAwait(false);
+            return Id;
         }
 
         internal void PutId(GitId id)
@@ -82,7 +94,7 @@ namespace AmpScm.Git.Objects
 
         public async ValueTask<GitCommit> WriteAndFetchAsync(GitRepository repository)
         {
-            var id = await WriteAsync(repository).ConfigureAwait(false);
+            var id = await WriteToAsync(repository).ConfigureAwait(false);
             return await repository.GetAsync<GitCommit>(id).ConfigureAwait(false) ?? throw new InvalidOperationException();
         }
     }

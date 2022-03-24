@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Git.Objects
 {
-    public interface IGitPromisor<TGitObject> : IGitLazy<TGitObject>
+    public interface IGitLazy<out TGitObject>
         where TGitObject : GitObject
     {
-        GitObjectType Type { get; }
+        GitId? Id { get; }
 
-        ValueTask<TGitObject> WriteAndFetchAsync(GitRepository repository);
+        ValueTask<GitId> WriteToAsync(GitRepository repository);
     }
 }

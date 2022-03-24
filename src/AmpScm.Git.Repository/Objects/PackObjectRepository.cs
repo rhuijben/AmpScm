@@ -275,6 +275,23 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
+        internal override bool ContainsId(GitId id)
+        {
+            Init();
+
+            if (_fanOut is null)
+                return false;
+
+            byte byte0 = id[0];
+
+            uint start = (byte0 == 0) ? 0 : _fanOut![byte0 - 1];
+            uint count = _fanOut![byte0] - start;
+
+            byte[] oids = GetOidArray(start, count);
+
+            return TryFindId(oids, id, out var _);
+        }
+
         internal async ValueTask<TGitObject?> GetByOffsetAsync<TGitObject>(long offset, GitId id)
             where TGitObject : GitObject
         {

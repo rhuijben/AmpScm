@@ -11,11 +11,14 @@ namespace AmpScm.Git.Objects
     {
         public static GitTreeWriter AsWriter(this GitTree tree)
         {
+            if (tree is null)
+                throw new ArgumentNullException(nameof(tree));
+
             var gtw = GitTreeWriter.CreateEmpty();
 
-            foreach(var v in tree)
+            foreach (var v in tree)
             {
-                switch(v.ElementType)
+                switch (v.ElementType)
                 {
                     case GitTreeElementType.File:
                     case GitTreeElementType.FileExecutable:
@@ -35,7 +38,11 @@ namespace AmpScm.Git.Objects
 
         public static GitBlobWriter AsWriter(this GitBlob blob)
         {
+            if (blob is null)
+                throw new ArgumentNullException(nameof(blob));
+
             var bw = GitBlobWriter.CreateFrom(blob.GetBucket());
+
             bw.PutId(blob.Id); // TODO: Cleanup
 
             return bw;
@@ -43,13 +50,27 @@ namespace AmpScm.Git.Objects
 
         public static GitCommitWriter AsWriter(this GitCommit commit)
         {
-            var bw = GitCommitWriter.CreateFromTree(commit.Tree.AsWriter());
-            bw.Parents = commit.Parents.Select(x => (x ?? throw new InvalidOperationException()).AsWriter()).ToArray();
+            if (commit is null)
+                throw new ArgumentNullException(nameof(commit));
+
+            var cw = GitCommitWriter.CreateFromTree(commit.Tree.AsWriter());
+            cw.Parents = commit.Parents.Select(x => (x ?? throw new InvalidOperationException()).AsWriter()).ToArray();
 
 
-            bw.PutId(commit.Id); // TODO: Cleanup
+            cw.PutId(commit.Id); // TODO: Cleanup
 
-            return bw;
+            return cw;
+        }
+
+        public static GitTagObjectWriter AsWriter(this GitTagObject tag)
+        {
+            if (tag is null)
+                throw new ArgumentNullException(nameof(tag));
+
+            var tw = new GitTagObjectWriter();
+
+            tw.PutId(tag.Id);
+            return tw;
         }
     }
 }

@@ -27,6 +27,11 @@ namespace AmpScm.Git.Sets
             return Repository.SetQueryProvider.GetAsyncEnumerator<T>(cancellationToken);
         }
 
+        internal bool ContainsId(GitId id)
+        {
+            return Repository.ObjectRepository.ContainsId(id);
+        }
+
         public override IEnumerator<T> GetEnumerator()
         {
             return Repository.SetQueryProvider.GetEnumerable<T>().GetEnumerator();

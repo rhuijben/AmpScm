@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AmpScm.Git.Objects
+namespace AmpScm.Buckets.Git
 {
     [CLSCompliant(false)]
     public struct GitCommitGenerationValue : IEquatable<GitCommitGenerationValue>

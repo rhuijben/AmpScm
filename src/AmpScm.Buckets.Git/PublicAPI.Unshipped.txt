@@ -5,6 +5,16 @@ AmpScm.Buckets.Git.GitBitmapHeaderBucket.Flags.get -> int?
 AmpScm.Buckets.Git.GitBitmapHeaderBucket.GitBitmapHeaderBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.GitBitmapHeaderBucket.ObjectCount.get -> int?
 AmpScm.Buckets.Git.GitBitmapHeaderBucket.Version.get -> int?
+AmpScm.Buckets.Git.GitCommitGenerationValue
+AmpScm.Buckets.Git.GitCommitGenerationValue.CorrectedTime.get -> System.DateTimeOffset
+AmpScm.Buckets.Git.GitCommitGenerationValue.CorrectedTimeValue.get -> long
+AmpScm.Buckets.Git.GitCommitGenerationValue.Equals(AmpScm.Buckets.Git.GitCommitGenerationValue other) -> bool
+AmpScm.Buckets.Git.GitCommitGenerationValue.Generation.get -> int
+AmpScm.Buckets.Git.GitCommitGenerationValue.GitCommitGenerationValue() -> void
+AmpScm.Buckets.Git.GitCommitGenerationValue.GitCommitGenerationValue(int generation, long timeValue) -> void
+AmpScm.Buckets.Git.GitCommitGenerationValue.GitCommitGenerationValue(int generation, System.DateTimeOffset timeStamp) -> void
+AmpScm.Buckets.Git.GitCommitGenerationValue.HasValue.get -> bool
+AmpScm.Buckets.Git.GitCommitGenerationValue.Value.get -> ulong
 AmpScm.Buckets.Git.GitEwahBitmapBucket
 AmpScm.Buckets.Git.GitEwahBitmapBucket.GitEwahBitmapBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.GitEwahBitmapBucket.ReadBitLengthAsync() -> System.Threading.Tasks.ValueTask<int>
@@ -115,6 +125,8 @@ AmpScm.Git.GitObjectType.None = 0 -> AmpScm.Git.GitObjectType
 AmpScm.Git.GitObjectType.Tag = 4 -> AmpScm.Git.GitObjectType
 AmpScm.Git.GitObjectType.Tree = 2 -> AmpScm.Git.GitObjectType
 override AmpScm.Buckets.Git.GitBitmapHeaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
+override AmpScm.Buckets.Git.GitCommitGenerationValue.Equals(object? obj) -> bool
+override AmpScm.Buckets.Git.GitCommitGenerationValue.GetHashCode() -> int
 override AmpScm.Buckets.Git.GitConfigurationItem.ToString() -> string!
 override AmpScm.Buckets.Git.GitConfigurationReaderBucket.ReadAsync(int requested = 2147483647) -> System.Threading.Tasks.ValueTask<AmpScm.Buckets.BucketBytes>
 override AmpScm.Buckets.Git.GitDeltaBucket.CanReset.get -> bool
@@ -157,6 +169,9 @@ override AmpScm.Buckets.Git.Objects.GitTreeReadBucket.ReadAsync(int requested = 
 override AmpScm.Git.GitId.Equals(object? obj) -> bool
 override AmpScm.Git.GitId.GetHashCode() -> int
 override AmpScm.Git.GitId.ToString() -> string!
+static AmpScm.Buckets.Git.GitCommitGenerationValue.FromValue(ulong value) -> AmpScm.Buckets.Git.GitCommitGenerationValue
+static AmpScm.Buckets.Git.GitCommitGenerationValue.operator !=(AmpScm.Buckets.Git.GitCommitGenerationValue left, AmpScm.Buckets.Git.GitCommitGenerationValue right) -> bool
+static AmpScm.Buckets.Git.GitCommitGenerationValue.operator ==(AmpScm.Buckets.Git.GitCommitGenerationValue left, AmpScm.Buckets.Git.GitCommitGenerationValue right) -> bool
 static AmpScm.Buckets.Git.GitConfigurationItem.operator <(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool
 static AmpScm.Buckets.Git.GitConfigurationItem.operator <=(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool
 static AmpScm.Buckets.Git.GitConfigurationItem.operator >(AmpScm.Buckets.Git.GitConfigurationItem! left, AmpScm.Buckets.Git.GitConfigurationItem! right) -> bool

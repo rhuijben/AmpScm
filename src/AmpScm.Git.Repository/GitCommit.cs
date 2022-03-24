@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Specialized;
+using AmpScm.Git.Objects;
 using AmpScm.Git.Sets;
 
 namespace AmpScm.Git
 {
     [DebuggerDisplay("{DebuggerDisplay, nq}")]
-    public sealed class GitCommit : GitObject
+    public sealed class GitCommit : GitObject, IGitLazy<GitCommit>
     {
         object? _tree;
         object? _parent;
@@ -263,6 +264,14 @@ namespace AmpScm.Git
                     _message += bb.ToUTF8String();
                 }
             }
+        }
+
+        ValueTask<GitId> IGitLazy<GitCommit>.WriteToAsync(GitRepository repository)
+        {
+            if (repository != Repository && !repository.Commits.ContainsId(Id))
+                return this.AsWriter().WriteToAsync(repository);
+            else
+                return new ValueTask<GitId>(Id);
         }
 
         public GitRevisionSet Revisions => new GitRevisionSet(Repository).AddCommit(this);

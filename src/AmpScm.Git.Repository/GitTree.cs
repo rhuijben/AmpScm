@@ -10,11 +10,12 @@ using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Git.Objects;
 using AmpScm.Buckets.Specialized;
 using AmpScm.Git.Implementation;
+using AmpScm.Git.Objects;
 using AmpScm.Git.Sets;
 
 namespace AmpScm.Git
 {
-    public class GitTree : GitObject, IEnumerable<GitTreeEntry>, IAsyncEnumerable<GitTreeEntry>
+    public sealed class GitTree : GitObject, IEnumerable<GitTreeEntry>, IAsyncEnumerable<GitTreeEntry>, IGitLazy<GitTree>
     {
         List<GitTreeEntry> _entries = new List<GitTreeEntry>();
         private GitBucket? _rdr;
@@ -98,6 +99,14 @@ namespace AmpScm.Git
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        ValueTask<GitId> IGitLazy<GitTree>.WriteToAsync(GitRepository repository)
+        {
+            if (repository != Repository && !repository.Blobs.ContainsId(Id))
+                return this.AsWriter().WriteToAsync(repository);
+            else
+                return new ValueTask<GitId>(Id);
         }
 
         GitTreeItemCollection? _allFiles;

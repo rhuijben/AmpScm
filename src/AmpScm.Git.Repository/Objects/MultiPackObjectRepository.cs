@@ -129,6 +129,17 @@ namespace AmpScm.Git.Objects
             return (null, true);
         }
 
+        internal override bool ContainsId(GitId id)
+        {
+            if (_packs == null)
+                return false; // Not really loaded yet
+
+            if (FanOut == null)
+                Init().AsTask().GetAwaiter().GetResult();
+
+            return TryFindId(id, out var _);
+        }
+
         public async override IAsyncEnumerable<TGitObject> GetAll<TGitObject>(HashSet<GitId> alreadyReturned)
         {
             if (_packs == null)

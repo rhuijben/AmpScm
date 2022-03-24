@@ -264,6 +264,19 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
+        internal override bool ContainsId(GitId id)
+        {
+            if (id is null)
+                throw new ArgumentNullException(nameof(id));
+
+            foreach (var p in Sources)
+            {
+                if (p.ProvidesGetObject && p.ContainsId(id))
+                    return true;
+            }
+            return false;
+        }
+
         protected GitObjectRepository[] Sources => _repositories.Value;
     }
 }

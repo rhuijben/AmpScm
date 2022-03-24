@@ -38,6 +38,11 @@ namespace AmpScm.Git.Objects
             return default;
         }
 
+        internal virtual bool ContainsId(GitId id)
+        {
+            return false;
+        }
+
         internal virtual ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
             return default;

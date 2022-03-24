@@ -11,40 +11,55 @@ namespace AmpScm.Git.Objects
 {
     public class GitBlobWriter : GitObjectWriter, IGitPromisor<GitBlob>
     {
-        Bucket _bucket;
+        Bucket? _bucket;
+        Func<ValueTask<Bucket>> _fetchBlob;
 
         private GitBlobWriter(Bucket bucket)
         {
+            if (bucket is null)
+                throw new ArgumentNullException(nameof(bucket));
+
             _bucket = bucket;
         }
 
         public static GitBlobWriter CreateFrom(Bucket bucket)
         {
+            if (bucket is null)
+                throw new ArgumentNullException(nameof(bucket));
+
             return new GitBlobWriter(bucket);
         }
 
-        public override async ValueTask<GitId> WriteAsync(GitRepository repository)
+        public override async ValueTask<GitId> WriteToAsync(GitRepository repository)
         {
             if (repository is null)
                 throw new ArgumentNullException(nameof(repository));
 
-            return Id = await WriteBucketAsObject(_bucket, repository).ConfigureAwait(false);
+            if (Id is null || !repository.Blobs.ContainsId(Id))
+            {
+                var bucket = _bucket;
+                bucket ??= await _fetchBlob();
+                var id = await WriteBucketAsObject(_bucket, repository).ConfigureAwait(false);
+
+                _fetchBlob ??= async () => (await repository.Blobs.GetAsync(id).ConfigureAwait(false))!.GetBucket();
+                _bucket = null;
+
+                Id = id;
+            }
+            return Id;
         }
 
         public async ValueTask<GitBlob> WriteAndFetchAsync(GitRepository repository)
         {
-            var id = await WriteAsync(repository).ConfigureAwait(false);
+            var id = await WriteToAsync(repository).ConfigureAwait(false);
             return await repository.GetAsync<GitBlob>(id).ConfigureAwait(false) ?? throw new InvalidOperationException();
         }
-
-        public GitBlob? Blob => GitObject;
-        public GitBlob? GitObject => (GitBlob)WrittenObject;
 
         internal void PutId(GitId id)
         {
             Id ??= id;
         }
 
-        public override GitObjectType Type => GitObjectType.Blob;
+        public sealed override GitObjectType Type => GitObjectType.Blob;
     }
 }

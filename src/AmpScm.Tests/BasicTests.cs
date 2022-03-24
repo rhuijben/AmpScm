@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
+using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Specialized;
 using AmpScm.BucketTests.Buckets;
 using AmpScm.Git.Objects;

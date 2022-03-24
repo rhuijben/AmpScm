@@ -13,19 +13,10 @@ namespace AmpScm.Git.Objects
     public abstract class GitObjectWriter
     {
         public GitId? Id { get; private protected set; }
-        private protected GitObject? WrittenObject { get; set; }
 
         public abstract GitObjectType Type { get; }
 
-        public abstract ValueTask<GitId> WriteAsync(GitRepository toRepository);
-
-        public async ValueTask<GitId> EnsureId(GitRepository repository)
-        {
-            if (Id is null)
-                await WriteAsync(repository).ConfigureAwait(false);
-
-            return Id;
-        }
+        public abstract ValueTask<GitId> WriteToAsync(GitRepository toRepository);
 
         private protected async ValueTask<GitId> WriteBucketAsObject(Bucket bucket, GitRepository repository)
         {

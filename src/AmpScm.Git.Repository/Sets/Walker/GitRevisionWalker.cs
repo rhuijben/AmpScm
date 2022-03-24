@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Git;
 
 namespace AmpScm.Git.Sets.Walker
 {
@@ -90,7 +91,7 @@ namespace AmpScm.Git.Sets.Walker
                             correctedTimestamp = await c.GetCommitTimeValue().ConfigureAwait(false);
                         }
 
-                        c.SetChainInfo(new Objects.GitCommitGenerationValue(generation, correctedTimestamp));
+                        c.SetChainInfo(new GitCommitGenerationValue(generation, correctedTimestamp));
                     }
                 }
             }            
