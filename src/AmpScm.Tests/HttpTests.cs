@@ -32,7 +32,7 @@ namespace AmpScm.Tests
 
 
 #if !DEBUG
-        [Timeout(20000)
+        [Timeout(20000)]
 #endif
         [TestMethod]
         public async Task GetGitHubHome()
@@ -64,7 +64,7 @@ namespace AmpScm.Tests
         }
 
 #if !DEBUG
-        [Timeout(20000)
+        [Timeout(20000)]
 #endif
         [TestMethod]
         public async Task GetGitHubHomeInsecure()
@@ -97,7 +97,7 @@ namespace AmpScm.Tests
         }
 
 #if !DEBUG
-        [Timeout(20000)
+        [Timeout(20000)]
 #endif
         [TestMethod]
         public async Task GetGitInfoV1()
@@ -135,7 +135,7 @@ namespace AmpScm.Tests
         }
 
 #if !DEBUG
-        [Timeout(20000)
+        [Timeout(20000)]
 #endif
         [TestMethod]
         public async Task GetGitInfoV2()
@@ -173,7 +173,7 @@ namespace AmpScm.Tests
         }
 
 #if !DEBUG
-        [Timeout(20000)
+        [Timeout(20000)]
 #endif
         [TestMethod]
         public async Task GetGitInfoV2Auth()
