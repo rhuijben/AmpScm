@@ -117,6 +117,8 @@ namespace System.Linq
         /// <returns></returns>
         public static IAsyncQueryable<T> AsAsyncQueryable<T>(this IEnumerable<T> enumerable)
         {
+            if (enumerable is null)
+                throw new ArgumentNullException(nameof(enumerable));
             if (enumerable is IAsyncQueryable<T> r)
                 return r;
             else if (enumerable is IQueryable<T> q)

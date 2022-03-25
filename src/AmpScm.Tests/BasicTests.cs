@@ -89,7 +89,7 @@ namespace AmpScm.Tests
             Assert.AreEqual(49L, r);
 
             Assert.IsNotNull(c.HashResult);
-            Assert.AreEqual("E358B5530A87E41AF9168B4F45548AFC", FormatHash(c.HashResult));
+            Assert.AreEqual("E358B5530A87E41AF9168B4F45548AFC", TestExtensions.FormatHash(c.HashResult));
 
             await b.ResetAsync();
             var c2 = new AmpScm.Buckets.Specialized.CreateHashBucket(b, SHA1.Create());
@@ -98,7 +98,7 @@ namespace AmpScm.Tests
             Assert.AreEqual(49L, r);
 
             Assert.IsNotNull(c2.HashResult);
-            Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", FormatHash(c2.HashResult));
+            Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", TestExtensions.FormatHash(c2.HashResult));
 
             await c2.ResetAsync();
 
@@ -106,17 +106,17 @@ namespace AmpScm.Tests
             Assert.AreEqual(49L, r);
 
             Assert.IsNotNull(c2.HashResult);
-            Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", FormatHash(c2.HashResult));
+            Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", TestExtensions.FormatHash(c2.HashResult));
 
 #if NET5_0_OR_GREATER
             {
                 var rr = MD5.HashData(Encoding.ASCII.GetBytes(string.Join("", strings)));
 
-                Assert.AreEqual("E358B5530A87E41AF9168B4F45548AFC", FormatHash(rr));
+                Assert.AreEqual("E358B5530A87E41AF9168B4F45548AFC", TestExtensions.FormatHash(rr));
 
                 rr = SHA1.HashData(Encoding.ASCII.GetBytes(string.Join("", strings)));
 
-                Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", FormatHash(rr));
+                Assert.AreEqual("D9F7CE90FB58072D8A68F69A0CB30C133F9B08CB", TestExtensions.FormatHash(rr));
             }
 #endif
         }
@@ -581,16 +581,7 @@ namespace AmpScm.Tests
         private Bucket MakeBucket(params string[] args)
         {
             return new AggregateBucket(args.Select(x => Encoding.ASCII.GetBytes(x).AsBucket()).ToArray());
-        }
-
-        private string FormatHash(byte[] hashResult)
-        {
-            var sb = new StringBuilder();
-            foreach (var b in hashResult)
-                sb.Append(b.ToString("X2"));
-
-            return sb.ToString();
-        }
+        }        
 
         [TestMethod]
         [DataRow(typeof(short))]

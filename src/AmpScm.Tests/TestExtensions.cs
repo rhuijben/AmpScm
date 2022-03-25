@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,6 +32,37 @@ namespace AmpScm.Tests
                 if (bb.IsEof)
                     throw new InvalidOperationException();
             }
+        }
+
+        public static string PerTestDirectory(this TestContext tc, string subPath = null)
+        {
+            string dir;
+            if (!string.IsNullOrEmpty(subPath))
+                dir = Path.Combine(tc.TestResultsDirectory, tc.FullyQualifiedTestClassName, tc.TestName, subPath);
+            else
+                dir = Path.Combine(tc.TestResultsDirectory, tc.FullyQualifiedTestClassName, tc.TestName);
+
+            if (dir.Length > 100)
+                dir = Path.Combine(tc.TestResultsDirectory, SHA1String(dir).Substring(0, 8));
+
+            Directory.CreateDirectory(dir);
+
+            return dir;
+        }
+
+        private static string SHA1String(string v)
+        {
+            using var sha1 = SHA1.Create();
+            return FormatHash(sha1.ComputeHash(Encoding.UTF8.GetBytes(v)));
+        }
+
+        public static string FormatHash(byte[] hashResult)
+        {
+            var sb = new StringBuilder();
+            foreach (var b in hashResult)
+                sb.Append(b.ToString("X2"));
+
+            return sb.ToString();
         }
 
         public static async ValueTask<byte[]> ReadToEnd(this Bucket self)

@@ -24,54 +24,52 @@ namespace AmpScm.Tests
         [TestMethod]
         public void WalkCommitsEmpty()
         {
-            using (var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Init")))
-            {
-                Assert.IsNotNull(repo.FullPath);
-                var items = repo.Commits.ToArray();
+            using var repo = GitRepository.Init(TestContext.PerTestDirectory());
 
-                Assert.IsNotNull(items.Length);
+            Assert.IsNotNull(repo.FullPath);
+            var items = repo.Commits.ToArray();
 
-                var b = repo.Commits.Any();
+            Assert.IsNotNull(items.Length);
 
-                Assert.IsFalse(b);
+            var b = repo.Commits.Any();
 
-                //repo.Commits.FirstOrDefault(x => x.Tree != null);
-                //IAsyncIListProvider
-                items = repo.Commits.Where(x => x != null).ToArray();
+            Assert.IsFalse(b);
 
-                Assert.IsNotNull(items.Length);
+            //repo.Commits.FirstOrDefault(x => x.Tree != null);
+            //IAsyncIListProvider
+            items = repo.Commits.Where(x => x != null).ToArray();
 
-                Assert.AreEqual(false, repo.Configuration.GetBool("core", "bare") ?? false);
+            Assert.IsNotNull(items.Length);
 
-                Assert.IsNotNull(repo.Head);
-                Assert.IsNull(repo.Head.Commit);
-                Assert.IsNull(repo.Head.GitObject);
-            }
+            Assert.AreEqual(false, repo.Configuration.GetBool("core", "bare") ?? false);
+
+            Assert.IsNotNull(repo.Head);
+            Assert.IsNull(repo.Head.Commit);
+            Assert.IsNull(repo.Head.GitObject);
         }
 
         [TestMethod]
         public void TestBareOpen()
         {
-            using (var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "InitBare"), true))
-            {
-                Assert.IsTrue(repo.IsBare);
+            using var repo = GitRepository.Init(TestContext.PerTestDirectory(), true);
+            Assert.IsTrue(repo.IsBare);
 
-                var items = repo.Commits.ToArray();
+            var items = repo.Commits.ToArray();
 
-                Assert.IsNotNull(items.Length);
+            Assert.IsNotNull(items.Length);
 
-                var b = repo.Commits.Any();
+            var b = repo.Commits.Any();
 
-                Assert.IsFalse(b);
+            Assert.IsFalse(b);
 
-                //repo.Commits.FirstOrDefault(x => x.Tree != null);
+            //repo.Commits.FirstOrDefault(x => x.Tree != null);
 
-                items = repo.Commits.Where(x => x != null).ToArray();
+            items = repo.Commits.Where(x => x != null).ToArray();
 
-                Assert.IsNotNull(items.Length);
+            Assert.IsNotNull(items.Length);
 
-                Assert.AreEqual(true, repo.Configuration.GetBool("core", "bare") ?? false);
-            }
+            Assert.AreEqual(true, repo.Configuration.GetBool("core", "bare") ?? false);
+
         }
 
         [TestMethod]
@@ -92,8 +90,8 @@ namespace AmpScm.Tests
         [TestMethod]
         public void OpenInner()
         {
-            var repoOuter = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Inner-1"));
-            using var repoInner = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Inner-1", "Inner"));
+            using var repoOuter = GitRepository.Init(TestContext.PerTestDirectory());
+            using var repoInner = GitRepository.Init(Path.Combine(TestContext.PerTestDirectory(), "Inner"));
 
             string path = repoInner.FullPath;
 
@@ -404,7 +402,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public void WalkSetsEmptyRepository()
         {
-            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "Nothing"));
+            using var repo = GitRepository.Init(TestContext.PerTestDirectory());
             HashSet<Type> walked = new HashSet<Type>();
 
             WalkSets_TestType(repo, walked);

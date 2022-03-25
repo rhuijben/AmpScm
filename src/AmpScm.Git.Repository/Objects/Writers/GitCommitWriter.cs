@@ -84,8 +84,10 @@ namespace AmpScm.Git.Objects
                 // "encoding " // if not UTF-8
                 // -extra headers-
                 sb.Append('\n');
-                if (!string.IsNullOrWhiteSpace(CommitMessage))
-                    sb.Append(CommitMessage.Replace("\r", ""));
+
+                var msg = CommitMessage;
+                if (!string.IsNullOrWhiteSpace(msg))
+                    sb.Append(msg.Replace("\r", "", StringComparison.Ordinal));
 
                 var b = Encoding.UTF8.GetBytes(sb.ToString()).AsBucket();
 

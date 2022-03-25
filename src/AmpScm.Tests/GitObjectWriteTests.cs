@@ -24,7 +24,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task CreateRawObjects()
         {
-            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, "RawObjectTest"));
+            using var repo = GitRepository.Init(TestContext.PerTestDirectory());
 
             GitBlobWriter bw = GitBlobWriter.CreateFrom(System.Text.Encoding.UTF8.GetBytes("This is 'iota'.").AsBucket());
 
@@ -55,7 +55,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task CreateSvnTree()
         {
-            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, TestContext.TestName));
+            using var repo = GitRepository.Init(TestContext.PerTestDirectory());
 
             var items = new RepoItem[]
             {
@@ -132,7 +132,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task CreateSvnTree2()
         {
-            using var repo = GitRepository.Init(Path.Combine(TestContext.TestRunResultsDirectory, TestContext.TestName));
+            using var repo = GitRepository.Init(TestContext.PerTestDirectory());
 
             GitCommitWriter cw = GitCommitWriter.Create(new GitCommitWriter[0]);
 
