@@ -139,7 +139,7 @@ namespace AmpScm.Tests
             if (path == "<>")
             {
                 GitRepository gc = GitRepository.Open(typeof(GitRepositoryWalks).Assembly.Location);
-                path = TestContext.PerTestDirectory(path);
+                path = TestContext.PerTestDirectory("!!");
 
                 await gc.GetPlumbing().RunRawCommand("clone", new[] { "--bare", gc.FullPath, path });
 
