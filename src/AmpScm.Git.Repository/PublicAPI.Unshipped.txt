@@ -108,6 +108,8 @@ AmpScm.Git.Objects.GitBlobWriter
 AmpScm.Git.Objects.GitCommitWriter
 AmpScm.Git.Objects.GitCommitWriter.Author.get -> AmpScm.Git.GitSignature?
 AmpScm.Git.Objects.GitCommitWriter.Author.set -> void
+AmpScm.Git.Objects.GitCommitWriter.CommitMessage.get -> string?
+AmpScm.Git.Objects.GitCommitWriter.CommitMessage.set -> void
 AmpScm.Git.Objects.GitCommitWriter.Committer.get -> AmpScm.Git.GitSignature?
 AmpScm.Git.Objects.GitCommitWriter.Committer.set -> void
 AmpScm.Git.Objects.GitCommitWriter.Parents.get -> System.Collections.Generic.IReadOnlyList<AmpScm.Git.Objects.IGitLazy<AmpScm.Git.GitCommit!>!>!

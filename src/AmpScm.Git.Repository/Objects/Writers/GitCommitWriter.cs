@@ -17,6 +17,8 @@ namespace AmpScm.Git.Objects
         public GitSignature? Committer { get; set; }
         public GitSignature? Author { get; set; }
 
+        public string? CommitMessage { get; set; }
+
         private GitCommitWriter()
         {
             Parents = default!;
@@ -79,7 +81,11 @@ namespace AmpScm.Git.Objects
 
                 sb.Append((string)$"author {author.AsRecord()}\n");
                 sb.Append((string)$"committer {committer.AsRecord()}\n");
+                // "encoding " // if not UTF-8
+                // -extra headers-
                 sb.Append('\n');
+                if (!string.IsNullOrWhiteSpace(CommitMessage))
+                    sb.Append(CommitMessage.Replace("\r", ""));
 
                 var b = Encoding.UTF8.GetBytes(sb.ToString()).AsBucket();
 

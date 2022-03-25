@@ -238,6 +238,7 @@ namespace AmpScm.Git
                         case "mergetag":
                             break;
 
+                        case "encoding":
                         case "gpgsig":
                             break; // Ignored for now
 
