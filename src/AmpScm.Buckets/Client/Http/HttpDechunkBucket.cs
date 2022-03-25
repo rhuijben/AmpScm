@@ -13,6 +13,8 @@ namespace AmpScm.Buckets.Client.Http
             Size, // Within size block
             Chunk, // Within a chunk
             Term, // Within the CRLF at the end of the cunk
+            Fin, // Last CRLF before EOF
+            Fin2, // Last LF  before EOF
             Eof // done
         }
 
@@ -80,7 +82,7 @@ namespace AmpScm.Buckets.Client.Http
 
         async ValueTask Advance(bool wait)
         {
-            while (true)
+            while (_state != DechunkState.Chunk && _state != DechunkState.Eof)
             {
                 if (!wait)
                 {
@@ -99,8 +101,7 @@ namespace AmpScm.Buckets.Client.Http
                             if (eol == BucketEol.CRLF)
                             {
                                 _chunkLeft = Convert.ToInt32(bb.ToASCIIString(eol), 16);
-                                _state = _chunkLeft > 0 ? DechunkState.Chunk : DechunkState.Eof;
-                                return;
+                                _state = _chunkLeft > 0 ? DechunkState.Chunk : DechunkState.Fin;
                             }
                             else if (bb.IsEof)
                                 throw new HttpBucketException("Unexpected EOF");
@@ -109,9 +110,9 @@ namespace AmpScm.Buckets.Client.Http
                                 _state = DechunkState.Size;
                                 _start = bb.ToArray();
                                 _eol = eol;
-                                continue;
                             }
                         }
+                        break;
                     case DechunkState.Size:
                         {
                             var (bb, eol) = await Inner.ReadUntilEolAsync(_eol != BucketEol.None ? BucketEol.LF : BucketEol.CRLF).ConfigureAwait(false);
@@ -120,8 +121,7 @@ namespace AmpScm.Buckets.Client.Http
                             {
                                 bb = _start!.Concat(bb.ToArray()).ToArray();
                                 _chunkLeft = Convert.ToInt32(bb.ToASCIIString().Trim(), 16);
-                                _state = _chunkLeft > 0 ? DechunkState.Chunk : DechunkState.Eof;
-                                return;
+                                _state = _chunkLeft > 0 ? DechunkState.Chunk : DechunkState.Fin;
                             }
                             else
                             {
@@ -129,7 +129,7 @@ namespace AmpScm.Buckets.Client.Http
                                 _eol = eol;
                             }
                         }
-                        break;
+                            break;
                     case DechunkState.Term:
                         {
                             var bb = await Inner.ReadAsync(_chunkLeft).ConfigureAwait(false);
@@ -140,8 +140,28 @@ namespace AmpScm.Buckets.Client.Http
 
                             if (_chunkLeft == 0)
                                 _state = DechunkState.Start;
-                            continue;
                         }
+                        break;
+                    case DechunkState.Fin:
+                        {
+                            var bb = await Inner.ReadAsync(2).ConfigureAwait(false);
+                            if (bb.Length == 2)
+                                _state = DechunkState.Eof;
+                            else if (bb.Length == 1)
+                                _state = DechunkState.Fin2;
+                            else
+                                throw new HttpBucketException("Unexpected EOF");
+                        }
+                        break;
+                    case DechunkState.Fin2:
+                        {
+                            var bb = await Inner.ReadAsync(1).ConfigureAwait(false);
+                            if (bb.Length == 1)
+                                _state = DechunkState.Eof;
+                            else
+                                throw new HttpBucketException("Unexpected EOF");
+                        }
+                        break;
                     case DechunkState.Chunk:
                     case DechunkState.Eof:
                         return;

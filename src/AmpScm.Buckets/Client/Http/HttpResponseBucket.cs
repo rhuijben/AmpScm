@@ -20,6 +20,7 @@ namespace AmpScm.Buckets.Client.Http
         Action? _succes;
         Action? _authFailed;
         int _nRedirects;
+        Stack<Bucket>? _readUntilEof;
 
         public string? HttpVersion { get; private set; }
         public int? HttpStatus { get; private set; }
@@ -50,6 +51,15 @@ namespace AmpScm.Buckets.Client.Http
 
             if (bb.IsEof)
             {
+                while (_readUntilEof?.Count > 0)
+                {
+                    _reader = _readUntilEof.Pop();
+
+                    while(0 != await _reader.ReadSkipAsync(int.MaxValue).ConfigureAwait(false))
+                    {
+                    }
+                }
+
                 if (Request.Channel != null)
                 {
                     await _reader.DisposeAsync().ConfigureAwait(false);
@@ -92,19 +102,23 @@ namespace AmpScm.Buckets.Client.Http
             // Content-Encoding, aka end-to-end encoding. Typically 'gzip'
             if (headers[HttpResponseHeader.ContentEncoding] is string ce)
             {
+                _readUntilEof ??= new Stack<Bucket>();
                 foreach (var cEnc in ce.Split(new[] { ',' }))
                 {
                     if (string.Equals(cEnc, "gzip", StringComparison.OrdinalIgnoreCase))
                     {
+                        _readUntilEof.Push(rdr);
                         rdr = rdr.Decompress(BucketCompressionAlgorithm.GZip);
                     }
                     else if (string.Equals(cEnc, "deflate", StringComparison.OrdinalIgnoreCase))
                     {
+                        _readUntilEof.Push(rdr);
                         rdr = rdr.Decompress(BucketCompressionAlgorithm.Deflate);
                     }
 #if !NETFRAMEWORK
                     else if (string.Equals(cEnc, "br", StringComparison.OrdinalIgnoreCase))
                     {
+                        _readUntilEof.Push(rdr);
                         rdr = rdr.Decompress(BucketCompressionAlgorithm.Brotli);
                     }
 #endif

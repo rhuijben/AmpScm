@@ -16,7 +16,6 @@ using AmpScm.Buckets.Git;
 namespace AmpScm.Tests
 {
     [TestClass]
-    [DoNotParallelize]
     public class HttpTests
     {
         public TestContext TestContext { get; set; } = null!;
@@ -37,7 +36,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitHubHome()
         {
-            var br = Client.CreateRequest($"https://github.com/get-404-{Guid.NewGuid()}");
+            var br = Client.CreateRequest($"https://cloudflare.com/get-404-{Guid.NewGuid()}");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             using var result = await br.GetResponseAsync();
@@ -58,7 +57,7 @@ namespace AmpScm.Tests
             {
                 var t = bb.ToUTF8String();
                 len += bb.Length;
-                TestContext.WriteLine(t);
+                //TestContext.WriteLine(t);
                 total += t;
             }
         }

@@ -52,18 +52,23 @@ namespace AmpScm.Buckets.Client
 
         internal void Release(BucketChannel bucketChannel)
         {
-            _channels[bucketChannel.Key] = bucketChannel;
+            lock (_channels)
+            {
+                _channels[bucketChannel.Key] = bucketChannel;
+            }
         }
 
         internal bool TryGetChannel(Uri uri, out BucketChannel? channel)
         {
-            var key = uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
-            if (_channels.TryGetValue(key, out channel))
+            lock (_channels)
             {
-                _channels.Remove(key);
-                return true;
+                var key = uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
+                if (_channels.TryGetValue(key, out channel))
+                {
+                    _channels.Remove(key);
+                    return true;
+                }
             }
-
             return false;
         }
 
