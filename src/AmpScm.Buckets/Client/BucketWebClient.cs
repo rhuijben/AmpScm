@@ -40,6 +40,11 @@ namespace AmpScm.Buckets.Client
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
+                    foreach(var c in _channels.Values)
+                    {
+                        c.Dispose();
+                    }
+                    _channels.Clear();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

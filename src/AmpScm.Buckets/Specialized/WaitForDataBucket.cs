@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Buckets.Interfaces;
 
@@ -13,6 +14,7 @@ namespace AmpScm.Buckets.Specialized
         bool _waitingForMore;
         bool _readEof;
         TaskCompletionSource<bool>? _waiter;
+        readonly LeaveLock _l = new();
 
         public WaitForDataBucket()
             : base(new AggregateBucket())
@@ -37,6 +39,8 @@ namespace AmpScm.Buckets.Specialized
 
         public void Append(Bucket bucket)
         {
+            using var m = MeLock();
+
             var b = Aggregation.Append(bucket);
 
             Debug.Assert(b == Aggregation);
@@ -46,6 +50,8 @@ namespace AmpScm.Buckets.Specialized
 
         public void Prepend(Bucket bucket)
         {
+            using var m = MeLock();
+
             var b = Aggregation.Prepend(bucket);
 
             Debug.Assert(b == Aggregation);
@@ -57,26 +63,32 @@ namespace AmpScm.Buckets.Specialized
         {
             while (true)
             {
-                var bb = await Aggregation.ReadAsync(requested).ConfigureAwait(false);
-
-                if (!bb.IsEof)
-                    return bb;
-                else if (_readEof)
-                    return bb; // EOF
-
-                if (!_waitingForMore)
+                using (MeLock())
                 {
-                    _waiter = new TaskCompletionSource<bool>();
-                    _waitingForMore = true;
-                }
+                    var bb = await Aggregation.ReadAsync(requested).ConfigureAwait(false);
+
+                    if (!bb.IsEof)
+                        return bb;
+                    else if (_readEof)
+                        return bb; // EOF
+
+                    if (!_waitingForMore)
+                    {
+                        _waiter = new TaskCompletionSource<bool>();
+                        _waitingForMore = true;
+                    }
 #if DEBUG
-                else
-                    Debug.WriteLine("Waiting on waiter more than once");
+                    else
+                        Debug.WriteLine("Waiting on waiter more than once");
 #endif
+                }
                 await _waiter!.Task.ConfigureAwait(false);
 
-                _waitingForMore = false;
-                _waiter = null;
+                using (MeLock())
+                {
+                    _waitingForMore = false;
+                    _waiter = null;
+                }
             }
         }
 
@@ -89,6 +101,21 @@ namespace AmpScm.Buckets.Specialized
         {
             _readEof = true;
             return default;
+        }
+
+        LeaveLock MeLock()
+        {
+            Monitor.Enter(_l);
+
+            return _l;
+        }
+
+        sealed class LeaveLock : IDisposable
+        {
+            public void Dispose()
+            {
+                Monitor.Exit(this);
+            }
         }
     }
 }

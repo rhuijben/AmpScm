@@ -22,18 +22,10 @@ namespace AmpScm.Tests
 
         public BucketWebClient Client { get; } = new();
 
-
-        [TestCleanup]
-        public void Done()
-        {
-            Client.Dispose();
-        }
-
-
 #if !DEBUG
         [Timeout(20000)]
 #endif
-        [TestMethod]
+        //[DynamicData(nameof(Run100))]
         public async Task GetGitHubHome()
         {
             var br = Client.CreateRequest($"https://cloudflare.com/get-404-{Guid.NewGuid()}");

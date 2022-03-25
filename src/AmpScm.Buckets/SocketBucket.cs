@@ -45,7 +45,7 @@ namespace AmpScm.Buckets
             Socket.Dispose();
         }
 
-        public async ValueTask ConnectAsync(string host, int port, CancellationToken cancellationToken=default)
+        public async ValueTask ConnectAsync(string host, int port, CancellationToken cancellationToken = default)
         {
 #if !NET6_0_OR_GREATER
             await Socket.ConnectAsync(host, port).ConfigureAwait(false);
@@ -63,7 +63,7 @@ namespace AmpScm.Buckets
             {
                 if (_writeEof)
                     break; // Use wait at return for reading
-                
+
                 _writing ??= HandleWriting();
 
                 ready = await Task.WhenAny(reading, _writing).ConfigureAwait(false);
@@ -124,7 +124,7 @@ namespace AmpScm.Buckets
 
         async Task HandleWriting()
         {
-            while(true)
+            while (true)
             {
                 var bb = await WriteBucket.ReadAsync().ConfigureAwait(false);
 
@@ -137,7 +137,7 @@ namespace AmpScm.Buckets
                     }
                 }
 
-                while(bb.Length > 0)
+                while (bb.Length > 0)
                 {
 #if NET6_0_OR_GREATER
                     int written = await Socket.SendAsync(bb.Memory, SocketFlags.None).ConfigureAwait(false);
