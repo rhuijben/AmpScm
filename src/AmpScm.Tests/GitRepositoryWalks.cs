@@ -141,7 +141,7 @@ namespace AmpScm.Tests
                 GitRepository gc = GitRepository.Open(typeof(GitRepositoryWalks).Assembly.Location);
                 path = TestContext.PerTestDirectory(path);
 
-                await gc.GetPlumbing().RunRawCommand("clone", new[] { gc.FullPath, path });
+                await gc.GetPlumbing().RunRawCommand("clone", new[] { "--bare", gc.FullPath, path });
 
                 gc = GitRepository.Open(path);
                 await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true });

@@ -581,7 +581,7 @@ namespace AmpScm.Tests
         private Bucket MakeBucket(params string[] args)
         {
             return new AggregateBucket(args.Select(x => Encoding.ASCII.GetBytes(x).AsBucket()).ToArray());
-        }        
+        }
 
         [TestMethod]
         [DataRow(typeof(short))]
