@@ -52,6 +52,14 @@ namespace AmpScm.Git
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
 
+
+            if (File.Exists(Path.Combine(path, "config")) 
+                && File.Exists(Path.Combine(path, "HEAD"))
+                && Directory.Exists(Path.Combine(path, "refs")))
+            {
+                return path;
+            }
+
             string? p = path;
 
             while(p?.Length >0)

@@ -144,6 +144,7 @@ namespace AmpScm.Tests
                 await gc.GetPlumbing().RunRawCommand("clone", new[] { "--bare", gc.FullPath, path });
 
                 gc = GitRepository.Open(path);
+                Assert.AreEqual(path, gc.FullPath);
                 await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true });
                 await gc.GetPlumbing().Repack(new GitRepackArgs { WriteBitmap = true, SinglePack = true, WriteMultiPack = true });
             }
