@@ -6,7 +6,7 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {
-    public sealed class FileBucket : Bucket, IBucketPoll
+    public sealed partial class FileBucket : Bucket, IBucketPoll
     {
         readonly FileHolder _holder;
         readonly byte[] _buffer;
