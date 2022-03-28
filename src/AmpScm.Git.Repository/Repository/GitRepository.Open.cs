@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AmpScm.Git
 {
     public partial class GitRepository
-    {        
+    {
         public static GitRepository Open(string path)
             => Open(path, true);
 
@@ -52,8 +52,9 @@ namespace AmpScm.Git
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
 
+            path = Path.GetFullPath(path);
 
-            if (File.Exists(Path.Combine(path, "config")) 
+            if (File.Exists(Path.Combine(path, "config"))
                 && File.Exists(Path.Combine(path, "HEAD"))
                 && Directory.Exists(Path.Combine(path, "refs")))
             {
@@ -62,7 +63,7 @@ namespace AmpScm.Git
 
             string? p = path;
 
-            while(p?.Length >0)
+            while (p?.Length > 0)
             {
                 var tst = Path.Combine(p, ".git");
 
