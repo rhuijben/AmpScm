@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 
 namespace AmpScm.Buckets
 {
@@ -17,6 +21,9 @@ namespace AmpScm.Buckets
             int _nRefs;
             long? _length;
 
+            IntPtr _ovlBase;
+            Stack<IntPtr>? _ovls;
+
             public FileHolder(FileStream primary, string path)
             {
                 _primary = primary ?? throw new ArgumentNullException(nameof(primary));
@@ -24,7 +31,129 @@ namespace AmpScm.Buckets
 
                 if (primary.IsAsync)
                     _keep.Push(primary);
+
+                PrepareAsync();
             }
+
+            void Dispose()
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                    DisposeWindows(true);
+
+                GC.SuppressFinalize(this);
+            }
+
+            ~FileHolder()
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                    DisposeWindows(false);
+            }
+
+            private void PrepareAsync()
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+#pragma warning disable CA1416 // Validate platform compatibility
+                    PrepareWinAsync();
+#pragma warning restore CA1416 // Validate platform compatibility
+            }
+
+#if NET5_0_OR_GREATER
+            [SupportedOSPlatform("windows")]
+#endif
+            void PrepareWinAsync()
+            {
+                int ovlSize = (Marshal.SizeOf<NativeOverlapped>() + 15) & ~0xF;
+
+                _ovlBase = Marshal.AllocCoTaskMem(16 * ovlSize);
+
+                _ovls = new Stack<IntPtr>();
+
+                for (int i = 0; i < 16; i++)
+                    _ovls.Push((IntPtr)((ulong)_ovlBase + (ulong)(i * ovlSize)));
+            }
+
+#if NET5_0_OR_GREATER
+
+            [SupportedOSPlatform("windows")]
+#endif
+            void DisposeWindows(bool disposing)
+            {
+                if (_ovls?.Count == 16)
+                    Marshal.FreeCoTaskMem(_ovlBase);
+            }
+
+            static class NativeMethods
+            {
+                public delegate void IOCompletionCallback(uint errorCode, uint numBytes, IntPtr pOVERLAP);
+                [DllImport("kernel32.dll", SetLastError =true)]
+                [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+                public static extern bool ReadFileEx(SafeFileHandle hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead, [In] IntPtr lpOverlapped, IOCompletionCallback lpCompletionRoutine);
+
+
+                [DllImport("kernel32.dll", SetLastError = true)]
+                [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+                public static extern bool GetOverlappedResult(SafeFileHandle hFile, [In] IntPtr lpOverlapped, out uint lpNumberOfBytesTransferred, bool bWait);
+            }
+
+#if NET5_0_OR_GREATER
+            [SupportedOSPlatform("windows")]
+#endif
+            private bool TryWinReadAtSync(out ValueTask<int> vt, long readPos, byte[] buffer, int readLen)
+            {
+                IntPtr v;
+                lock (_ovls!)
+                {
+                    if (_ovls.Count == 0)
+                    {
+                        vt = default;
+                        return false;
+                    }
+
+                    v = _ovls.Pop();
+                }
+
+
+                TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
+
+                NativeOverlapped nop = default;
+                nop.OffsetLow = (int)((uint)readPos & uint.MaxValue);
+                nop.OffsetHigh = (int)(uint)(readPos >> 32);
+
+                Marshal.StructureToPtr(nop, v, false);
+
+                if (NativeMethods.ReadFileEx(_primary.SafeFileHandle, buffer, (uint)readLen, v,
+                    (errorCode, numBytes, pOverlap) =>
+                    {
+                        uint bytesRead;
+                        if (NativeMethods.GetOverlappedResult(_primary.SafeFileHandle, v, out bytesRead, true))
+                        {
+                            tcs.SetResult((int)bytesRead);
+                        }
+                        else
+                        {
+                            tcs.SetException(Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error())!);
+                        }
+
+                        lock (_ovls)
+                        {
+                            _ovls.Push(v);
+                        }
+                    }))
+                {
+                    vt = new ValueTask<int>(tcs.Task);
+                    return true;
+                }
+                else
+                {
+                    lock (_ovls)
+                    {
+                        _ovls.Push(v);
+                    }
+                    throw Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error());
+
+                }
+            }
+
 
             public void AddRef()
             {
@@ -49,10 +178,16 @@ namespace AmpScm.Buckets
                     }
                     _primary.Dispose();
                 }
+                else
+                    Dispose();
             }
 
             public ValueTask<int> ReadAtAsync(long readPos, byte[] buffer, int readLen)
             {
+#pragma warning disable CA1416 // Validate platform compatibility
+                if (_ovls is not null && TryWinReadAtSync(out var vt, readPos, buffer, readLen))
+                    return vt;
+#pragma warning restore CA1416 // Validate platform compatibility
                 if (_primary.IsAsync)
                     return TrueReadAtAsync(readPos, buffer, readLen);
                 else

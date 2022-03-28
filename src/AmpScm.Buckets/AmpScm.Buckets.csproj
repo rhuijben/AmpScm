@@ -39,6 +39,10 @@
     <PackageReference Include="zlib.managed" Version="1.1.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <SupportedPlatform Include="windows" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' != 'net47' ">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.3">
       <PrivateAssets>all</PrivateAssets>

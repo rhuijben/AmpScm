@@ -6,7 +6,7 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {
-    public sealed class FileBucket : Bucket, IBucketPoll
+    public sealed partial class FileBucket : Bucket, IBucketPoll
     {
         readonly FileHolder _holder;
         readonly byte[] _buffer;
@@ -168,9 +168,9 @@ namespace AmpScm.Buckets
 
             FileStream primary;
 
-            if (forAsync)
-                primary = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete, 4096, FileOptions.Asynchronous);
-            else
+//            if (forAsync)
+//                primary = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete, 4096, FileOptions.Asynchronous);
+//            else
                 primary = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete, 4096);
 
             FileHolder fh = new FileHolder(primary, path);
