@@ -20,7 +20,6 @@ namespace AmpScm.Git.Objects
         FileBucket? _revIdxBucket;
         int _ver;
         uint[]? _fanOut;
-        bool _hasReverseIndex;
         bool _hasBitmap;
 
         public PackObjectRepository(GitRepository repository, string packFile, GitIdType idType)
@@ -96,7 +95,6 @@ namespace AmpScm.Git.Objects
                     }
 
                     _hasBitmap = File.Exists(Path.ChangeExtension(_packFile, ".bitmap"));
-                    _hasReverseIndex = _hasBitmap && File.Exists(Path.ChangeExtension(_packFile, ".rev"));
                 }
             }
         }
@@ -403,7 +401,7 @@ namespace AmpScm.Git.Objects
         {
             Init();
 
-            if (typeof(TGitObject) != typeof(GitObject) && _hasBitmap && _hasReverseIndex)
+            if (typeof(TGitObject) != typeof(GitObject) && _hasBitmap)
             {
                 return GetAllViaBitmap<TGitObject>(alreadyReturned);
             }
@@ -528,6 +526,11 @@ namespace AmpScm.Git.Objects
         private async ValueTask<TGitObject> GetOneViaPackOffset<TGitObject>(int v, GitObjectType gitObjectType)
             where TGitObject : class
         {
+            if (!File.Exists(Path.ChangeExtension(_packFile, ".rev")))
+            {
+                await CreateReverseIndex();
+            }
+
             _revIdxBucket ??= FileBucket.OpenRead(Path.ChangeExtension(_packFile, ".rev"));
             await _revIdxBucket.ResetAsync().ConfigureAwait(false);
             await _revIdxBucket.ReadSkipAsync(12 + sizeof(uint) * v).ConfigureAwait(false);
@@ -544,6 +547,82 @@ namespace AmpScm.Git.Objects
             GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
 
             return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId, gitObjectType).ConfigureAwait(false);
+        }
+
+        private async ValueTask CreateReverseIndex()
+        {
+            Init();
+
+            if (_fanOut == null)
+                return;
+
+            var bmpName = Path.ChangeExtension(_packFile, ".rev");
+            var tmpName = bmpName + ".tmp";
+
+            // TODO: Use less memory
+            byte[] mapBytes;
+            {
+                SortedList<long, int> map = new SortedList<long, int>((int)_fanOut[255]);
+
+                uint count = _fanOut[255];
+
+                byte[]? oids = GetOidArray(0, count);
+                if (_ver == 1)
+                    oids = GetOidArray(0, count);
+                else
+                    oids = null;
+                byte[] offsets = GetOffsetArray(0, count, oids!);
+
+                int n = 0;
+                for (uint i = 0; i < count; i++)
+                {
+                    long offset = GetOffset(offsets, (int)i);
+
+                    map[offset] = n++;
+                }
+
+                mapBytes = new byte[sizeof(uint) * n];
+                n = 0;
+                foreach (var v in map.Values)
+                {
+                    Array.Copy(NetBitConverter.GetBytes(v), 0, mapBytes, n, sizeof(uint));
+
+                    n += sizeof(uint);
+                }
+            }
+
+            byte[]? sha = null;
+            using Bucket b = (Encoding.ASCII.GetBytes("RIDX").AsBucket()
+                                + NetBitConverter.GetBytes((int)1 /* Version 1 */).AsBucket()
+                                + NetBitConverter.GetBytes((int)_idType).AsBucket()
+                                + mapBytes.AsBucket()
+                                + GitId.Parse(Path.GetFileNameWithoutExtension(_packFile).Substring(5)).Hash.AsBucket())
+                            .SHA1(r => sha = r);
+
+            {
+                using var fs = File.Create(tmpName);
+
+                while (true)
+                {
+                    var bb = await b.ReadAsync().ConfigureAwait(false);
+
+                    if (bb.IsEof)
+                        break;
+#if !NETFRAMEWORK
+                    await fs.WriteAsync(bb.Memory).ConfigureAwait(false);
+#else
+                    var r = bb.ToArray();
+                    await fs.WriteAsync(r, 0, r.Length).ConfigureAwait(false);
+#endif
+                }
+
+                await fs.WriteAsync(sha!, 0, sha.Length).ConfigureAwait(false);
+            }
+
+            if (!File.Exists(bmpName))
+                File.Move(tmpName, bmpName);
+            else
+                File.Delete(tmpName);
         }
 
         private async ValueTask VerifyBitmap(FileBucket bmp)
