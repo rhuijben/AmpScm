@@ -71,7 +71,7 @@ namespace AmpScm.Buckets.Git
 
             while (start.Length < _packetLength - 4)
             {
-                bb = await Inner.ReadAsync(start.Length - _packetLength - 4).ConfigureAwait(false);
+                bb = await Inner.ReadAsync(_packetLength - start.Length - 4).ConfigureAwait(false);
 
                 if (bb.IsEof)
                     throw new GitBucketException($"Unexpected eof in {Name} bucket");

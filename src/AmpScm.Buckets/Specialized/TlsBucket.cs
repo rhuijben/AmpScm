@@ -74,6 +74,8 @@ namespace AmpScm.Buckets.Specialized
 
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
+            if (requested < 0)
+                throw new ArgumentOutOfRangeException(nameof(requested), requested, "Must be positive");
             if (!_authenticated)
             {
                 await _stream.AuthenticateAsClientAsync(_targetHost).ConfigureAwait(false);
@@ -122,8 +124,15 @@ namespace AmpScm.Buckets.Specialized
                 _bytesRead += len;
                 if (len > requested)
                 {
-                    _unread = new BucketBytes(_inputBuffer, requested, len - requested);
-                    return new BucketBytes(_inputBuffer, 0, requested);
+                    try
+                    {
+                        _unread = new BucketBytes(_inputBuffer, requested, len - requested);
+                        return new BucketBytes(_inputBuffer, 0, requested);
+                    }
+                    catch(Exception e)
+                    {
+                        throw new Exception($"{requested}, {len}, {_inputBuffer.Length}", e);
+                    }
                 }
                 else
                 {

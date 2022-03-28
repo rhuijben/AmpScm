@@ -65,7 +65,7 @@ namespace AmpScm.Buckets.Specialized
             {
                 using (MeLock())
                 {
-                    var bb = await Aggregation.ReadAsync(requested).ConfigureAwait(false);
+                    var bb = await Aggregation.ReadCombinedAsync(4096).ConfigureAwait(false);
 
                     if (!bb.IsEof)
                         return bb;

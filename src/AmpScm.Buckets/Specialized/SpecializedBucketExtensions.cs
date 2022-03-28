@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets.Specialized
 {
@@ -276,5 +277,34 @@ namespace AmpScm.Buckets.Specialized
 
             return NetBitConverter.ToUInt64(bb, 0);
         }
+
+        public static async ValueTask<BucketBytes> ReadCombinedAsync(this Bucket self, int bufferSize, int maxRequested = int.MaxValue)
+        {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
+            else if (self is IBucketIovec iov)
+            {
+                var r = await iov.ReadIovec(bufferSize).ConfigureAwait(false);
+
+                int bytes = (r.Buffers.Length > 0) ? r.Buffers.Sum(x => x.Length) : 0;
+
+                if (bytes > 0)
+                {
+                    byte[] buffer = new byte[bytes];
+                    int pos = 0;
+
+                    foreach (var v in r.Buffers)
+                    {
+                        v.CopyTo(new Memory<byte>(buffer, pos, v.Length));
+                        pos += v.Length;
+                    }
+
+                    return buffer;
+                }
+            }
+
+            return await self.ReadAsync(maxRequested).ConfigureAwait(false);
+        }
     }
 }
+

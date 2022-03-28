@@ -8,7 +8,7 @@ using AmpScm.Buckets.Interfaces;
 namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{Name}: BucketCount={BucketCount}, Current={CurrentBucket}, Position={Position}")]
-    public class AggregateBucket : Bucket, IBucketAggregation
+    public class AggregateBucket : Bucket, IBucketAggregation, IBucketIovec
     {
         Bucket?[] _buckets;
         int _n;
@@ -133,7 +133,7 @@ namespace AmpScm.Buckets
             return BucketBytes.Eof;
         }
 
-        private async ValueTask MoveNext()
+        private async ValueTask MoveNext(bool close = true)
         {
             Bucket? del;
             lock (LockOn)
@@ -143,7 +143,7 @@ namespace AmpScm.Buckets
                 if (del == null)
                     return;
 
-                if (!_keepOpen)
+                if (!_keepOpen && close)
                     _buckets[_n] = null;
                 else
                     del = null;
@@ -258,6 +258,44 @@ namespace AmpScm.Buckets
             if (!reset)
                 ab._position = _position;
             return ab;
+        }
+
+#pragma warning disable CA1033 // Interface methods should be callable by child types
+        async ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> IBucketIovec.ReadIovec(int maxRequested)
+#pragma warning restore CA1033 // Interface methods should be callable by child types
+        {
+            IEnumerable<ReadOnlyMemory<byte>>? result = Enumerable.Empty<ReadOnlyMemory<byte>>();
+
+            if (!_keepOpen)
+
+                for (int i = _n - 1; i >= 0 && _buckets[i] != null; i--)
+                {
+                    var del = _buckets[i];
+                    _buckets[i] = null;
+
+                    await del.DisposeAsync().ConfigureAwait(false);
+                }
+
+            while (CurrentBucket is IBucketIovec iov)
+            {
+                var r = await iov.ReadIovec(maxRequested).ConfigureAwait(false);
+
+                if (r.Buffers.Length > 0)
+                    result = (result != null) ? result.Concat(r.Buffers) : r.Buffers;
+
+                maxRequested -= r.Buffers.Sum(x => x.Length);
+
+                if (!r.Done || maxRequested == 0)
+                {
+                    return (result.ToArray(), false); // Don't want to wait. Done for now
+                }
+                else
+                {
+                    await MoveNext(false).ConfigureAwait(false);
+                }
+            }
+
+            return (result.ToArray(), CurrentBucket is null);
         }
 
         #region DEBUG INFO

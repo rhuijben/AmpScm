@@ -102,7 +102,7 @@ namespace AmpScm.Buckets
             if ((bytes?.Length ?? 0) == 0)
                 return Bucket.Empty;
 
-            return new IovecBucket(bytes!);
+            return new MemoryBucket(bytes!);
         }
 
         public static Bucket AsBucket(this byte[] bytes, bool copy)
@@ -117,12 +117,12 @@ namespace AmpScm.Buckets
                 bytes = data;
             }
 
-            return new IovecBucket(bytes!);
+            return new MemoryBucket(bytes!);
         }
 
         public static Bucket AsBucket(ReadOnlySpan<byte> bytes)
         {
-            return new IovecBucket(bytes.ToArray());
+            return new MemoryBucket(bytes.ToArray());
         }
 
         public static TlsBucket WithTlsClientFor<TBucket>(this TBucket bucket, string targetHost)
@@ -145,7 +145,7 @@ namespace AmpScm.Buckets
 
         public static Bucket AsBucket(this ReadOnlyMemory<byte> memory)
         {
-            return new IovecBucket(memory);
+            return new MemoryBucket(memory);
         }
 
         public static Bucket AsBucket(this IEnumerable<Bucket> buckets)
