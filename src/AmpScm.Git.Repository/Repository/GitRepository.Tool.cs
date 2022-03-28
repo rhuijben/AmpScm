@@ -295,7 +295,7 @@ namespace AmpScm.Git
             {
                 if (e.Data is not null)
                 {
-                    _stdErr!.Append(e.Data);
+                    _stdErr!.AppendLine(e.Data);
                 }
                 else if (Interlocked.Decrement(ref _n) == 0)
                 {
@@ -307,7 +307,7 @@ namespace AmpScm.Git
             {
                 if (e.Data is not null)
                 {
-                    _stdOut!.Append(e.Data);
+                    _stdOut!.AppendLine(e.Data);
                 }
                 else if (Interlocked.Decrement(ref _n) == 0)
                 {

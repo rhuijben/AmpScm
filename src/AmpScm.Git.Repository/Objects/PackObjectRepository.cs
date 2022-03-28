@@ -557,7 +557,7 @@ namespace AmpScm.Git.Objects
                 return;
 
             var bmpName = Path.ChangeExtension(_packFile, ".rev");
-            var tmpName = bmpName + ".tmp";
+            var tmpName = bmpName + ".t" + Guid.NewGuid();
 
             // TODO: Use less memory
             byte[] mapBytes;

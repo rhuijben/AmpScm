@@ -93,7 +93,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitInfoV1()
         {
-            var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
+            var br = Client.CreateRequest($"https://github.com/rhuijben/putty.git/info/refs?service=git-upload-pack");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             //br.Headers["Git-Protocol"] = "version=2";
@@ -131,7 +131,7 @@ namespace AmpScm.Tests
         [TestMethod]
         public async Task GetGitInfoV2()
         {
-            var br = Client.CreateRequest($"https://secure.vsoft.nl/git-repositories/plain/putty/info/refs?service=git-upload-pack");
+            var br = Client.CreateRequest($"https://github.com/rhuijben/putty.git/info/refs?service=git-upload-pack");
 
             br.Headers[HttpRequestHeader.UserAgent] = "BucketTest/0 " + TestContext.TestName;
             br.Headers["Git-Protocol"] = "version=2";

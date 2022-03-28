@@ -106,40 +106,38 @@ namespace AmpScm.Buckets.Client.Protocols
 
         internal virtual Bucket CreateRequest()
         {
-            AggregateBucket bucket = new AggregateBucket();
             Encoding enc = RequestEncoding;
 
-            bucket.Append(enc.GetBytes((Method ?? "GET") + " ").AsBucket());
-            bucket.Append(enc.GetBytes(RequestUri.GetComponents(UriComponents.PathAndQuery, UriFormat.UriEscaped)).AsBucket());
-            bucket.Append(enc.GetBytes(" HTTP/1.1\r\n").AsBucket());
-
-            bucket.Append(CreateHeaders(RequestUri.Host));
-
-            return bucket;
+#pragma warning disable CA2000 // Dispose objects before losing scope
+            return enc.GetBytes((Method ?? "GET") + " ").AsBucket()
+                + enc.GetBytes(RequestUri.GetComponents(UriComponents.PathAndQuery, UriFormat.UriEscaped)).AsBucket()
+                + enc.GetBytes(" HTTP/1.1\r\n").AsBucket()
+                + CreateHeaders(RequestUri.Host);
+#pragma warning restore CA2000 // Dispose objects before losing scope
         }
 
         protected virtual Bucket CreateHeaders(string hostName)
         {
-            AggregateBucket bucket = new AggregateBucket();
+            var bucket = Bucket.Empty;
             Encoding enc = Encoding.UTF8;
 
             if (!Headers.Contains(HttpRequestHeader.Host))
             {
-                bucket.Append(enc.GetBytes("Host: ").AsBucket());
-                bucket.Append(enc.GetBytes(RequestUri.Host).AsBucket());
-                bucket.Append(enc.GetBytes("\r\n").AsBucket());
+                bucket += enc.GetBytes("Host: ").AsBucket()
+                        + enc.GetBytes(RequestUri.Host).AsBucket()
+                        + enc.GetBytes("\r\n").AsBucket();
             }
 
             if (!Headers.Contains(HttpRequestHeader.AcceptEncoding))
             {
 #if NETFRAMEWORK
-                bucket.Append(enc.GetBytes("Accept-Encoding: gzip, deflate\r\n").AsBucket());
+                bucket += enc.GetBytes("Accept-Encoding: gzip, deflate\r\n").AsBucket();
 #else
-                bucket.Append(enc.GetBytes("Accept-Encoding: gzip, deflate, br\r\n").AsBucket());
+                bucket += enc.GetBytes("Accept-Encoding: gzip, deflate, br\r\n").AsBucket();
 #endif
             }
 
-            bucket.Append(Headers.ToByteArray().AsBucket()); // Includes the final \r\n to end the request headers
+            bucket += Headers.ToByteArray().AsBucket(); // Includes the final \r\n to end the request headers
 
             return bucket;
         }

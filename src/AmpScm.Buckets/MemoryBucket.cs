@@ -75,5 +75,8 @@ namespace AmpScm.Buckets
         {
             return this;
         }
+
+        internal BucketBytes Data => _data;
+        internal int Offset => _offset;
     }
 }

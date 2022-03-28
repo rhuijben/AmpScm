@@ -134,9 +134,9 @@ namespace AmpScm.Buckets
         public static Bucket operator +(Bucket first, Bucket second)
 #pragma warning restore CA2225 // Operator overloads have named alternates
         {
-            if (first is null)
+            if (first is null || first is EmptyBucket)
                 return second;
-            else if (second is null)
+            else if (second is null || second is EmptyBucket)
                 return first;
             else
                 return first.Append(second);
