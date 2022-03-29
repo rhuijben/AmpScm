@@ -55,12 +55,9 @@ namespace AmpScm.Git.References
             if (!File.Exists(fileName))
                 return null;
 
-            if (!GitRepository.TryReadRefFile(fileName, null, out var body))
-                return null;
-
-            if (body.StartsWith("ref:", StringComparison.Ordinal))
+            if (GitRepository.TryReadRefFile(fileName, "ref: ", out var body))
             {
-                var ob = await Repository.ReferenceRepository.GetAsync(body.Substring(4).Trim()).ConfigureAwait(false);
+                var ob = await Repository.ReferenceRepository.GetAsync(body.Trim()).ConfigureAwait(false);
 
                 if (ob is not null)
                     return ob;

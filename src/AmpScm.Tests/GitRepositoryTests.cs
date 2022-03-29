@@ -96,7 +96,7 @@ namespace AmpScm.Tests
             string path = repoInner.FullPath;
 
             {
-                using var repo2 = GitRepository.Open(path, false);
+                using var repo2 = GitRepository.Open(path);
                 Assert.AreEqual(path, repo2.FullPath);
                 Assert.IsFalse(repo2.IsBare);
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
@@ -108,14 +108,14 @@ namespace AmpScm.Tests
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
             }
             {
-                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"), false);
+                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"));
                 Assert.AreEqual(path, repo2.FullPath);
                 Assert.IsFalse(repo2.IsBare);
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
             }
 
             {
-                using var repo2 = GitRepository.Open(Path.Combine(path, "a", "b", "c"), true);
+                using var repo2 = GitRepository.Open(Path.Combine(path, "a", "b", "c"));
                 Assert.AreEqual(path, repo2.FullPath);
                 Assert.IsFalse(repo2.IsBare);
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
@@ -124,7 +124,7 @@ namespace AmpScm.Tests
             Directory.Delete(Path.Combine(repoOuter.FullPath, ".git"), true);
 
             {
-                using var repo2 = GitRepository.Open(path, false);
+                using var repo2 = GitRepository.Open(path);
                 Assert.AreEqual(path, repo2.FullPath);
                 Assert.IsFalse(repo2.IsBare);
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
@@ -136,14 +136,14 @@ namespace AmpScm.Tests
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
             }
             {
-                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"), false);
+                using var repo2 = GitRepository.Open(Path.Combine(path, ".git"));
                 Assert.AreEqual(path, repo2.FullPath);
                 Assert.IsFalse(repo2.IsBare);
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");
             }
 
             {
-                using var repo2 = GitRepository.Open(Path.Combine(path, "a", "b", "c"), true);
+                using var repo2 = GitRepository.Open(Path.Combine(path, "a", "b", "c"));
                 Assert.AreEqual(path, repo2.FullPath);
                 Assert.IsFalse(repo2.IsBare);
                 Assert.IsFalse(repo2.IsLazy, "Not lazy");

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AmpScm.Buckets;
 using AmpScm.Git.Repository;
@@ -14,9 +15,6 @@ namespace AmpScm.Git
     public partial class GitRepository
     {
         public static GitRepository Open(string path)
-            => Open(path, true);
-
-        public static GitRepository Open(string path, bool findGitRoot)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
@@ -29,13 +27,21 @@ namespace AmpScm.Git
             return new GitRepository(root, type);
         }
 
-        public static ValueTask<GitRepository> OpenAsync(string path)
+        public static ValueTask<GitRepository> OpenAsync(string path, CancellationToken cancellation = default)
         {
             var g = GitRepository.Open(path);
 
             return new ValueTask<GitRepository>(g);
         }
 
+        /// <summary>
+        /// Find git repository for <paramref name="path"/>. Start by looking at 'path/.git' (directory/file), then checking 
+        /// if path is a (bare-)repository itself. Then start looking up for a '.git' in any parent directory. And if that
+        /// fails, look for parent directories that are a repository.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         static (string? Path, GitRootType Type) FindGitRoot(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -56,9 +62,20 @@ namespace AmpScm.Git
                     return (p, GitRootType.WorkTree);
                 }
 
+                if (ReferenceEquals(p, path))
+                {
+                    if (!Directory.Exists(Path.Combine(path, ".git"))
+                          && File.Exists(Path.Combine(path, "config"))
+                          && File.Exists(Path.Combine(path, "HEAD"))
+                          && Directory.Exists(Path.Combine(path, "refs")))
+                    {
+                        return (path, path.EndsWith(Path.DirectorySeparatorChar + ".git", StringComparison.OrdinalIgnoreCase)
+                                        ? GitRootType.None : GitRootType.Bare);
+                    }
+                }
+
                 p = Path.GetDirectoryName(p);
             }
-
 
             p = path;
 
