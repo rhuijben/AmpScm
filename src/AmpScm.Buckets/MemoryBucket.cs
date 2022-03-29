@@ -4,7 +4,7 @@ using AmpScm.Buckets.Interfaces;
 
 namespace AmpScm.Buckets
 {
-    public class MemoryBucket : Bucket, IBucketNoClose, IBucketIovec
+    public class MemoryBucket : Bucket, IBucketNoClose, IBucketReadBuffers
     {
         BucketBytes _data;
         int _offset;
@@ -78,7 +78,7 @@ namespace AmpScm.Buckets
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 #pragma warning disable CA1033 // Interface methods should be callable by child types
-        async ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> IBucketIovec.ReadIovec(int maxRequested)
+        async ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> IBucketReadBuffers.ReadBuffersAsync(int maxRequested)
 #pragma warning restore CA1033 // Interface methods should be callable by child types
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {

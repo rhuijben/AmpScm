@@ -592,31 +592,15 @@ namespace AmpScm.Git.Objects
             }
 
             byte[]? sha = null;
-            using Bucket b = (Encoding.ASCII.GetBytes("RIDX").AsBucket()
+            using (Bucket b = (Encoding.ASCII.GetBytes("RIDX").AsBucket()
                                 + NetBitConverter.GetBytes((int)1 /* Version 1 */).AsBucket()
                                 + NetBitConverter.GetBytes((int)_idType).AsBucket()
                                 + mapBytes.AsBucket()
                                 + GitId.Parse(Path.GetFileNameWithoutExtension(_packFile).Substring(5)).Hash.AsBucket())
-                            .SHA1(r => sha = r);
-
+                            .SHA1(r => sha = r))
+            using (var fs = File.Create(tmpName))
             {
-                using var fs = File.Create(tmpName);
-
-                while (true)
-                {
-                    var bb = await b.ReadAsync().ConfigureAwait(false);
-
-                    if (bb.IsEof)
-                        break;
-#if !NETFRAMEWORK
-                    await fs.WriteAsync(bb.Memory).ConfigureAwait(false);
-#else
-                    var r = bb.ToArray();
-                    await fs.WriteAsync(r, 0, r.Length).ConfigureAwait(false);
-#endif
-                }
-
-                await fs.WriteAsync(sha!, 0, sha.Length).ConfigureAwait(false);
+                await fs.WriteAsync(b).ConfigureAwait(false);
             }
 
             if (!File.Exists(bmpName))
@@ -641,7 +625,7 @@ namespace AmpScm.Git.Objects
                 throw new GitBucketException($"Bitmap Header has {bhr.ObjectCount} commit records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
-        async ValueTask<GitObjectBucket> MyResolveByOid(GitId id)
+        async ValueTask<GitObjectBucket?> MyResolveByOid(GitId id)
         {
             // 99% case. All deltas should be in the same pack
             var r = await ResolveById(id).ConfigureAwait(false);

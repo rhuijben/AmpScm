@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace AmpScm.Buckets.Interfaces
 {
-    public interface IBucketIovec
+    public interface IBucketReadBuffers
     {
-        ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> ReadIovec(int maxRequested = int.MaxValue);
+        ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> ReadBuffersAsync(int maxRequested = int.MaxValue);
     }
 }

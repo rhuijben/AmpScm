@@ -8,7 +8,7 @@ using AmpScm.Buckets.Interfaces;
 namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{Name}: BucketCount={BucketCount}, Current={CurrentBucket}, Position={Position}")]
-    public class AggregateBucket : Bucket, IBucketAggregation, IBucketIovec
+    public class AggregateBucket : Bucket, IBucketAggregation, IBucketReadBuffers
     {
         Bucket?[] _buckets;
         int _n;
@@ -261,7 +261,7 @@ namespace AmpScm.Buckets
         }
 
 #pragma warning disable CA1033 // Interface methods should be callable by child types
-        async ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> IBucketIovec.ReadIovec(int maxRequested)
+        async ValueTask<(ReadOnlyMemory<byte>[] Buffers, bool Done)> IBucketReadBuffers.ReadBuffersAsync(int maxRequested)
 #pragma warning restore CA1033 // Interface methods should be callable by child types
         {
             IEnumerable<ReadOnlyMemory<byte>>? result = Enumerable.Empty<ReadOnlyMemory<byte>>();
@@ -276,9 +276,9 @@ namespace AmpScm.Buckets
                     await del.DisposeAsync().ConfigureAwait(false);
                 }
 
-            while (CurrentBucket is IBucketIovec iov)
+            while (CurrentBucket is IBucketReadBuffers iov)
             {
-                var r = await iov.ReadIovec(maxRequested).ConfigureAwait(false);
+                var r = await iov.ReadBuffersAsync(maxRequested).ConfigureAwait(false);
 
                 if (r.Buffers.Length > 0)
                     result = (result != null) ? result.Concat(r.Buffers) : r.Buffers;

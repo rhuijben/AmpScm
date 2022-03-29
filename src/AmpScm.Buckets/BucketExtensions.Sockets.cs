@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -10,6 +11,7 @@ using AmpScm.Buckets.Specialized;
 
 namespace AmpScm.Buckets
 {
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
     partial class BucketExtensions
     {
 #if NETFRAMEWORK && !NET48_OR_GREATER
@@ -54,6 +56,44 @@ namespace AmpScm.Buckets
                 socket.EndConnect, null);
         }
 #endif
+
+        public static ValueTask WriteAsync(this Stream stream, BucketBytes bucketBytes, CancellationToken cancellationToken = default)
+        {
+            if (stream is null)
+                throw new ArgumentNullException(nameof(stream));
+
+#if !NETFRAMEWORK
+            return stream.WriteAsync(bucketBytes.Memory, cancellationToken);
+#else
+            var (q, r) = bucketBytes;
+
+            if (q is not null)
+                return new ValueTask(stream.WriteAsync(q, r, bucketBytes.Length, cancellationToken));
+            else
+            {
+                q = bucketBytes.ToArray();
+                return new ValueTask(stream.WriteAsync(q, 0, bucketBytes.Length, cancellationToken));
+            }
+#endif
+        }
+
+        public static async ValueTask WriteAsync(this Stream stream, Bucket bucket, CancellationToken cancellationToken = default)
+        {
+            if (stream is null)
+                throw new ArgumentNullException(nameof(stream));
+            else if (bucket is null)
+                throw new ArgumentNullException(nameof(bucket));
+
+            while (true)
+            {
+                var bb = await bucket.ReadAsync().ConfigureAwait(false);
+
+                if (bb.IsEof)
+                    break;
+
+                await stream.WriteAsync(bb, cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 
 }

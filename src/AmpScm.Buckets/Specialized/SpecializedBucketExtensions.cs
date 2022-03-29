@@ -9,28 +9,33 @@ namespace AmpScm.Buckets.Specialized
 {
     public static class SpecializedBucketExtensions
     {
-        public static CreateHashBucket SHA1(this Bucket self, Action<byte[]> created)
+        public static Bucket SHA1(this Bucket self, Action<byte[]> created)
         {
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
             return new CreateHashBucket(self, System.Security.Cryptography.SHA1.Create(), created);
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
         }
 
-        public static CreateHashBucket SHA256(this Bucket self, Action<byte[]> created)
+        public static Bucket SHA256(this Bucket self, Action<byte[]> created)
         {
             return new CreateHashBucket(self, System.Security.Cryptography.SHA256.Create(), created);
         }
 
-        public static CreateHashBucket MD5(this Bucket self, Action<byte[]> created)
+        public static Bucket MD5(this Bucket self, Action<byte[]> created)
         {
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
             return new CreateHashBucket(self, System.Security.Cryptography.MD5.Create(), created);
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
         }
 
-        public static CreateHashBucket Crc32(this Bucket self, Action<int> created)
+        public static Bucket Crc32(this Bucket self, Action<int> created)
         {
             return new CreateHashBucket(self, CreateHashBucket.Crc32.Create(), (v) => created(NetBitConverter.ToInt32(v, 0)));
+        }
+
+        public static Bucket ReadLength(this Bucket self, Action<long> bytesRead)
+        {
+            return new CreateHashBucket(self, CreateHashBucket.BytesRead.Create(), (v) => bytesRead(BitConverter.ToInt64(v, 0)));
         }
 
         public static async ValueTask ReadSkipUntilEofAsync(this Bucket self)
@@ -293,9 +298,9 @@ namespace AmpScm.Buckets.Specialized
         {
             if (self is null)
                 throw new ArgumentNullException(nameof(self));
-            else if (self is IBucketIovec iov)
+            else if (self is IBucketReadBuffers iov)
             {
-                var r = await iov.ReadIovec(bufferSize).ConfigureAwait(false);
+                var r = await iov.ReadBuffersAsync(bufferSize).ConfigureAwait(false);
 
                 int bytes = (r.Buffers.Length > 0) ? r.Buffers.Sum(x => x.Length) : 0;
 

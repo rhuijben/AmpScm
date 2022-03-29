@@ -155,12 +155,12 @@ namespace AmpScm.Buckets.Specialized
 
             protected override byte[] HashFinal()
             {
-                var hashBuffer = UInt32ToBigEndianBytes(~hash);
+                var hashBuffer = NetBitConverter.GetBytes(~hash);
                 HashValue = hashBuffer;
                 return hashBuffer;
             }
 
-            public override int HashSize { get { return 32; } }
+            public override int HashSize => sizeof(int) * 8;
 
             public static uint Compute(byte[] buffer)
             {
@@ -208,12 +208,35 @@ namespace AmpScm.Buckets.Specialized
                 return hash;
             }
 
-            static byte[] UInt32ToBigEndianBytes(uint uint32)
+            public static new Crc32 Create() => new();
+        }
+
+        internal sealed class BytesRead : HashAlgorithm
+        {
+            long _len;
+
+            public BytesRead()
             {
-                return NetBitConverter.GetBytes(uint32);
             }
 
-            public static new Crc32 Create() => new Crc32();
+            public override void Initialize()
+            {
+                _len = 0;
+            }
+
+            protected override void HashCore(byte[] array, int ibStart, int cbSize)
+            {
+                _len += cbSize;
+            }
+
+            protected override byte[] HashFinal()
+            {
+                return BitConverter.GetBytes(_len);
+            }
+
+            public override int HashSize => sizeof(long) * 8;
+
+            public static new BytesRead Create() => new();
         }
     }
 }

@@ -703,8 +703,9 @@ namespace AmpScm.Tests
             await Assert.That.BucketsEqual(idxData, index);
         }
 
-        private async ValueTask<GitObjectBucket> GetDeltaSource(string packFile, GitId id)
+        private async ValueTask<GitObjectBucket?> GetDeltaSource(string packFile, GitId id)
         {
+            TestContext.WriteLine($"Resolving {id}");
             GitRepository repo = await GitRepository.OpenAsync(Path.GetDirectoryName(packFile)!);
 
             return (await repo.ObjectRepository.FetchGitIdBucketAsync(id))!;
@@ -743,7 +744,7 @@ namespace AmpScm.Tests
         {
             using var srcFile = FileBucket.OpenRead(packFile);
             var b = new List<Bucket>();
-            for (int i = 0; i < 100;i++)
+            for (int i = 0; i < 100; i++)
                 b.Add(await srcFile.Wrap().Skip(i * 1024).DuplicateAsync(true));
 
             var s = b.Select(b => b.ReadAsync(1024).AsTask()).ToArray();

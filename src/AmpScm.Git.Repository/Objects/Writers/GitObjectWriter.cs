@@ -31,18 +31,10 @@ namespace AmpScm.Git.Objects
                 if (!r.HasValue)
                 {
                     string innerTmp = Path.Combine(di.FullName, tmpFile) + ".pre";
-                    using var tmp = File.Create(innerTmp);
-                    BucketBytes bb;
-                    r = 0;
-                    while (!(bb = await bucket.ReadAsync().ConfigureAwait(false)).IsEof)
+
+                    using (var tmp = File.Create(innerTmp))
                     {
-#if !NETFRAMEWORK
-                        await tmp.WriteAsync(bb.Memory).ConfigureAwait(false);
-#else
-                        var buf = bb.ToArray();
-                        await tmp.WriteAsync(buf, 0, buf.Length).ConfigureAwait(false);
-#endif
-                        r += bb.Length;
+                        await tmp.WriteAsync(bucket.ReadLength(len => r = len)).ConfigureAwait(false);
                     }
                     bucket = FileBucket.OpenRead(innerTmp);
                 }
@@ -50,17 +42,7 @@ namespace AmpScm.Git.Objects
                 byte[]? checksum = null;
                 using (var wb = Type.CreateHeader(r.Value!).Append(bucket).SHA1(cs => checksum = cs).Compress(BucketCompressionAlgorithm.ZLib))
                 {
-                    BucketBytes bb;
-                    r = 0;
-                    while (!(bb = await wb.ReadAsync().ConfigureAwait(false)).IsEof)
-                    {
-#if !NETFRAMEWORK
-                        await f.WriteAsync(bb.Memory).ConfigureAwait(false);
-#else
-                        var buf = bb.ToArray();
-                        await f.WriteAsync(buf, 0, buf.Length).ConfigureAwait(false);
-#endif
-                    }
+                    await f.WriteAsync(wb).ConfigureAwait(false);
                 }
 
                 id = new GitId(repository.InternalConfig.IdType, checksum!);
