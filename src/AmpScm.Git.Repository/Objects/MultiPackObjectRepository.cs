@@ -76,7 +76,7 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal async override ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
+        internal async override ValueTask<GitObjectBucket?> ResolveById(GitId id)
         {
             if (_packs == null)
                 return null; // Not really loaded yet
@@ -84,7 +84,7 @@ namespace AmpScm.Git.Objects
             // TODO: Find in multipack and directly open via index
             foreach (var p in _packs)
             {
-                var r = await p.ResolveByOid(id).ConfigureAwait(false);
+                var r = await p.ResolveById(id).ConfigureAwait(false);
 
                 if (r is not null)
                     return r;

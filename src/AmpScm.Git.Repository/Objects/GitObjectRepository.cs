@@ -43,7 +43,7 @@ namespace AmpScm.Git.Objects
             return false;
         }
 
-        internal virtual ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
+        internal virtual ValueTask<GitObjectBucket?> ResolveById(GitId id)
         {
             return default;
         }
@@ -51,6 +51,11 @@ namespace AmpScm.Git.Objects
         internal virtual ValueTask<IGitCommitGraphInfo?> GetCommitInfo(GitId id)
         {
             return default;
+        }
+
+        public ValueTask<GitObjectBucket?> FetchGitIdBucketAsync(GitId id)
+        {
+            return Repository.ObjectRepository.ResolveById(id);
         }
 
         internal async ValueTask<TGitObject?> ResolveIdString<TGitObject>(string idString)

@@ -34,7 +34,7 @@ namespace AmpScm.Tests
             for (int i = 0; i < gh.ObjectCount; i++)
             {
                 long? offset = b.Position;
-                using var pf = new GitPackFrameBucket(b.NoClose(), GitIdType.Sha1);
+                using var pf = new GitPackFrameBucket(b.NoClose(), GitIdType.Sha1, null);
 
                 await pf.ReadInfoAsync();
 
@@ -627,7 +627,7 @@ namespace AmpScm.Tests
                 long? offset = b.Position;
                 int crc = 0;
                 using var crcr = b.NoClose().Crc32(c => crc = c);
-                using var pf = new GitPackFrameBucket(crcr, GitIdType.Sha1);
+                using var pf = new GitPackFrameBucket(crcr, GitIdType.Sha1, id => GetDeltaSource(packFile, id));
 
                 await pf.ReadInfoAsync();
 
@@ -701,6 +701,13 @@ namespace AmpScm.Tests
             using var idxData = indexFile.Take(lIdx - 20).SHA1(x => idxChecksum = x);
 
             await Assert.That.BucketsEqual(idxData, index);
+        }
+
+        private async ValueTask<GitObjectBucket> GetDeltaSource(string packFile, GitId id)
+        {
+            GitRepository repo = await GitRepository.OpenAsync(Path.GetDirectoryName(packFile)!);
+
+            return (await repo.ObjectRepository.FetchGitIdBucketAsync(id))!;
         }
 
         [TestMethod]

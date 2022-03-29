@@ -16,8 +16,8 @@ namespace AmpScm.Buckets.Git
         long position;
         long frame_position;
         long delta_position;
-        readonly GitIdType _oidType;
-        Func<GitId, ValueTask<GitObjectBucket>>? _oidResolver;
+        readonly GitIdType _idType;
+        Func<GitId, ValueTask<GitObjectBucket?>>? _fetchBucketById;
         byte[]? _deltaId;
 
         enum frame_state
@@ -38,11 +38,11 @@ namespace AmpScm.Buckets.Git
         const GitObjectType GitObjectType_DeltaOffset = (GitObjectType)6;
         const GitObjectType GitObjectType_DeltaReference = (GitObjectType)7;
 
-        public GitPackFrameBucket(Bucket inner, GitIdType oidType, Func<GitId, ValueTask<GitObjectBucket>>? resolveOid = null)
+        public GitPackFrameBucket(Bucket inner, GitIdType idType, Func<GitId, ValueTask<GitObjectBucket?>>? fetchBucketById = null)
             : base(inner.WithPosition())
         {
-            _oidType = oidType;
-            _oidResolver = resolveOid;
+            _idType = idType;
+            _fetchBucketById = fetchBucketById;
         }
 
         public override BucketBytes Peek()
@@ -172,7 +172,7 @@ namespace AmpScm.Buckets.Git
                 {
                     if (_deltaId == null)
                     {
-                        _deltaId = new byte[(_oidType == GitIdType.Sha1) ? 20 : 32];
+                        _deltaId = new byte[(_idType == GitIdType.Sha1) ? 20 : 32];
                         position = 0;
                     }
 
@@ -246,7 +246,7 @@ namespace AmpScm.Buckets.Git
                     state = frame_state.body;
                     reader = new ZLibBucket(Inner.SeekOnReset().NoClose());
                     DeltaCount = 0;
-                    _oidResolver = null;
+                    _fetchBucketById = null;
                 }
             }
 
@@ -272,19 +272,19 @@ namespace AmpScm.Buckets.Git
                         to_skip -= skipped;
                     }
 
-                    base_reader = new GitPackFrameBucket(deltaSource, _oidType, _oidResolver);
+                    base_reader = new GitPackFrameBucket(deltaSource, _idType, _fetchBucketById);
                 }
                 else
                 {
-                    var deltaId = new GitId(_oidType, _deltaId!);
+                    var deltaId = new GitId(_idType, _deltaId!);
 
-                    if (_oidResolver == null)
-                        throw new GitBucketException($"Found delta offset against {deltaId}, but don't have a resolver to obtain that object");
+                    if (_fetchBucketById == null)
+                        throw new GitBucketException($"Found delta against {deltaId}, but don't have a resolver to obtain that object");
 
-                    base_reader = await _oidResolver(deltaId).ConfigureAwait(false);
+                    base_reader = await _fetchBucketById(deltaId).ConfigureAwait(false);
 
                     if (base_reader == null)
-                        throw new GitBucketException($"Can't obtain delta reference for {deltaId}");
+                        throw new GitBucketException($"Can't obtain delta-base bucket for {deltaId}");
                     _deltaId = null; // Not used any more
                 }
 
@@ -298,7 +298,7 @@ namespace AmpScm.Buckets.Git
                     DeltaCount = 1;
 
                 reader = new GitDeltaBucket(reader!, base_reader);
-                _oidResolver = null;
+                _fetchBucketById = null;
             }
 
             return true;

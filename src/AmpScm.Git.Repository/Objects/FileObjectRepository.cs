@@ -60,7 +60,7 @@ namespace AmpScm.Git.Objects
             return File.Exists(path);
         }
 
-        internal override ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
+        internal override ValueTask<GitObjectBucket?> ResolveById(GitId id)
         {
             var name = id.ToString();
 

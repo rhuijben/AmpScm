@@ -23,7 +23,7 @@ namespace AmpScm.Git.Objects
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (_inner == null)
-                _inner = await Repository.ObjectRepository.ResolveByOid(Id).ConfigureAwait(false) ?? throw new InvalidOperationException($"Can't fetch {Id}");
+                _inner = await Repository.ObjectRepository.ResolveById(Id).ConfigureAwait(false) ?? throw new InvalidOperationException($"Can't fetch {Id}");
 
             var bb =  await _inner.ReadAsync(requested).ConfigureAwait(false);
 
@@ -38,7 +38,7 @@ namespace AmpScm.Git.Objects
                 return;
 
             if (_inner == null)
-                _inner = await Repository.ObjectRepository.ResolveByOid(Id).ConfigureAwait(false) ?? throw new InvalidOperationException($"Can't fetch {Id}");
+                _inner = await Repository.ObjectRepository.ResolveById(Id).ConfigureAwait(false) ?? throw new InvalidOperationException($"Can't fetch {Id}");
 
             await _inner.ReadTypeAsync().ConfigureAwait(false);
             Type = _inner.Type;

@@ -229,14 +229,14 @@ namespace AmpScm.Git.Objects
             return null;
         }
 
-        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
+        internal override async ValueTask<GitObjectBucket?> ResolveById(GitId id)
         {
             if (id is null)
                 throw new ArgumentNullException(nameof(id));
 
             foreach (var p in Sources)
             {
-                var r = await p.ResolveByOid(id).ConfigureAwait(false);
+                var r = await p.ResolveById(id).ConfigureAwait(false);
 
                 if (r != null)
                     return r;

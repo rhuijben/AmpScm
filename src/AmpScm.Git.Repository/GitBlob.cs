@@ -23,7 +23,7 @@ namespace AmpScm.Git
 
         internal Bucket? GetBucket()
         {
-            return Repository.ObjectRepository.ResolveByOid(Id).AsTask().GetAwaiter().GetResult();
+            return Repository.ObjectRepository.ResolveById(Id).AsTask().GetAwaiter().GetResult();
         }
 
         ValueTask<GitId> IGitLazy<GitBlob>.WriteToAsync(GitRepository repository)

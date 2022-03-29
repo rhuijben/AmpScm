@@ -644,14 +644,14 @@ namespace AmpScm.Git.Objects
         async ValueTask<GitObjectBucket> MyResolveByOid(GitId id)
         {
             // 99% case. All deltas should be in the same pack
-            var r = await ResolveByOid(id).ConfigureAwait(false);
+            var r = await ResolveById(id).ConfigureAwait(false);
             if (r is not null)
                 return r;
 
-            return (await Repository.ObjectRepository.ResolveByOid(id).ConfigureAwait(false)) ?? throw new GitRepositoryException($"Unexpected unresolvable reference to id {id}");
+            return (await Repository.ObjectRepository.ResolveById(id).ConfigureAwait(false)) ?? throw new GitRepositoryException($"Unexpected unresolvable reference to id {id}");
         }
 
-        internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
+        internal override async ValueTask<GitObjectBucket?> ResolveById(GitId id)
         {
             Init();
 
