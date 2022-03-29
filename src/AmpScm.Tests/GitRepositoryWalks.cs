@@ -155,5 +155,28 @@ namespace AmpScm.Tests
             Assert.IsTrue(repo.Blobs.Count() > 0);
             Assert.IsTrue(repo.TagObjects.Count() > 0);
         }
+
+        [TestMethod]
+        public async Task WalkWorkTreeWorkingCopy()
+        {
+            var path = TestContext.PerTestDirectory();
+            var path2 = TestContext.PerTestDirectory("2");
+            {
+                using GitRepository gc = GitRepository.Open(typeof(GitRepositoryWalks).Assembly.Location);
+                await gc.GetPlumbing().RunRawCommand("clone", new[] { gc.FullPath, path2 });
+            }
+            {
+                using GitRepository gc = GitRepository.Open(path2);
+                Assert.AreEqual(path2, gc.FullPath);
+                await gc.GetPlumbing().RunRawCommand("worktree", new[] { "add", "-b", "MyWorkTree", path });
+            }
+
+            using var repo = GitRepository.Open(path);
+            Assert.AreEqual(path, repo.FullPath);
+
+            Assert.IsTrue(repo.Commits.Any());
+            Assert.IsTrue(repo.References.Any());
+            Assert.AreEqual("refs/heads/MyWorkTree", repo.Head.Resolved.Name);
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using AmpScm.Git.Repository;
 
 // This file contains an internal API to allow exposing the GitRepository as a high level GitClient
 // within the Amp.Git.Client package
@@ -15,7 +16,7 @@ namespace AmpScm.Git
     partial class GitRepository
     {
         internal GitRepository(GitRepositoryOpenArgs a)
-            : this(GitRepositoryOpenArgs.NotNull(a).Path, a.BareCheck)
+            : this(GitRepositoryOpenArgs.NotNull(a).Path, a.RootType)
         {
 
         }
@@ -30,12 +31,12 @@ namespace AmpScm.Git
             public GitRepositoryOpenArgs(string path)
             {
                 Path = path;
-                BareCheck = false;
+                RootType = GitRootType.None;
             }
 
             public string Path;
 
-            public bool BareCheck { get; }
+            public GitRootType RootType { get; }
 
             public static GitRepositoryOpenArgs NotNull(GitRepositoryOpenArgs a)
             {

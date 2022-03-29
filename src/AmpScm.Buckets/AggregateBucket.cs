@@ -270,7 +270,7 @@ namespace AmpScm.Buckets
 
                 for (int i = _n - 1; i >= 0 && _buckets[i] != null; i--)
                 {
-                    var del = _buckets[i];
+                    var del = _buckets[i]!;
                     _buckets[i] = null;
 
                     await del.DisposeAsync().ConfigureAwait(false);

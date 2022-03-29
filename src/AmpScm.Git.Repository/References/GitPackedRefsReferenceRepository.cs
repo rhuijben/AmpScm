@@ -11,8 +11,8 @@ namespace AmpScm.Git.References
     internal class GitPackedRefsReferenceRepository : GitReferenceRepository
     {
         public const string PackedRefsFile = "packed-refs";
-        public GitPackedRefsReferenceRepository(GitReferenceRepository repository, string gitDir)
-            : base(repository.Repository, gitDir)
+        public GitPackedRefsReferenceRepository(GitReferenceRepository repository, string gitDir, string workTreeDir)
+            : base(repository.Repository, gitDir, workTreeDir)
         {
         }
 

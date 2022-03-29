@@ -71,7 +71,7 @@ namespace AmpScm.Git
             if (!isBare)
                 File.SetAttributes(gitDir, FileAttributes.Hidden | File.GetAttributes(gitDir));
 
-            return new GitRepository(path, bareCheck: isBare);
+            return new GitRepository(path, isBare ? Repository.GitRootType.Bare : Repository.GitRootType.Normal);
         }
 
     }

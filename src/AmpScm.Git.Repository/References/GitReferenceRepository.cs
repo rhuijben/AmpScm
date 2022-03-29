@@ -13,11 +13,13 @@ namespace AmpScm.Git.References
 
         protected internal GitRepository Repository { get; }
         protected internal string GitDir { get; }
+        protected internal string WorkTreeDir { get; }
 
-        protected GitReferenceRepository(GitRepository repository, string gitDir)
+        protected GitReferenceRepository(GitRepository repository, string gitDir, string workTreeDir)
         {
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             GitDir = gitDir ?? throw new ArgumentNullException(nameof(gitDir));
+            WorkTreeDir = workTreeDir ?? throw new ArgumentNullException(nameof(gitDir));
         }
 
 

@@ -191,6 +191,8 @@ namespace AmpScm.Buckets.Specialized
 
         public static async ValueTask<BucketBytes> ReadUntilAsync(this Bucket self, byte b)
         {
+            if (self is null)
+                throw new ArgumentNullException(nameof(self));
             IEnumerable<byte>? result = null;
 
             while (true)
@@ -278,6 +280,15 @@ namespace AmpScm.Buckets.Specialized
             return NetBitConverter.ToUInt64(bb, 0);
         }
 
+
+        /// <summary>
+        /// Read in-memory buckets combined in a single buffer
+        /// </summary>
+        /// <param name="self"></param>
+        /// <param name="bufferSize"></param>
+        /// <param name="maxRequested"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static async ValueTask<BucketBytes> ReadCombinedAsync(this Bucket self, int bufferSize, int maxRequested = int.MaxValue)
         {
             if (self is null)

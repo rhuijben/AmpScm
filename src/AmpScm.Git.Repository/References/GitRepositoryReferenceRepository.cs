@@ -9,8 +9,8 @@ namespace AmpScm.Git.References
 {
     internal class GitRepositoryReferenceRepository : GitReferenceRepository
     {
-        public GitRepositoryReferenceRepository(GitRepository gitRepository, string gitDir)
-            : base(gitRepository, gitDir)
+        public GitRepositoryReferenceRepository(GitRepository gitRepository, string gitDir, string workTreeDir)
+            : base(gitRepository, gitDir, workTreeDir)
         {
             _repositories = new Lazy<GitReferenceRepository[]>(() => GetRepositories().ToArray());
         }
@@ -19,10 +19,10 @@ namespace AmpScm.Git.References
 
         private IEnumerable<GitReferenceRepository> GetRepositories()
         {
-            yield return new GitFileReferenceRepository(this, GitDir);
+            yield return new GitFileReferenceRepository(this, GitDir, WorkTreeDir);
 
             if (File.Exists(Path.Combine(GitDir, GitPackedRefsReferenceRepository.PackedRefsFile)))
-                yield return new GitPackedRefsReferenceRepository(this, GitDir);
+                yield return new GitPackedRefsReferenceRepository(this, GitDir, WorkTreeDir);
 
             //yield return new GitShellReferenceRepository(this, GitDir);
         }

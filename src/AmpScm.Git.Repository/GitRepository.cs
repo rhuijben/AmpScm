@@ -27,6 +27,7 @@ namespace AmpScm.Git
         readonly Lazy<GitConfiguration> _gitConfiguration;
 
         protected internal string GitDir { get; }
+        protected internal string WorkTreeDir { get; }
 
         // Not directly creatable for now
         private GitRepository()
@@ -53,32 +54,62 @@ namespace AmpScm.Git
             ReferenceRepository = null!;
         }
 
-        internal GitRepository(string path, bool bareCheck = false)
+        internal GitRepository(string root, GitRootType rootType)
             : this()
         {
-            FullPath = GitTools.GetNormalizedFullPath(path);
+            FullPath = GitTools.GetNormalizedFullPath(root);
 
-            // TODO: Needs config check
-            if (bareCheck && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git", StringComparison.OrdinalIgnoreCase))
+            bool isBare;
+
+            if ((rootType == GitRootType.Bare || rootType == GitRootType.None)
+                && FullPath.EndsWith(Path.DirectorySeparatorChar + ".git", StringComparison.OrdinalIgnoreCase))
             {
                 GitDir = FullPath;
 
                 if (!(Configuration?.GetBool("core", "bare") ?? false))
                 {
-                    bareCheck = false;
+                    isBare = false;
+                    rootType = GitRootType.Normal;
                     FullPath = Path.GetDirectoryName(FullPath) ?? throw new InvalidOperationException();
                 }
+                else
+                    isBare = true;
+            }
+            else
+                isBare = (rootType == GitRootType.Bare);
+
+            IsBare = isBare;
+
+            switch (rootType)
+            {
+                case GitRootType.Normal:
+                case GitRootType.None:
+                    WorkTreeDir = GitDir = Path.Combine(FullPath, ".git");
+                    break;
+                case GitRootType.WorkTree:
+                    {
+                        string wt;
+                        if (TryReadRefFile(Path.Combine(FullPath, ".git"), "gitdir: ", out var wtDir)
+                            && TryReadRefFile(Path.Combine(wt = GitTools.GetNormalizedFullPath(wtDir), "commondir"), null, out var commonDir)
+                            && Directory.Exists(GitDir = Path.Combine(wt, commonDir))
+                            && File.Exists(Path.Combine(GitDir, "config")))
+                        {
+                            GitDir = GitTools.GetNormalizedFullPath(GitDir);
+                            WorkTreeDir = wt;
+                        }
+                        else
+                            throw new GitRepositoryException($"Unable to read WorkTree configuration for '{FullPath}");
+                        break;
+                    }
+                case GitRootType.Bare:
+                    WorkTreeDir = GitDir = FullPath;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(rootType));
             }
 
-            IsBare = bareCheck;
-
-            if (!IsBare)
-                GitDir = Path.Combine(FullPath, ".git");
-            else
-                GitDir = FullPath;
-
             ObjectRepository = new Objects.GitRepositoryObjectRepository(this, Path.Combine(GitDir, "objects"));
-            ReferenceRepository = new References.GitRepositoryReferenceRepository(this, GitDir);
+            ReferenceRepository = new References.GitRepositoryReferenceRepository(this, GitDir, WorkTreeDir);
         }
 
         public GitObjectSet<GitObject> Objects { get; }

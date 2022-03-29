@@ -131,7 +131,7 @@ AmpScm.Git.Objects.IGitLazy<TGitObject>.WriteToAsync(AmpScm.Git.GitRepository! r
 AmpScm.Git.References.GitReferenceRepository
 AmpScm.Git.References.GitReferenceRepository.GetAsync(string! name) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitReference?>
 AmpScm.Git.References.GitReferenceRepository.GitDir.get -> string!
-AmpScm.Git.References.GitReferenceRepository.GitReferenceRepository(AmpScm.Git.GitRepository! repository, string! gitDir) -> void
+AmpScm.Git.References.GitReferenceRepository.GitReferenceRepository(AmpScm.Git.GitRepository! repository, string! gitDir, string! workTreeDir) -> void
 AmpScm.Git.References.GitReferenceRepository.Repository.get -> AmpScm.Git.GitRepository!
 AmpScm.Git.References.GitSymbolicReference
 AmpScm.Git.References.GitSymbolicReference.Reference.get -> AmpScm.Git.GitReference?

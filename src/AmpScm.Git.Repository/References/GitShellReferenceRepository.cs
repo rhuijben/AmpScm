@@ -13,8 +13,8 @@ namespace AmpScm.Git.References
     /// </summary>
     internal class GitShellReferenceRepository : GitPackedRefsReferenceRepository
     {
-        public GitShellReferenceRepository(GitReferenceRepository repository, string gitDir) 
-            : base(repository, gitDir)
+        public GitShellReferenceRepository(GitReferenceRepository repository, string gitDir, string workTreeDir)
+            : base(repository, gitDir, workTreeDir)
         {
         }
 
