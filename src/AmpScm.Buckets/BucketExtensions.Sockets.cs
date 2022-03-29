@@ -84,15 +84,16 @@ namespace AmpScm.Buckets
             else if (bucket is null)
                 throw new ArgumentNullException(nameof(bucket));
 
-            while (true)
-            {
-                var bb = await bucket.ReadAsync().ConfigureAwait(false);
+            using (bucket)
+                while (true)
+                {
+                    var bb = await bucket.ReadAsync().ConfigureAwait(false);
 
-                if (bb.IsEof)
-                    break;
+                    if (bb.IsEof)
+                        break;
 
-                await stream.WriteAsync(bb, cancellationToken).ConfigureAwait(false);
-            }
+                    await stream.WriteAsync(bb, cancellationToken).ConfigureAwait(false);
+                }
         }
     }
 

@@ -12,7 +12,7 @@ namespace AmpScm.Buckets
             if (r.Length != 1)
                 return null;
             else
-                return r.ToArray()[0];
+                return r[0];
         }
 
         public async ValueTask<long> ReadSkipAsync(long skip)
