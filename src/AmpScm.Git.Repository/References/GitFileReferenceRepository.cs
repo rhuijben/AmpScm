@@ -38,7 +38,7 @@ namespace AmpScm.Git.References
         protected internal override async ValueTask<GitReference?> GetUnsafeAsync(string name, bool findSymbolic)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            string dir = name.Contains('/', StringComparison.OrdinalIgnoreCase) ? GitDir : WorkTreeDir;
+            string dir = name.Contains('/', StringComparison.Ordinal) ? GitDir : WorkTreeDir;
             string fileName = Path.Combine(dir, name);
 
             if (!File.Exists(fileName))
@@ -49,7 +49,7 @@ namespace AmpScm.Git.References
 
         protected internal override async ValueTask<GitReference?> ResolveAsync(GitReference gitReference)
         {
-            string dir = gitReference.Name.Contains('/', StringComparison.OrdinalIgnoreCase) ? GitDir : WorkTreeDir;
+            string dir = gitReference.Name.Contains('/', StringComparison.Ordinal) ? GitDir : WorkTreeDir;
             string fileName = Path.Combine(dir, gitReference.Name);
 
             if (!File.Exists(fileName))

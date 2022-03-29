@@ -219,11 +219,10 @@ override sealed AmpScm.Git.Objects.GitBlobWriter.Type.get -> AmpScm.Git.GitObjec
 static AmpScm.Git.GitObject.operator !=(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitObject.operator ==(AmpScm.Git.GitObject? one, AmpScm.Git.GitObject? other) -> bool
 static AmpScm.Git.GitReference.ValidName(string! name, bool allowSpecialSymbols) -> bool
-static AmpScm.Git.GitRepository.OpenAsync(string! path) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitRepository!>
 static AmpScm.Git.GitRepository.Init(string! path) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Init(string! path, bool isBare) -> AmpScm.Git.GitRepository!
 static AmpScm.Git.GitRepository.Open(string! path) -> AmpScm.Git.GitRepository!
-static AmpScm.Git.GitRepository.Open(string! path, bool findGitRoot) -> AmpScm.Git.GitRepository!
+static AmpScm.Git.GitRepository.OpenAsync(string! path, System.Threading.CancellationToken cancellation = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<AmpScm.Git.GitRepository!>
 static AmpScm.Git.GitTools.FirstLine(string? message) -> string?
 static AmpScm.Git.GitTools.GetNormalizedFullPath(string! path) -> string!
 static AmpScm.Git.GitTreeEntry.operator !=(AmpScm.Git.GitTreeEntry! e1, AmpScm.Git.GitTreeEntry! e2) -> bool
