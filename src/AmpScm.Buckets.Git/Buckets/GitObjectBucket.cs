@@ -13,7 +13,7 @@ namespace AmpScm.Buckets.Git
         {
         }
 
-        public GitObjectType Type { get; internal set; }
+        public GitObjectType Type { get; protected set; }
 
         public abstract ValueTask ReadTypeAsync();
     }

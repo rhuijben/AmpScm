@@ -18,6 +18,7 @@ AmpScm.Buckets.Git.GitCommitGenerationValue.Value.get -> ulong
 AmpScm.Buckets.Git.GitEwahBitmapBucket
 AmpScm.Buckets.Git.GitEwahBitmapBucket.GitEwahBitmapBucket(AmpScm.Buckets.Bucket! inner) -> void
 AmpScm.Buckets.Git.GitEwahBitmapBucket.ReadBitLengthAsync() -> System.Threading.Tasks.ValueTask<int>
+AmpScm.Buckets.Git.GitObjectBucket.Type.set -> void
 AmpScm.Buckets.Git.GitPacketBucket
 AmpScm.Buckets.Git.GitPacketBucket.CurrentPacketLength.get -> int
 AmpScm.Buckets.Git.GitPacketBucket.GitPacketBucket(AmpScm.Buckets.Bucket! inner) -> void

@@ -29,7 +29,8 @@ namespace AmpScm.Git.Objects
             {
                 var oid = GetOid(i);
 
-                yield return (TGitObject)(object)new GitCommit(Repository, await Repository.ObjectRepository.ResolveByOid(oid).ConfigureAwait(false), oid);
+                if (!alreadyReturned.Contains(oid))
+                    yield return (TGitObject)(object)new GitCommit(Repository, new LazyGitObjectBucket(Repository, oid, GitObjectType.Commit), oid);
             }
         }
 
@@ -110,7 +111,7 @@ namespace AmpScm.Git.Objects
                 return new GitCommitGraphInfo(parents, chainLevel);
             }
 
-            return await base.GetCommitInfo(id).ConfigureAwait(false);
+            return null;
         }
 
         internal override bool ProvidesGetObject => false;

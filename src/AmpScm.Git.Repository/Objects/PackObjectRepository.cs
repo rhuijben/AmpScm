@@ -298,7 +298,7 @@ namespace AmpScm.Git.Objects
             var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
             await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
-            GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+            GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, MyResolveByOid);
 
             GitObject ob = await GitObject.FromBucketAsync(Repository, pf, id).ConfigureAwait(false);
 
@@ -352,7 +352,7 @@ namespace AmpScm.Git.Objects
                 var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
                 await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, MyResolveByOid);
 
                 GitObject ob = await GitObject.FromBucketAsync(Repository, pf, foundId).ConfigureAwait(false);
 
@@ -437,7 +437,7 @@ namespace AmpScm.Git.Objects
                 var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
                 await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, MyResolveByOid);
 
                 GitObject ob = await GitObject.FromBucketAsync(Repository, pf, objectId).ConfigureAwait(false);
 
@@ -544,7 +544,7 @@ namespace AmpScm.Git.Objects
             var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
             await rdr.ReadSkipAsync(GetOffset(offsets, 0)).ConfigureAwait(false);
 
-            GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+            GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, MyResolveByOid);
 
             return (TGitObject)(object)await GitObject.FromBucketAsync(Repository, pf, objectId, gitObjectType).ConfigureAwait(false);
         }
@@ -641,6 +641,16 @@ namespace AmpScm.Git.Objects
                 throw new GitBucketException($"Bitmap Header has {bhr.ObjectCount} commit records, index {_fanOut[255]}, for {Path.GetFileName(_packFile)}");
         }
 
+        async ValueTask<GitObjectBucket> MyResolveByOid(GitId id)
+        {
+            // 99% case. All deltas should be in the same pack
+            var r = await ResolveByOid(id).ConfigureAwait(false);
+            if (r is not null)
+                return r;
+
+            return (await Repository.ObjectRepository.ResolveByOid(id).ConfigureAwait(false)) ?? throw new GitRepositoryException($"Unexpected unresolvable reference to id {id}");
+        }
+
         internal override async ValueTask<GitObjectBucket?> ResolveByOid(GitId id)
         {
             Init();
@@ -665,7 +675,7 @@ namespace AmpScm.Git.Objects
                 var rdr = await _packBucket!.DuplicateAsync(true).ConfigureAwait(false);
                 await rdr.ReadSkipAsync(offset).ConfigureAwait(false);
 
-                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, Repository.ObjectRepository.ResolveByOid!);
+                GitPackFrameBucket pf = new GitPackFrameBucket(rdr, _idType, MyResolveByOid);
 
                 return pf;
             }
