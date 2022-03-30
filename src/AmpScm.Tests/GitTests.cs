@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using AmpScm.AsyncIO;
 using AmpScm.Buckets;
 using AmpScm.Buckets.Git;
 using AmpScm.Buckets.Specialized;
@@ -701,6 +703,25 @@ namespace AmpScm.Tests
             using var idxData = indexFile.Take(lIdx - 20).SHA1(x => idxChecksum = x);
 
             await Assert.That.BucketsEqual(idxData, index);
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(LocalPacks))]
+        [Timeout(1200000)]
+        public async Task CheckAsyncFile(string packFile)
+        {
+            using var v = new AsyncFile(packFile, FileMode.Open);
+            List<Task> lst = new();
+            int n = 0;
+
+            for (int i = 0; i < 100; i++)
+            {
+                var buf = new byte[128];
+                lst.Add(v.ReadAsync(i, buf, 0, 128).AsTask().ContinueWith(ti => { TestContext.WriteLine($"Read {ti.Result} bytes, {n}, {Encoding.ASCII.GetString(buf)}"); Interlocked.Increment(ref n); }));
+            }
+
+            await Task.WhenAll(lst.ToArray());
+            Assert.AreEqual(100, n);
         }
 
         private async ValueTask<GitObjectBucket?> GetDeltaSource(string packFile, GitId id)
