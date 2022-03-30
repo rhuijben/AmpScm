@@ -23,7 +23,7 @@ namespace AmpScm.Tests
         {
             byte[] buffer = Enumerable.Range(0, 256).Select(x => (byte)x).ToArray();
 
-            await using var mb = new MemoryBucket(buffer);
+            using var mb = new MemoryBucket(buffer);
 
             BucketBytes bb;
 

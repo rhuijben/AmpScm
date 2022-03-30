@@ -50,17 +50,6 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        protected override async ValueTask DisposeAsyncCore()
-        {
-#if NETFRAMEWORK
-            _stream.Dispose();
-#else
-            await _stream.DisposeAsync().ConfigureAwait(false);
-#endif
-
-            await base.DisposeAsyncCore().ConfigureAwait(false);
-        }
-
         public async ValueTask ShutdownAsync()
         {
             if (_authenticated)

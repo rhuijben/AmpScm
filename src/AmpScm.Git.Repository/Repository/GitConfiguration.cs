@@ -55,7 +55,7 @@ namespace AmpScm.Git.Repository
 
         async ValueTask LoadConfigAsync(string path)
         {
-            using var b = FileBucket.OpenRead(path);
+            using var b = FileBucket.OpenRead(path, false);
             using var cr = new GitConfigurationReaderBucket(b);
 
             while (await cr.ReadConfigItem().ConfigureAwait(false) is GitConfigurationItem item)

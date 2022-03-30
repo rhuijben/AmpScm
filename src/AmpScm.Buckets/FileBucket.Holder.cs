@@ -53,6 +53,11 @@ namespace AmpScm.Buckets
 
             public ValueTask<int> ReadAtAsync(long readPos, byte[] buffer, int readLen)
             {
+                if (readLen <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(readLen));
+                else if (readPos > 0 && readPos >= Length)
+                    return new ValueTask<int>(0);
+
                 if (_primary.IsAsync)
                     return TrueReadAtAsync(readPos, buffer, readLen);
                 else
@@ -145,7 +150,7 @@ namespace AmpScm.Buckets
                 }
             }
 
-            public long Length => _length ?? (_length = _primary.Length).Value;
+            public long Length => _length ??= _primary.Length;
 
 
             sealed class Returner : IDisposable

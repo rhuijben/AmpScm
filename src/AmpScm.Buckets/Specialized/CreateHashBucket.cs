@@ -91,20 +91,6 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        protected override ValueTask DisposeAsyncCore()
-        {
-            if (_hasher != null)
-            {
-                if (_result == null && _onResult != null)
-                    FinishHashing();
-
-                _hasher.Dispose();
-                _hasher = null;
-            }
-
-            return base.DisposeAsyncCore();
-        }
-
 #pragma warning disable CA1819 // Properties should not return arrays
         public byte[]? HashResult => _result;
 #pragma warning restore CA1819 // Properties should not return arrays

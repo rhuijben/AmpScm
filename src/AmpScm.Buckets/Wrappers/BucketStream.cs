@@ -39,7 +39,7 @@ namespace AmpScm.Buckets.Wrappers
 #if !NETFRAMEWORK
         public override async ValueTask DisposeAsync()
         {
-            await Bucket.DisposeAsync().ConfigureAwait(false);
+            Bucket.Dispose();
             await base.DisposeAsync().ConfigureAwait(false);
         }
 #endif

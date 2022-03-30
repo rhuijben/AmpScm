@@ -324,15 +324,6 @@ namespace AmpScm.Buckets.Specialized
             }
         }
 
-        protected override ValueTask DisposeAsyncCore()
-        {
-            write_data = null!;
-            read_buffer = default;
-            write_buffer = default;
-
-            return base.DisposeAsyncCore();
-        }
-
         public override async ValueTask<Bucket> DuplicateAsync(bool reset)
         {
             if (!reset)

@@ -30,7 +30,7 @@ namespace AmpScm.Git.Objects
             if (!File.Exists(path))
                 return null;
 
-            var fileReader = FileBucket.OpenRead(path);
+            var fileReader = FileBucket.OpenRead(path, false);
             try
             {
                 var rdr = new GitObjectFileBucket(fileReader);
@@ -40,13 +40,13 @@ namespace AmpScm.Git.Objects
                 if (ob is TGitObject tg)
                     return tg;
 
-                await rdr.DisposeAsync().ConfigureAwait(false);
+                rdr.Dispose();
 
                 return null;
             }
             catch
             {
-                await fileReader.DisposeAsync().ConfigureAwait(false);
+                fileReader.Dispose();
                 throw;
             }
         }
@@ -69,7 +69,7 @@ namespace AmpScm.Git.Objects
             if (!File.Exists(path))
                 return default;
 
-            var fileReader = FileBucket.OpenRead(path);
+            var fileReader = FileBucket.OpenRead(path, false);
             return new ValueTask<GitObjectBucket?>(new GitObjectFileBucket(fileReader));
         }
 
@@ -86,7 +86,7 @@ namespace AmpScm.Git.Objects
                     if (!GitId.TryParse(idString, out var id))
                         continue;
 
-                    var fileReader = FileBucket.OpenRead(file);
+                    var fileReader = FileBucket.OpenRead(file, false);
 
                     var rdr = new GitObjectFileBucket(fileReader);
 
@@ -95,7 +95,7 @@ namespace AmpScm.Git.Objects
                     if (ob is TGitObject tg)
                         yield return tg;
                     else
-                        await rdr.DisposeAsync().ConfigureAwait(false);
+                        rdr.Dispose();
                 }
             }
         }

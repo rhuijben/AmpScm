@@ -29,14 +29,6 @@ namespace AmpScm.Buckets.Specialized
                 Inner.Dispose();
         }
 
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            if (!DontDisposeInner)
-                await Inner.DisposeAsync().ConfigureAwait(false);
-
-            await base.DisposeAsyncCore().ConfigureAwait(false);
-        }
-
         protected void NoClose()
         {
             DontDisposeInner = true;

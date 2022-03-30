@@ -123,7 +123,7 @@ namespace AmpScm.Buckets
                     return r;
                 }
 
-                await MoveNext().ConfigureAwait(false);
+                MoveNext();
             }
             if (!_keepOpen)
             {
@@ -133,7 +133,7 @@ namespace AmpScm.Buckets
             return BucketBytes.Eof;
         }
 
-        private async ValueTask MoveNext(bool close = true)
+        private void MoveNext(bool close = true)
         {
             Bucket? del;
             lock (LockOn)
@@ -151,8 +151,7 @@ namespace AmpScm.Buckets
                 _n++;
             }
 
-            if (del != null)
-                await del.DisposeAsync().ConfigureAwait(false);
+            del?.Dispose();
         }
 
         public override ValueTask<int> ReadSkipAsync(int requested)
@@ -204,21 +203,6 @@ namespace AmpScm.Buckets
             }
 
             return BucketBytes.Eof;
-        }
-
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            while (_n < _buckets.Length)
-            {
-                if (_buckets[_n] != null)
-                {
-                    await _buckets[_n]!.DisposeAsync().ConfigureAwait(false);
-                }
-                _buckets[_n++] = null;
-            }
-
-            _buckets = Array.Empty<Bucket>();
-            _n = 0;
         }
 
         protected override void Dispose(bool disposing)
@@ -273,7 +257,7 @@ namespace AmpScm.Buckets
                     var del = _buckets[i]!;
                     _buckets[i] = null;
 
-                    await del.DisposeAsync().ConfigureAwait(false);
+                    del.Dispose();
                 }
 
             while (CurrentBucket is IBucketReadBuffers iov)
@@ -291,7 +275,7 @@ namespace AmpScm.Buckets
                 }
                 else
                 {
-                    await MoveNext(false).ConfigureAwait(false);
+                    MoveNext(false);
                 }
             }
 

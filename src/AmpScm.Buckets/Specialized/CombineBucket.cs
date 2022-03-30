@@ -17,13 +17,6 @@ namespace AmpScm.Buckets.Specialized
             Right = right ?? throw new ArgumentNullException(nameof(right));
         }
 
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            await base.DisposeAsyncCore().ConfigureAwait(false);
-            if (!DontDisposeInner)
-                await Right.DisposeAsync().ConfigureAwait(false);
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

@@ -305,7 +305,7 @@ namespace AmpScm.Git.Objects
             if (ob is TGitObject tg)
                 return tg;
             else
-                await pf.DisposeAsync().ConfigureAwait(false);
+                pf.Dispose();
             return null;
         }
 
@@ -359,7 +359,7 @@ namespace AmpScm.Git.Objects
                 if (ob is TGitObject tg)
                     return (tg, true); // Success
                 else
-                    await pf.DisposeAsync().ConfigureAwait(false);
+                    pf.Dispose();
 
                 return (null, false); // We had a match. No singular good result
             }
@@ -444,7 +444,7 @@ namespace AmpScm.Git.Objects
                 if (ob is TGitObject one)
                     yield return one;
                 else
-                    await pf.DisposeAsync().ConfigureAwait(false);
+                    pf.Dispose();
             }
         }
 

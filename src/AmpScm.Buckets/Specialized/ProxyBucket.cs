@@ -56,7 +56,7 @@ namespace AmpScm.Buckets.Specialized
             return Inner.ReadUntilEolAsync(acceptableEols, requested);
         }
 
-        public override ValueTask<TReadBucket?> ReadBucket<TReadBucket>()
+        public override TReadBucket? ReadBucket<TReadBucket>()
             where TReadBucket : class
         {
             return Inner.ReadBucket<TReadBucket>();

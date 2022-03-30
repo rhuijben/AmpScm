@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace AmpScm.Buckets
 {
     [DebuggerDisplay("{Name}: Position={Position}")]
-    public abstract partial class Bucket : IAsyncDisposable, IDisposable
+    public abstract partial class Bucket : IDisposable
     {
         public static readonly Bucket Empty = new EmptyBucket();
         protected internal static readonly ValueTask<BucketBytes> EofTask = new ValueTask<BucketBytes>(BucketBytes.Eof);
@@ -88,7 +88,7 @@ namespace AmpScm.Buckets
             return default;
         }
 
-        public virtual ValueTask<TBucket?> ReadBucket<TBucket>()
+        public virtual TBucket? ReadBucket<TBucket>()
             where TBucket : Bucket
         {
             return default;
@@ -111,18 +111,6 @@ namespace AmpScm.Buckets
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await DisposeAsyncCore().ConfigureAwait(false);
-            Dispose(false);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual ValueTask DisposeAsyncCore()
-        {
-            return default;
         }
 
         public override string ToString()

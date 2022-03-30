@@ -39,12 +39,6 @@ namespace AmpScm.Buckets
             }
         }
 
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            await base.DisposeAsyncCore().ConfigureAwait(false);
-            Socket.Dispose();
-        }
-
         public async ValueTask ConnectAsync(string host, int port, CancellationToken cancellationToken = default)
         {
 #if !NET6_0_OR_GREATER

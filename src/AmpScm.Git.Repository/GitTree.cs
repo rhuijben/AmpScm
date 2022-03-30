@@ -48,7 +48,7 @@ namespace AmpScm.Git
             if (el is null)
             {
                 _rdr = null;
-                await rdr.DisposeAsync().ConfigureAwait(false);
+                rdr.Dispose();
                 return;
             }
 

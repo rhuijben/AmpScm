@@ -81,7 +81,7 @@ namespace AmpScm.Tests
                 new RepoItem { Name = "A/D/H/omega", Content = "This is the file 'omega'.\n" }
             };
 
-            Hashtable ht = new Hashtable();
+            Dictionary<string, GitObject> ht = new ();
             foreach (var i in items.Where(x => x.Content != null))
             {
                 GitBlobWriter b = GitBlobWriter.CreateFrom(System.Text.Encoding.UTF8.GetBytes(i.Content!).AsBucket());
@@ -114,7 +114,7 @@ namespace AmpScm.Tests
                 ht[m.Name] = r;
             }
 
-            GitCommitWriter cw = GitCommitWriter.Create(new GitCommit[0]);
+            GitCommitWriter cw = GitCommitWriter.Create(Array.Empty<GitCommit>());
             cw.Tree = ((GitTree)ht[""]).AsWriter();
 
             cw.Author = cw.Committer = new GitSignature("BH", "bh@BH", new DateTimeOffset(new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Local)));

@@ -49,14 +49,6 @@ namespace AmpScm.Buckets.Git
             }
         }
 
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            if (!DontDisposeInner)
-                await BaseBucket.DisposeAsync().ConfigureAwait(false);
-
-            await base.DisposeAsyncCore().ConfigureAwait(false);
-        }
-
         public override long? Position => position;
 
         static int PopCount(uint value)

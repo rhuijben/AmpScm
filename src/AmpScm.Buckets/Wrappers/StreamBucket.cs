@@ -52,22 +52,6 @@ namespace AmpScm.Buckets.Wrappers
             }
         }
 
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            try
-            {
-#if !NETFRAMEWORK
-                await _stream.DisposeAsync().ConfigureAwait(false);
-#else
-                _stream.Dispose();
-#endif
-            }
-            finally
-            {
-                await base.DisposeAsyncCore().ConfigureAwait(false);
-            }
-        }
-
         public override async ValueTask<BucketBytes> ReadAsync(int requested = int.MaxValue)
         {
             if (_remaining.Length == 0)

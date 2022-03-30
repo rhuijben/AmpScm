@@ -62,7 +62,7 @@ namespace AmpScm.Buckets.Client.Http
 
                 if (Request.Channel != null)
                 {
-                    await _reader.DisposeAsync().ConfigureAwait(false);
+                    _reader.Dispose();
                     _reader = Bucket.Empty;
 
                     Request.ReleaseChannel();
@@ -337,8 +337,8 @@ namespace AmpScm.Buckets.Client.Http
 
             var (reader, noClose) = GetBodyReader(headers);
 
-            await reader.ReadSkipUntilEofAsync().ConfigureAwait(false);
-            await reader.DisposeAsync().ConfigureAwait(false);
+            using (reader)
+                await reader.ReadSkipUntilEofAsync().ConfigureAwait(false);
 
             var c = _authState.Current;
 
